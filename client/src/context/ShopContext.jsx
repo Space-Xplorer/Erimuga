@@ -2,7 +2,7 @@
 
 export const ShopContext = React.createContext()
 
-const ShopContextProvider = ({ children }) => {
+const ShopContextProvider = (props) => {
 
     const value = {}
 
