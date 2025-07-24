@@ -3,7 +3,6 @@ import cors from 'cors';
 import 'dotenv/config';
 import session from 'express-session';
 import passport from 'passport';
-import mongoose from "mongoose";
 import MongoStore from "connect-mongo";
 
 import connectDB from './config/mongodb.js';
