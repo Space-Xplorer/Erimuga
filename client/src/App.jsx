@@ -10,11 +10,12 @@ import Login from './pages/Login';
 import PlaceOrder from './pages/PlaceOrder';
 import Orders from './pages/Orders';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 
 const App = () => {
   return (
-    <div>
+    <div className='flex flex-col min-h-screen'>
       <Navbar />
       <Routes>
 
@@ -29,7 +30,7 @@ const App = () => {
           <Route path='/orders' element={<Orders />} />
 
       </Routes>
-
+      <Footer />
       
     </div>
   )
