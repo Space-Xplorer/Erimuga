@@ -11,8 +11,8 @@ import './config/passport.js';
 
 import userAuthRoutes from './routes/userAuth.js';
 import productRouter from './routes/product.js';
-import cartRouter
- from './routes/cart.js';
+import cartRouter from './routes/cart.js';
+import orderRouter from './routes/orders.js'; // Uncomment if you have order routes
 const app = express();
 const PORT = process.env.PORT || 3000;
 await connectDB();
@@ -42,6 +42,7 @@ app.use(passport.session());
 app.use("/user/auth", userAuthRoutes);
 app.use("/products", productRouter);
 app.use("/cart", cartRouter);
+app.use("/orders", orderRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
