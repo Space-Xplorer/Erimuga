@@ -61,8 +61,10 @@ const Navbar = () => {
           {/* Cart */}
           <div className="hidden md:block">
             <Link to="/cart" className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300">
-              <FaShoppingCart className="text-lg" />
-              Cart
+              <div className="relative">
+                <FaShoppingCart className="text-lg" />
+                <span className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full px-1 text-xs min-w-[18px] text-center">0</span>
+              </div>
             </Link>
           </div>
 
@@ -74,7 +76,7 @@ const Navbar = () => {
             </div>
             {/* Dropdown menu */}
             <div className="hidden group-hover:block absolute right-0 pt-4 z-50">
-              <div className="w-40 bg-white text-black rounded shadow-md transition-all duration-150">
+              <div className="cursor-pointer w-40 bg-white text-black rounded shadow-md transition-all duration-150">
                 <Link
                   to="/dashboard"
                   className="block px-4 py-2 hover:bg-gray-100 rounded"
