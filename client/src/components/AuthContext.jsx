@@ -1,25 +1,58 @@
-import React from 'react'
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-const AuthContext = createContext()
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('userAuthToken');
+  });
 
-  const login = async (email, password) => {
-    // Perform login logic here
-    setUser({ email })
-  }
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
+
+  const login = (userData, token) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem('userAuthToken', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
 
   const logout = () => {
-    // Perform logout logic here
-    setUser(null)
-  }
-    const isLoggedIn = !!user
-  return (
-    <div>
-      
-    </div>
-  )
-}
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('userAuthToken');
+    localStorage.removeItem('user');
+  };
 
-export default AuthContext
+  const value = {
+    user,
+    isAuthenticated,
+    login,
+    logout
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext;
