@@ -64,7 +64,19 @@ const ShopContextProvider = ({ children }) => {
     initializeData();
   }, []);
 
-  // 🛒 Cart operations
+  // ✅ Fetch products on mount
+  useEffect(() => {
+    // Replace this with your actual API endpoint
+    axios.get('http://localhost:5000/products')
+      .then((res) => {
+        console.log('Fetched products:', res.data);
+        setProducts(res.data);
+      })
+      .catch((err) => {
+        console.error('Error fetching products:', err);
+      });
+  }, []);
+  // 🔼 Add to cart
   const addToCart = (product, quantity = 1) => {
     const existing = cartItems.find(item => item.productId === product._id);
     if (existing) {
