@@ -7,10 +7,17 @@ const router = express.Router();
 
 // Register
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
-  const user = await userModel.create({ name, email, password: hashed });
-  res.status(201).json(user);
+  try {
+    const { name, email, password } = req.body;
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await userModel.create({ name, email, password: hashed });
+    res.status(201).json(user);
+  } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.email) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+    res.status(500).json({ message: "Server error during registration" });
+  }
 });
 
 // Local Login

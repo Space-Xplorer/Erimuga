@@ -12,19 +12,23 @@ const SignupForm = ({ onSignup }) => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/register', {
+      const res = await fetch('http://localhost:5000/user/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, usertype: 'user' })
       });
       const data = await res.json();
-      if (res.ok && data._id) {
+      
+      if (!res.ok) {
+        // This will catch and display the "Email already registered" message
+        throw new Error(data.message || 'Signup failed');
+      }
+      
+      if (data._id) {
         if (onSignup) onSignup();
-      } else {
-        setError(data.message || 'Signup failed');
       }
     } catch (err) {
-      setError('Server error. Please try again.');
+      setError(err.message || 'Server error. Please try again.');
     } finally {
       setLoading(false);
     }

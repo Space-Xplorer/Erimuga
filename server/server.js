@@ -18,7 +18,10 @@ const PORT = process.env.PORT || 3000;
 await connectDB();
 await connectCloudinary();
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Adjust this to the client URL
+  credentials: true
+}));
 app.use(express.json());
 
 
