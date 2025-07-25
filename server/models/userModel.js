@@ -7,6 +7,14 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String }, // to store Google OAuth ID
   usertype: { type: String, default: 'user' }, // 'user' or 'admin'
   cartData: { type: Object, default: {} },
+  
+  // ✅ New field for user role/type
+  userType: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  }
+
 }, { minimize: false });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);

@@ -6,15 +6,16 @@ import {placeOrderCOD,
   getUserOrders,
   cancelOrder} from '../controllers/orderController.js';
 import express from 'express';
+import { isAdmin, isLoggedIn } from '../middlewares/auth.js';
 
 const orderRouter = express.Router();
 
-orderRouter.post('/place-order/cod', placeOrderCOD);
-orderRouter.post('/place-order/razorpay', placeOrderRazorpay);
-orderRouter.get('/', getAllOrders);
-orderRouter.get('/:id', getOrderDetails);
-orderRouter.put('/:id/status', updateOrderStatus);
-orderRouter.get('/user/:id', getUserOrders);
-orderRouter.delete('/:id', cancelOrder);
+orderRouter.post('/place-order/cod', isLoggedIn, placeOrderCOD);
+orderRouter.post('/place-order/razorpay', isLoggedIn, placeOrderRazorpay);
+orderRouter.get('/', isLoggedIn, isAdmin, getAllOrders);
+orderRouter.get('/:id', isLoggedIn, getOrderDetails);
+orderRouter.put('/:id/status', isLoggedIn, updateOrderStatus);
+orderRouter.get('/user/:id', isLoggedIn, getUserOrders);
+orderRouter.delete('/:id', isLoggedIn, cancelOrder);
 
 export default orderRouter;

@@ -5,18 +5,32 @@ import userModel from "../models/userModel.js";
 
 const router = express.Router();
 
-// Register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await userModel.create({ name, email, password: hashed });
-    res.status(201).json(user);
-  } catch (error) {
-    if (error.code === 11000 && error.keyPattern?.email) {
-      return res.status(400).json({ message: "Email already registered" });
+    const { name, email, password, userType = "user" } = req.body;
+
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
     }
-    res.status(500).json({ message: "Server error during registration" });
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    const user = await userModel.create({
+      name,
+      email,
+      password: hashed,
+      userType,
+    });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      userType: user.userType,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Registration failed", details: error.message });
   }
 });
 
