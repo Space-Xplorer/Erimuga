@@ -27,7 +27,7 @@ const ShopContextProvider = ({ children }) => {
     // Replace this with your actual API endpoint
     axios.get('http://localhost:5000/products')
       .then((res) => {
-        console.log('Fetched products:', res.data);
+        // console.log('Fetched products:', res.data);
         setProducts(res.data);
       })
       .catch((err) => {
