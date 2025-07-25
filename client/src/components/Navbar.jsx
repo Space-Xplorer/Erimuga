@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUserCircle } from 'react-icons/fa';
-import { useAuth } from './AuthContext';
+import { useAuth } from './Auth/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

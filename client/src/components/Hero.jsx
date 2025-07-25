@@ -21,8 +21,8 @@ const Hero = () => {
   const nextSlide = () => setIndex((prev) => (prev + 1) % images.length);
 
   return (
-    <section className="bg-[#7E4A35] text-[#F9F5F1] py-16 px-6 sm:px-10 md:px-20">
-      <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-10">
+    <section className="bg-[#7E4A35] text-[#F9F5F1] h-[calc(100vh-80px)] px-6 sm:px-10 md:px-20 flex items-center">
+      <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-10 h-full">
         {/* Text Section */}
         <div className="w-full md:w-1/2 text-center md:text-left">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
@@ -44,7 +44,7 @@ const Hero = () => {
           <img
             src={images[index]}
             alt={`Slide ${index + 1}`}
-            className="w-full h-64 sm:h-80 md:h-[22rem] lg:h-[26rem] object-cover rounded shadow-lg transition duration-500"
+            className="w-full h-72 sm:h-96 md:h-[28rem] lg:h-[32rem] object-cover rounded-sm shadow-lg transition duration-500"
           />
 
           {/* Carousel Controls */}

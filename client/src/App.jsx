@@ -10,7 +10,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import PlaceOrder from './pages/PlaceOrder';
 import Orders from './pages/Orders';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
