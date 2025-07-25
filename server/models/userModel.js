@@ -6,6 +6,14 @@ const userSchema = new mongoose.Schema({
   password: { type: String }, // optional for OAuth users
   googleId: { type: String }, // to store Google OAuth ID
   cartData: { type: Object, default: {} },
+  
+  // ✅ New field for user role/type
+  userType: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  }
+
 }, { minimize: false });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);
