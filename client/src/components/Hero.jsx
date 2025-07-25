@@ -21,49 +21,72 @@ const Hero = () => {
   const nextSlide = () => setIndex((prev) => (prev + 1) % images.length);
 
   return (
-    <section className="bg-[#7E4A35] text-[#F9F5F1] h-[calc(100vh-80px)] px-6 sm:px-10 md:px-20 flex items-center">
-      <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-10 h-full">
-        {/* Text Section */}
-        <div className="w-full md:w-1/2 text-center md:text-left">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
-            Timeless Style.<br className="hidden sm:block" /> Rustic Charm.
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl mb-6 text-[#FDEBD0]">
-            Explore our earthy collections crafted for those who love elegance with a touch of the wild.
-          </p>
-          <Link
-            to="/collection"
-            className="inline-block bg-[#D4A373] text-white font-semibold px-6 py-3 rounded hover:bg-[#c88d56] transition"
-          >
-            Shop the Collection
-          </Link>
-        </div>
+    <section className="relative h-[calc(100vh-80px)] overflow-hidden">
+      {/* Background Carousel */}
+      <div className="absolute inset-0 w-full h-full">
+        <img
+          src={images[index]}
+          alt={`Slide ${index + 1}`}
+          className="w-full h-full object-cover object-center transition duration-500"
+        />
+        {/* Dark overlay for better text visibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40"></div>
+      </div>
 
-        {/* Carousel Section */}
-        <div className="w-full md:w-1/2 relative">
-          <img
-            src={images[index]}
-            alt={`Slide ${index + 1}`}
-            className="w-full h-72 sm:h-96 md:h-[28rem] lg:h-[32rem] object-cover rounded-sm shadow-lg transition duration-500"
-          />
-
-          {/* Carousel Controls */}
-          <button
-            onClick={prevSlide}
-            className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56] z-10"
-          >
-            <FaChevronLeft />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56] z-10"
-          >
-            <FaChevronRight />
-          </button>
+      {/* Content */}
+      <div className="relative z-10 h-full px-6 sm:px-10 md:px-20 flex items-center">
+        <div className="max-w-7xl mx-auto w-full">
+          {/* Text Section */}
+          <div className="w-full md:w-1/2 text-left text-[#F9F5F1]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+              Timeless Style.<br className="hidden sm:block" /> Rustic Charm.
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl mb-6 text-[#FDEBD0]">
+              Explore our earthy collections crafted for those who love elegance with a touch of the wild.
+            </p>
+            <Link
+              to="/collection"
+              className="inline-block bg-[#D4A373] text-white font-semibold px-6 py-3 rounded hover:bg-[#c88d56] transition"
+            >
+              Shop the Collection
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Carousel Controls */}
+      <button
+        onClick={prevSlide}
+        className="absolute z-20 top-1/2 left-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56]"
+      >
+        <FaChevronLeft />
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute z-20 top-1/2 right-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56]"
+      >
+        <FaChevronRight />
+      </button>
     </section>
   );
+
+  //         {/* Carousel Controls */}
+  //         <button
+  //           onClick={prevSlide}
+  //           className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56] z-10"
+  //         >
+  //           <FaChevronLeft />
+  //         </button>
+  //         <button
+  //           onClick={nextSlide}
+  //           className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56] z-10"
+  //         >
+  //           <FaChevronRight />
+  //         </button>
+  //       </div>
+  //     </div>
+  //   </section>
+  // );
 };
 
 export default Hero;

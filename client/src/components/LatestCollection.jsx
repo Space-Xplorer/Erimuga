@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ProductCard from './ProductCard';
+import PartialCard from './PartialCard';
 import useScreenSize from '../hooks/useScreenSize';
 
 const LatestCollection = () => {
@@ -16,8 +16,9 @@ const LatestCollection = () => {
           throw new Error('Failed to fetch products');
         }
         const data = await response.json();
-        // Get only the number of products that fit in one row
-        const latestProducts = data.slice(-productsPerRow);
+        // Sort products by creation date (newest first) and get only the number that fit in one row
+        const sortedProducts = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const latestProducts = sortedProducts.slice(0, productsPerRow);
         setProducts(latestProducts);
       } catch (err) {
         setError(err.message);
@@ -39,11 +40,20 @@ const LatestCollection = () => {
         <div className='max-w-screen-xl mx-auto'>
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
             {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <div key={product._id} className="flex flex-col">
+                <PartialCard product={product} />
+                <div className="p-3 text-center">
+                  <h3 className="font-semibold text-gray-800 text-lg group-hover:text-[#B22222] transition">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-600 mt-1">₹{product.price}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </div>
+      
     </section>
   )
 }

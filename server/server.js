@@ -6,26 +6,36 @@ import passport from 'passport';
 import MongoStore from "connect-mongo";
 
 import connectDB from './config/mongodb.js';
-import connectCloudinary from './config/cloudinary.js';
+import './config/cloudinary.js';  // Cloudinary config is imported and executed automatically
 import './config/passport.js';
 
 import userAuthRoutes from './routes/userAuth.js';
 import productRouter from './routes/product.js';
 import cartRouter from './routes/cart.js';
-import orderRouter from './routes/orders.js'; // Uncomment if you have order routes
+import orderRouter from './routes/orders.js';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connect to MongoDB
 await connectDB();
-await connectCloudinary();
 
 app.use(cors({
   origin: 'http://localhost:5173', // Adjust this to the client URL
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the public directory
+app.use(express.static('../client/public'));
 
- // Load Passport strategies
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'Server is running' });
+});
+
+// Load Passport strategies
 app.use(session({
   secret: "your-session-secret",
   resave: false,

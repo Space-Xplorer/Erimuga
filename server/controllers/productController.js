@@ -1,12 +1,18 @@
 import Product from "../models/productModel.js";
 import fs from "fs";
 import path from "path";
+import { uploadToCloudinary, uploadMultipleImages } from "../config/cloudinary.js";
 
 // Add new product
 const addProduct = async (req, res) => {
   try {
     const { name, mainCategory, apparelType, subcategory, description, price } = req.body;
-    const images = req.files?.map((file) => file.filename) || [];
+    
+    // Handle local file paths
+    let imagePaths = [];
+    if (req.files && req.files.length > 0) {
+      imagePaths = req.files.map(file => `/${file.filename}`);
+    }
 
     const newProduct = new Product({
       name,
@@ -15,7 +21,7 @@ const addProduct = async (req, res) => {
       subcategory,
       description,
       price,
-      image: images
+      image: imagePaths
     });
 
     await newProduct.save();
