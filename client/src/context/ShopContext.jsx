@@ -1,25 +1,67 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-// Create the context
 export const ShopContext = createContext();
 
-// Context Provider
 const ShopContextProvider = ({ children }) => {
-  // 🔐 User info (fetched from backend or session)
   const [user, setUser] = useState(null);
-
-  // 🛒 Cart state
   const [cartItems, setCartItems] = useState([]);
-
-  // 🛍️ Products (you can also load these in individual pages)
   const [products, setProducts] = useState([]);
 
-  // ✅ Fetch user on mount
+  // ✅ Fetch products first
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/products');
+      setProducts(res.data);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    }
+  };
+
+  // ✅ Fetch cart after products are loaded
+  const getCartDataFromBackend = async (userId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/cart/get?userId=${userId}`);
+      const cartObject = res.data.cart;
+
+      const cartArray = Object.entries(cartObject).map(([productId, quantity]) => {
+        const product = products.find(p => String(p._id) === String(productId));
+        if (!product) {
+          console.warn(`Product with ID ${productId} not found in product list.`);
+          return null;
+        }
+        return {
+          ...product,
+          quantity,
+          productId: product._id,
+          productName: product.name,
+        };
+      }).filter(Boolean); // remove nulls
+
+      console.log("Fetched cart items:", cartArray);
+      setCartItems(cartArray);
+    } catch (error) {
+      console.error("Failed to fetch cart from backend:", error);
+    }
+  };
+
+  // ✅ Fetch user and initialize all data (products -> cart)
   useEffect(() => {
-    axios.get('/api/auth/me', { withCredentials: true }) // Adjust to your backend
-      .then(res => setUser(res.data))
-      .catch(() => setUser(null));
+    const initializeData = async () => {
+      try {
+        const userRes = await axios.get('http://localhost:5000/user/auth/me', { withCredentials: true });
+        setUser(userRes.data);
+        console.log("✅ Login Response Data:", userRes.data);
+
+        await fetchProducts(); // wait for products
+        await getCartDataFromBackend(userRes.data._id); // then fetch cart
+      } catch (err) {
+        console.warn("User not logged in");
+        setUser(null);
+      }
+    };
+
+    initializeData();
   }, []);
 
   // ✅ Fetch products on mount
@@ -27,7 +69,7 @@ const ShopContextProvider = ({ children }) => {
     // Replace this with your actual API endpoint
     axios.get('http://localhost:5000/products')
       .then((res) => {
-        // console.log('Fetched products:', res.data);
+        console.log('Fetched products:', res.data);
         setProducts(res.data);
       })
       .catch((err) => {
@@ -54,12 +96,10 @@ const ShopContextProvider = ({ children }) => {
     }
   };
 
-  // 🔽 Remove from cart
   const removeFromCart = (productId) => {
     setCartItems(prev => prev.filter(item => item.productId !== productId));
   };
 
-  // ✏️ Update quantity
   const updateQuantity = (productId, quantity) => {
     setCartItems(prev =>
       prev.map(item =>
@@ -70,7 +110,6 @@ const ShopContextProvider = ({ children }) => {
     );
   };
 
-  // 💰 Calculate total
   const getTotalAmount = () => {
     return cartItems.reduce((acc, item) => {
       const product = products.find(p => p._id === item.productId);
@@ -78,7 +117,6 @@ const ShopContextProvider = ({ children }) => {
     }, 0);
   };
 
-  // 📦 Place order
   const placeOrder = async (address, paymentMethod = "COD") => {
     const orderPayload = {
       userId: user?._id,
@@ -104,11 +142,13 @@ const ShopContextProvider = ({ children }) => {
     setUser,
     products,
     cartItems,
+    setCartItems,
     addToCart,
     removeFromCart,
     updateQuantity,
     getTotalAmount,
-    placeOrder
+    placeOrder,
+    getCartDataFromBackend
   };
 
   return (
