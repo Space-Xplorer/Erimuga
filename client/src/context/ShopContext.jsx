@@ -1,5 +1,3 @@
-
-
 export const ShopContext = React.createContext()
 
 const ShopContextProvider = (props) => {

@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 
 const LoginForm = ({ onLogin }) => {
+  const { login: authLogin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,17 +17,20 @@ const LoginForm = ({ onLogin }) => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/login', {
+      const res = await fetch('http://localhost:5000/user/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem('userAuthToken', data.token);
+      if (res.ok) {
+        // Use the AuthContext login function
+        authLogin(data.user, data.token);
         if (onLogin) onLogin();
+        // Navigate to the previous page or home
+        navigate(from, { replace: true });
       } else {
-        setError(data.message || 'Login failed');
+        setError(data.message || 'Invalid email or password');
       }
     } catch (err) {
       setError('Server error. Please try again.');

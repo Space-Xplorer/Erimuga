@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUserCircle } from 'react-icons/fa';
+import { useAuth } from './AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef();
-  const isLoggedIn = Boolean(localStorage.getItem('userAuthToken'));
+  const navigate = useNavigate();
+  const { isAuthenticated, user, logout: authLogout } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -70,11 +72,11 @@ const Navbar = () => {
           </div>
 
           {/* Profile or Sign In */}
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <div className="relative group" ref={profileRef}>
               <div className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300 focus:outline-none cursor-pointer">
                 <FaUserCircle className="text-lg" />
-                <span>Profile</span>
+                <span>{user?.name || 'Profile'}</span>
               </div>
               {/* Dropdown menu */}
               <div className="hidden group-hover:block absolute right-0 pt-4 z-50">
@@ -93,19 +95,16 @@ const Navbar = () => {
                   >
                     Orders
                   </Link>
-                  <Link
-                    to="/logout"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded text-red-600"
-                    onClick={e => {
-                      e.preventDefault();
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-red-600"
+                    onClick={() => {
                       setIsProfileOpen(false);
-                      localStorage.removeItem('userAuthToken');
-                      // Add logout logic here
-                      window.location.href = '/login';
+                      authLogout();
+                      navigate('/login');
                     }}
                   >
                     Logout
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>

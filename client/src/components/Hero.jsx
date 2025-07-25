@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const images = [
-  'https://images.unsplash.com/photo-1585241936935-84dc81d8fb06?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1600180758890-eac0269a216f?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1585241747280-2434d2db0293?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1630409353282-1e79ef34f66e?auto=format&fit=crop&w=800&q=80',
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Assamese_couple_in_traditional_attire.jpg/2560px-Assamese_couple_in_traditional_attire.jpg',
+  'https://www.poojn.in/wp-content/uploads/2025/04/Assams-Rich-Culture-PeopleAttireandLanguage-Explained.jpeg.jpg',
 ];
 
 const Hero = () => {
