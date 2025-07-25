@@ -9,8 +9,8 @@ const productSchema = new Schema({
   subcategory: { type: String, required: true },
   description: { type: String, required: true },
   price: { type: Number, required: true },
-  image: { type: [String], required: true },
-  isBestSeller: { type: String, enum: ['yes', 'no'], default: 'no' }, // ✅ Added
+  image: { type: [String], required: true }, // Store local image paths
+  isBestSeller: { type: String, enum: ['yes', 'no'], default: 'no' },
   date: { type: Date, default: Date.now }
 });
 
