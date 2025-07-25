@@ -69,24 +69,6 @@ const Hero = () => {
       </button>
     </section>
   );
-
-  //         {/* Carousel Controls */}
-  //         <button
-  //           onClick={prevSlide}
-  //           className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56] z-10"
-  //         >
-  //           <FaChevronLeft />
-  //         </button>
-  //         <button
-  //           onClick={nextSlide}
-  //           className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56] z-10"
-  //         >
-  //           <FaChevronRight />
-  //         </button>
-  //       </div>
-  //     </div>
-  //   </section>
-  // );
 };
 
 export default Hero;
