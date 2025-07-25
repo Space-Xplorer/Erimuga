@@ -27,7 +27,7 @@ const LatestCollection = () => {
     };
 
     fetchLatestProducts();
-  }, []);
+  }, [productsPerRow]);
 
   if (loading) return <div className="text-center py-8">Loading latest collection...</div>;
   if (error) return <div className="text-center py-8 text-red-600">Error: {error}</div>;
@@ -36,10 +36,12 @@ const LatestCollection = () => {
     <section className='bg-gray-50 py-12'>
       <div className='container mx-auto px-6'>
         <h2 className='text-3xl font-bold mb-8 text-center'>Latest Collection</h2>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-center max-w-[${productsPerRow * 300}px] mx-auto`}>
-          {products.map((product) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
+        <div className='max-w-screen-xl mx-auto'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

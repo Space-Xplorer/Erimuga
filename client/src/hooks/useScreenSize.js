@@ -1,25 +1,39 @@
 import { useState, useEffect } from 'react';
 
 const useScreenSize = () => {
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const [productCount, setProductCount] = useState(getInitialCount());
+
+  function getInitialCount() {
+    const width = window.innerWidth;
+    if (width >= 1024) return 4;      // lg breakpoint
+    if (width >= 768) return 3;       // md breakpoint
+    if (width >= 640) return 2;       // sm breakpoint
+    return 1;                         // mobile
+  }
 
   useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
+    function handleResize() {
+      const newCount = getInitialCount();
+      if (newCount !== productCount) {
+        setProductCount(newCount);
+      }
+    }
+
+    // Add debounced resize listener
+    let timeoutId = null;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleResize, 150);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timeoutId);
+    };
+  }, [productCount]);
 
-  const getProductCount = () => {
-    if (screenWidth >= 1024) return 4;      // lg: 4 columns
-    if (screenWidth >= 768) return 3;       // md: 3 columns
-    if (screenWidth >= 640) return 2;       // sm: 2 columns
-    return 1;                               // mobile: 1 column
-  };
-
-  return getProductCount();
+  return productCount;
 };
 
 export default useScreenSize;
