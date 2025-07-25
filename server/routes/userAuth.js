@@ -5,6 +5,16 @@ import userModel from "../models/userModel.js";
 
 const router = express.Router();
 
+// server/routes/user.js (or auth.js)
+router.get('/me', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json(req.user);
+  } else {
+    res.status(401).json({ error: "Not authenticated" });
+  }
+});
+
+
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, userType = "user" } = req.body;

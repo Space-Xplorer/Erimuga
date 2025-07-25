@@ -15,6 +15,8 @@ const addtocart = async (req, res) => {
       user.cartData[productId] = quantity;
     }
 
+    user.markModified('cartData');
+
     await user.save();
     res.status(200).json({ message: "Product added to cart", cart: user.cartData });
   } catch (error) {
