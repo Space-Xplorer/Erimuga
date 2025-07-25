@@ -6,6 +6,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef();
+  const isLoggedIn = Boolean(localStorage.getItem('userAuthToken'));
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -68,44 +69,51 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Profile with Dropdown */}
-          <div className="relative group" ref={profileRef}>
-            <div className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300 focus:outline-none cursor-pointer">
-              <FaUserCircle className="text-lg" />
-              <span>Profile</span>
-            </div>
-            {/* Dropdown menu */}
-            <div className="hidden group-hover:block absolute right-0 pt-4 z-50">
-              <div className="cursor-pointer w-40 bg-white text-black rounded shadow-md transition-all duration-150">
-                <Link
-                  to="/dashboard"
-                  className="block px-4 py-2 hover:bg-gray-100 rounded"
-                  onClick={() => setIsProfileOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/orders"
-                  className="block px-4 py-2 hover:bg-gray-100 rounded"
-                  onClick={() => setIsProfileOpen(false)}
-                >
-                  Orders
-                </Link>
-                <Link
-                  to="/logout"
-                  className="block px-4 py-2 hover:bg-gray-100 rounded text-red-600"
-                  onClick={e => {
-                    e.preventDefault();
-                    setIsProfileOpen(false);
-                    // Add logout logic here
-                    alert("Logged out!");
-                  }}
-                >
-                  Logout
-                </Link>
+          {/* Profile or Sign In */}
+          {isLoggedIn ? (
+            <div className="relative group" ref={profileRef}>
+              <div className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300 focus:outline-none cursor-pointer">
+                <FaUserCircle className="text-lg" />
+                <span>Profile</span>
+              </div>
+              {/* Dropdown menu */}
+              <div className="hidden group-hover:block absolute right-0 pt-4 z-50">
+                <div className="cursor-pointer w-40 bg-white text-black rounded shadow-md transition-all duration-150">
+                  <Link
+                    to="/dashboard"
+                    className="block px-4 py-2 hover:bg-gray-100 rounded"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/orders"
+                    className="block px-4 py-2 hover:bg-gray-100 rounded"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    Orders
+                  </Link>
+                  <Link
+                    to="/logout"
+                    className="block px-4 py-2 hover:bg-gray-100 rounded text-red-600"
+                    onClick={e => {
+                      e.preventDefault();
+                      setIsProfileOpen(false);
+                      localStorage.removeItem('userAuthToken');
+                      // Add logout logic here
+                      window.location.href = '/login';
+                    }}
+                  >
+                    Logout
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-1 py-2 md:p-0">
+              <Link to="/login" className="bg-yellow-300 text-[#B22222] font-semibold px-4 py-2 rounded hover:bg-yellow-400 transition-colors duration-200">Sign In</Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>
