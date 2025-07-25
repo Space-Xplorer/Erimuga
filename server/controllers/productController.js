@@ -8,10 +8,19 @@ const addProduct = async (req, res) => {
   try {
     const { name, mainCategory, apparelType, subcategory, description, price } = req.body;
     
-    // Handle local file paths
-    let imagePaths = [];
+    // Upload images to Cloudinary
+    let cloudinaryUrls = [];
     if (req.files && req.files.length > 0) {
-      imagePaths = req.files.map(file => `/${file.filename}`);
+      const uploadPromises = req.files.map(async (file) => {
+        const result = await uploadToCloudinary(file.path, {
+          folder: `erimuga/products/${mainCategory}`,
+        });
+        // Delete the local file after upload
+        fs.unlinkSync(file.path);
+        return result.secure_url;
+      });
+      
+      cloudinaryUrls = await Promise.all(uploadPromises);
     }
 
     const newProduct = new Product({
@@ -21,7 +30,7 @@ const addProduct = async (req, res) => {
       subcategory,
       description,
       price,
-      image: imagePaths
+      image: cloudinaryUrls
     });
 
     await newProduct.save();

@@ -15,6 +15,12 @@ cloudinary.config({
 // Log successful configuration
 console.log('Cloudinary configured successfully');
 
+// Function to upload multiple images
+export const uploadMultipleImages = async (images, options = {}) => {
+    const uploadPromises = images.map(image => uploadToCloudinary(image, options));
+    return Promise.all(uploadPromises);
+};
+
 // Function to check if an asset exists in Cloudinary
 export const checkAssetExists = async (public_id) => {
     try {
@@ -36,7 +42,7 @@ const sanitizePublicId = (filename) => {
         .toLowerCase();              // Convert to lowercase
 };
 
-// Function to upload image to cloudinary
+// Function to upload image to cloudinary with optimizations
 export const uploadToCloudinary = async (imagePath, options = {}) => {
     try {
         const sanitizedFilename = sanitizePublicId(path.basename(imagePath, path.extname(imagePath)));
@@ -44,6 +50,16 @@ export const uploadToCloudinary = async (imagePath, options = {}) => {
         // Create the full public_id including folder
         const folder = options.folder || 'erimuga';
         const public_id = `${folder}/${sanitizedFilename}`;
+        
+        // Default transformation options
+        const defaultTransformation = [
+            { width: 1000, crop: "scale" },
+            { quality: "auto:good" },
+            { fetch_format: "auto" }
+        ];
+        
+        // Merge default transformations with any custom ones
+        const transformation = [...defaultTransformation, ...(options.transformation || [])];
         
         // Check if image already exists
         const exists = await checkAssetExists(public_id);
@@ -74,17 +90,17 @@ export const uploadToCloudinary = async (imagePath, options = {}) => {
     }
 };
 
-// Function to handle multiple image uploads
-export const uploadMultipleImages = async (files) => {
-    try {
-        const uploadPromises = files.map(file => uploadToCloudinary(file.path));
-        const results = await Promise.all(uploadPromises);
-        return results;
-    } catch (error) {
-        console.error('Multiple upload error:', error);
-        throw new Error('Failed to upload multiple images');
-    }
-};
+// // Function to handle multiple image uploads
+// export const uploadMultipleImages = async (files) => {
+//     try {
+//         const uploadPromises = files.map(file => uploadToCloudinary(file.path));
+//         const results = await Promise.all(uploadPromises);
+//         return results;
+//     } catch (error) {
+//         console.error('Multiple upload error:', error);
+//         throw new Error('Failed to upload multiple images');
+//     }
+// };
 
 export default cloudinary;
    

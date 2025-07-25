@@ -57,13 +57,13 @@ const Hero = () => {
       {/* Carousel Controls */}
       <button
         onClick={prevSlide}
-        className="absolute z-20 top-1/2 left-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56]"
+        className="absolute z-20 top-1/2 left-4 transform -translate-y-1/2 bg-none text-white p-2 rounded-full hover:bg-[#c88d56]/30"
       >
         <FaChevronLeft />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute z-20 top-1/2 right-4 transform -translate-y-1/2 bg-[#D4A373] text-white p-2 rounded-full hover:bg-[#c88d56]"
+        className="absolute z-20 top-1/2 right-4 transform -translate-y-1/2 bg-none text-white p-2 rounded-full hover:bg-[#c88d56]/30"
       >
         <FaChevronRight />
       </button>
