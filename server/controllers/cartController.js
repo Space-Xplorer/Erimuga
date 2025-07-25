@@ -47,16 +47,37 @@ const updateincart = async (req, res) => {
 // Get all items in cart
 const getfromCart = async (req, res) => {
   try {
+    // 1. Get userId from the request query
     const { userId } = req.query;
-
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+    // 2. Find the user in the database
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // 3. Access the cart data object (or an empty object if it doesn't exist)
+    const cartObject = user.cartData || {};
 
-    res.status(200).json({ cart: user.cartData });
+    // 4. Transform the cart object into an array
+    // Object.keys() gets all item IDs.
+    // .map() iterates over them to create the desired array structure.
+    const cartArray = Object.keys(cartObject).map(itemId => {
+      return {
+        itemId: itemId,
+        quantity: cartObject[itemId]
+      };
+    });
+    // 5. Send the transformed cart array in the response
+    res.status(200).json({ cart: cartArray });
+
   } catch (error) {
+    console.error("Error in getfromCart:", error); // Log the full error for debugging
     res.status(500).json({ error: "Failed to get cart", details: error.message });
   }
 };
+
 
 const removefromcart = async (req, res) => {
   try {

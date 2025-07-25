@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext(null);
 
@@ -26,11 +27,24 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('userAuthToken');
-    localStorage.removeItem('user');
+    const logout = async () => {
+    try {
+      // 1. Make a POST request to your backend's logout endpoint
+      // This tells the server to invalidate the session cookie.
+      await axios.post('http://localhost:5000/user/auth/logout', {}, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      // Log an error if the server-side logout fails, but proceed with
+      // client-side cleanup anyway.
+      console.error("Server-side logout failed:", error);
+    } finally {
+      // 2. Clear all client-side authentication data
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('userAuthToken');
+      localStorage.removeItem('user');
+    }
   };
 
   const value = {

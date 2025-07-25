@@ -75,7 +75,7 @@ router.post("/login", async (req, res) => {
 });
 
 // Logout
-router.get("/logout", (req, res) => {
+router.post("/logout", (req, res) => {
   req.logout(() => {
     res.status(200).json({ message: "Logged out" });
   });
