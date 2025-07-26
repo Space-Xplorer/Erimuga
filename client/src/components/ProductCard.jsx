@@ -27,11 +27,12 @@ const ProductCard = ({ product }) => {
             New
           </div>
         )}
-        <img 
-          src={product.image && product.image[0] ? product.image[0] : ''} 
-          alt={product.name} 
-          className='w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110' 
-        />
+      <img 
+        src={product.image && product.image[0] ? product.image[0] : '/placeholder.jpg'} 
+        alt={product.name || 'Product image'} 
+        className='w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110' 
+      />
+
         <div className='absolute inset-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
       </div>
       <div className='p-4'>

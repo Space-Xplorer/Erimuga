@@ -37,29 +37,35 @@ const Cart = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-6">
             {cartItems.map((item) => {
-              const product = products.find((p) => p._id === item.itemId);
+              const product = products.find(
+                (p) => p._id === item.productId // ✅ updated lookup
+              );
 
               if (!product) {
-                console.warn(`Product with ID ${item.itemId} not found in products list.`);
+                console.warn(`Product with ID ${item.productId} not found in products list.`);
                 return null;
               }
 
               return (
                 <div
-                  key={item.itemId}
+                  key={item.productId}
                   className="flex items-center bg-white p-4 md:p-6 rounded-xl shadow gap-4"
                 >
                   <img
-                    src={product.image[0]}
+                    src={product.image?.[0]}
                     alt={product.name}
                     className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg"
                   />
 
                   <div className="flex-grow">
                     <p className="font-semibold text-lg text-gray-800">{product.name}</p>
-                    <p className="text-sm text-gray-500 mb-1">₹{product.price}</p>
+                    <p className="text-sm text-gray-500">Size: {item.size || 'N/A'}</p>
+                    <p className="text-sm text-gray-500 mb-1">Color: {item.color || 'N/A'}</p>
+                    <p className="text-sm text-gray-500 mb-1">
+                      ₹{item.priceAtPurchase || product.price} per item
+                    </p>
                     <button
-                      onClick={() => removeFromCart(item.itemId)}
+                      onClick={() => removeFromCart(item.productId)}
                       className="text-sm text-red-500 hover:underline"
                     >
                       Remove
@@ -71,11 +77,13 @@ const Cart = () => {
                       type="number"
                       value={item.quantity}
                       min="1"
-                      onChange={(e) => updateQuantity(item.itemId, Number(e.target.value))}
+                      onChange={(e) =>
+                        updateQuantity(item.productId, Number(e.target.value))
+                      }
                       className="w-16 text-center border border-gray-300 rounded-md py-1 px-2"
                     />
                     <p className="w-24 text-right font-bold text-gray-800">
-                      ₹{(product.price * item.quantity).toFixed(2)}
+                      ₹{((item.priceAtPurchase || product.price) * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 </div>

@@ -1,28 +1,72 @@
 import User from '../models/userModel.js';
+import Product from '../models/productModel.js';
 import mongoose from 'mongoose';
 
 // Add product to cart
+// const addtocart = async (req, res) => {
+//   try {
+//     const { userId, productId, quantity } = req.body;
+
+//     const user = await User.findById(userId);
+//     if (!user) return res.status(404).json({ error: "User not found" });
+
+//     if (user.cartData[productId]) {
+//       user.cartData[productId] += quantity;
+//     } else {
+//       user.cartData[productId] = quantity;
+//     }
+
+//     user.markModified('cartData');
+
+//     await user.save();
+//     res.status(200).json({ message: "Product added to cart", cart: user.cartData });
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to add to cart", details: error.message });
+//   }
+// };
+
 const addtocart = async (req, res) => {
   try {
-    const { userId, productId, quantity } = req.body;
+    const { userId, productId, quantity, size, color, priceAtPurchase } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (user.cartData[productId]) {
-      user.cartData[productId] += quantity;
+    // Ensure cartData is initialized
+    if (!Array.isArray(user.cartData)) user.cartData = [];
+
+    // Check if the product with same attributes already exists
+    const existingItem = user.cartData.find(
+      item =>
+        item.productId.toString() === productId &&
+        item.size === size &&
+        item.color === color
+    );
+
+    if (existingItem) {
+      // If same product + attributes exist, increase quantity
+      existingItem.quantity += quantity;
     } else {
-      user.cartData[productId] = quantity;
+      // Add new item to cart
+      user.cartData.push({
+        productId,
+        quantity,
+        size,
+        color,
+        priceAtPurchase,
+      });
     }
 
     user.markModified('cartData');
-
     await user.save();
+
     res.status(200).json({ message: "Product added to cart", cart: user.cartData });
+
   } catch (error) {
     res.status(500).json({ error: "Failed to add to cart", details: error.message });
   }
 };
+
 
 // Update quantity of product in cart
 const updateincart = async (req, res) => {
@@ -47,36 +91,25 @@ const updateincart = async (req, res) => {
 // Get all items in cart
 const getfromCart = async (req, res) => {
   try {
-    // 1. Get userId from the request query
     const { userId } = req.query;
     if (!userId) {
       return res.status(400).json({ error: "User ID is required" });
     }
-    // 2. Find the user in the database
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    // 3. Access the cart data object (or an empty object if it doesn't exist)
-    const cartObject = user.cartData || {};
 
-    // 4. Transform the cart object into an array
-    // Object.keys() gets all item IDs.
-    // .map() iterates over them to create the desired array structure.
-    const cartArray = Object.keys(cartObject).map(itemId => {
-      return {
-        itemId: itemId,
-        quantity: cartObject[itemId]
-      };
-    });
-    // 5. Send the transformed cart array in the response
+    const cartArray = user.cartData || [];
+
     res.status(200).json({ cart: cartArray });
-
   } catch (error) {
-    console.error("Error in getfromCart:", error); // Log the full error for debugging
+    console.error("Error in getfromCart:", error);
     res.status(500).json({ error: "Failed to get cart", details: error.message });
   }
 };
+
 
 
 const removefromcart = async (req, res) => {
