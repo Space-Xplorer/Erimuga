@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from './Auth/AuthContext';
+import { useContext } from 'react';
+import { ShopContext } from '../context/ShopContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -9,6 +11,11 @@ const Navbar = () => {
   const profileRef = useRef();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout: authLogout } = useAuth();
+  const { cartItems } = useContext(ShopContext);
+  
+  const getTotalCartItems = () => {
+    return Object.values(cartItems).reduce((total, quantity) => total + quantity, 0);
+  };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -66,7 +73,11 @@ const Navbar = () => {
             <Link to="/cart" className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300">
               <div className="relative">
                 <FaShoppingCart className="text-lg" />
-                <span className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full px-1 text-xs min-w-[18px] text-center">0</span>
+                {getTotalCartItems() > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full px-1 text-xs min-w-[18px] text-center">
+                    {getTotalCartItems()}
+                  </span>
+                )}
               </div>
             </Link>
           </div>

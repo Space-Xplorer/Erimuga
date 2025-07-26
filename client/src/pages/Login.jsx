@@ -20,7 +20,7 @@ const Login = () => {
         <h2 className='text-2xl font-bold mb-6 text-center'>Login</h2>
         <LoginForm onLogin={handleLogin} />
         {/* <button type="submit" className="w-full bg-black text-[#FFD700] py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition">Login</button> */}
-            <a href="http://localhost:8080/user/auth/google" className="w-full flex items-center justify-center gap-2 mt-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition shadow">
+            <a href="http://localhost:5000/user/auth/google" className="w-full flex items-center justify-center gap-2 mt-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition shadow">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png" alt="Google" className="h-5 w-5" loading="lazy" />
               log in with Google
             </a>
