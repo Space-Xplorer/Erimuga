@@ -13,6 +13,7 @@ import Orders from './pages/Orders';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import Checkout from './pages/Checkout';
 
 
 const App = () => {
@@ -31,9 +32,7 @@ const App = () => {
           <Route path='/signup' element={<Signup />} />
           <Route path='/place-order' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} />
           <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-          <Route path='/place-order' element={<PlaceOrder />} />
-          <Route path='/orders' element={<Orders />} />
-
+          <Route path='/checkout' element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
       </Routes>
       <Footer />
       

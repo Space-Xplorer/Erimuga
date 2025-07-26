@@ -2,29 +2,6 @@ import User from '../models/userModel.js';
 import Product from '../models/productModel.js';
 import mongoose from 'mongoose';
 
-// Add product to cart
-// const addtocart = async (req, res) => {
-//   try {
-//     const { userId, productId, quantity } = req.body;
-
-//     const user = await User.findById(userId);
-//     if (!user) return res.status(404).json({ error: "User not found" });
-
-//     if (user.cartData[productId]) {
-//       user.cartData[productId] += quantity;
-//     } else {
-//       user.cartData[productId] = quantity;
-//     }
-
-//     user.markModified('cartData');
-
-//     await user.save();
-//     res.status(200).json({ message: "Product added to cart", cart: user.cartData });
-//   } catch (error) {
-//     res.status(500).json({ error: "Failed to add to cart", details: error.message });
-//   }
-// };
-
 const addtocart = async (req, res) => {
   try {
     const { userId, productId, quantity, size, color, priceAtPurchase } = req.body;
