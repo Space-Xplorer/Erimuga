@@ -6,7 +6,7 @@ export const ShopContext = createContext(null);
 
 const ShopContextProvider = ({ children }) => {
   const { isAuthenticated, user: authUser } = useAuth();
-  const [cartItems, setCartItems] = useState({});
+  const [cartItems, setCartItems] = useState([]); // ✅ FIXED
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(true);
@@ -45,70 +45,67 @@ const ShopContextProvider = ({ children }) => {
   }, [isAuthenticated, authUser]);
 
   const getCartDataFromBackend = async (userId) => {
-    try {
-      const res = await axios.get(`http://localhost:5000/cart/get?userId=${userId}`, { withCredentials: true });
-      const cartData = res.data.cartData || {};
-      setCartItems(cartData);
-      console.log("✅ Cart state updated with:", cartData);
-    } catch (error) {
-      console.error("Failed to fetch cart from backend:", error);
-      setCartItems({});
+  try {
+    const res = await axios.get(`http://localhost:5000/cart/get?userId=${userId}`, {
+      withCredentials: true
+    });
+    const cartArray = res.data.cart;
+    if (Array.isArray(cartArray)) {
+      setCartItems(cartArray);
+      console.log("✅ Cart state updated with:", cartArray);
+    } else {
+      console.error("Data received for cart is not an array:", cartArray);
+      setCartItems([]);
     }
+  } catch (error) {
+    console.error("❌ Failed to fetch cart from backend:", error);
+    setCartItems([]);
+  }
+};
+
+  const addToCart = async (product, quantity = 1, size, color) => {
+  // 1. Check for authentication using the user object from context
+  if (!isAuthenticated || !authUser?._id) {
+    console.error("User is not authenticated. Cannot add to cart.");
+    // Optionally, show a message to the user to log in.
+    return;
+  }
+
+  // 2. Prepare the data payload for the API
+  const cartItemData = {
+    // Use the user ID from the context
+    userId: authUser._id,
+    productId: product._id,
+    quantity: quantity,
+    size: size,
+    color: color,
+    priceAtPurchase: product.price
   };
 
-  const addToCart = async (product, quantity = 1) => {
-    if (!isAuthenticated || !authUser) {
-      throw new Error("User must be logged in to add items to cart");
+  // 3. Make the API call (this part is already correct)
+  try {
+    const response = await fetch('http://localhost:5000/cart/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(cartItemData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to add item to cart.");
     }
 
-    try {
-      const response = await axios.post(
-        'http://localhost:5000/cart/add',
-        {
-          userId: authUser._id,
-          productId: product._id,
-          quantity: quantity
-        },
-        { withCredentials: true }
-      );
+    const data = await response.json();
+    setCartItems(data.cart); 
 
-      if (response.data.cartData) {
-        setCartItems(response.data.cartData);
-      } else {
-        await getCartDataFromBackend(authUser._id);
-      }
-      return response.data;
-    } catch (error) {
-      console.error("Failed to add item to cart:", error);
-      throw error;
-    }
-  };
+    console.log("Success:", data.message);
 
-  const removeFromCart = async (productId) => {
-    if (!isAuthenticated || !authUser) {
-      throw new Error("User must be logged in to remove items from cart");
-    }
-
-    try {
-      const response = await axios.post(
-        'http://localhost:5000/cart/remove',
-        {
-          userId: authUser._id,
-          productId: productId
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data.cartData) {
-        setCartItems(response.data.cartData);
-      } else {
-        await getCartDataFromBackend(authUser._id);
-      }
-    } catch (error) {
-      console.error("Failed to remove item from cart:", error);
-      throw error;
-    }
-  };
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+  }
+};
 
   const updateQuantity = async (productId, quantity) => {
     if (!isAuthenticated || !authUser) {
@@ -137,12 +134,14 @@ const ShopContextProvider = ({ children }) => {
     }
   };
 
-  const getTotalAmount = () => {
-    return Object.entries(cartItems).reduce((total, [productId, quantity]) => {
-      const product = products.find(p => p._id === productId);
-      return total + (product?.price || 0) * quantity;
-    }, 0);
-  };
+const getTotalAmount = () => {
+  if (!Array.isArray(cartItems)) return 0; // Safety
+  return cartItems.reduce((total, item) => {
+    const productPrice = item.priceAtPurchase || 0;
+    return total + productPrice * item.quantity;
+  }, 0);
+};
+
 
   const getTotalItems = () => {
     return Object.values(cartItems).reduce((total, quantity) => total + quantity, 0);

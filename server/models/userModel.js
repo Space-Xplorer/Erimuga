@@ -6,9 +6,19 @@ const userSchema = new mongoose.Schema({
   password: { type: String }, // optional for OAuth users
   googleId: { type: String }, // to store Google OAuth ID
   usertype: { type: String, default: 'user' }, // 'user' or 'admin'
-  cartData: { type: Object, default: {} },
-  
-  // ✅ New field for user role/type
+  cartData: {
+  type: [
+    {
+      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+      quantity: { type: Number, required: true, min: 1 },
+      priceAtPurchase: { type: Number }, // optional - snapshot price
+      size: { type: String },            // optional - if applicable
+      color: { type: String },           // optional - if applicable
+    }
+  ],
+  default: []
+},
+
   userType: {
     type: String,
     enum: ['user', 'admin'],
