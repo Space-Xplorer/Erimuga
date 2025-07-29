@@ -1,55 +1,64 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../components/Auth/AuthContext';
 
 export const ShopContext = createContext(null);
 
 const ShopContextProvider = ({ children }) => {
-  // Get authentication state from AuthContext
   const { isAuthenticated, user: authUser } = useAuth();
-
   const [cartItems, setCartItems] = useState({});
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState('');
+  const [showSearch, setShowSearch] = useState(true);
+  const [sort, setSort] = useState('default');
+  const [filter, setFilter] = useState({ category: '', priceRange: [0, 10000] });
 
-  // --- EFFECT TO FETCH PRODUCTS (Public Data) ---
+  const Value = {
+    products,
+    cartItems,
+    search,
+    setSearch,
+    showSearch,
+    setShowSearch,
+    sort,
+    setSort,
+    filter,
+    setFilter
+  }
+
+  // Fetch products (Public Data)
   useEffect(() => {
     axios.get('http://localhost:5000/products')
       .then((res) => setProducts(res.data))
       .catch((err) => console.error('Error fetching products:', err));
   }, []);
 
-  // --- EFFECT TO FETCH USER CART (Protected Data) ---
-  // This effect now depends on the authentication state.
+  // Fetch user cart (Protected Data)
   useEffect(() => {
-    // Only fetch cart data if the user is authenticated and we have their info.
     if (isAuthenticated && authUser?._id) {
       console.log("User is authenticated, fetching cart...");
       getCartDataFromBackend(authUser._id);
     } else {
-      // If the user logs out, clear the cart items from state.
       console.log("User is not authenticated, clearing cart.");
-      setCartItems([]);
+      setCartItems({});
     }
-  }, [isAuthenticated, authUser]); // Re-run this logic when auth state changes
+  }, [isAuthenticated, authUser]);
 
   const getCartDataFromBackend = async (userId) => {
     try {
       const res = await axios.get(`http://localhost:5000/cart/get?userId=${userId}`, { withCredentials: true });
-      const cartData = res.data.cart || {};
+      const cartData = res.data.cartData || {};
       setCartItems(cartData);
       console.log("✅ Cart state updated with:", cartData);
     } catch (error) {
       console.error("Failed to fetch cart from backend:", error);
-      setCartItems([]);
+      setCartItems({});
     }
   };
 
-  // --- All other cart functions remain the same ---
-
   const addToCart = async (product, quantity = 1) => {
     if (!isAuthenticated || !authUser) {
-      console.error("User must be logged in to add items to cart");
-      return;
+      throw new Error("User must be logged in to add items to cart");
     }
 
     try {
@@ -63,69 +72,119 @@ const ShopContextProvider = ({ children }) => {
         { withCredentials: true }
       );
 
-      if (response.data.success) {
-        // Update local cart state with the new cart data from backend
+      if (response.data.cartData) {
+        setCartItems(response.data.cartData);
+      } else {
+        await getCartDataFromBackend(authUser._id);
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Failed to add item to cart:", error);
+      throw error;
+    }
+  };
+
+  const removeFromCart = async (productId) => {
+    if (!isAuthenticated || !authUser) {
+      throw new Error("User must be logged in to remove items from cart");
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/cart/remove',
+        {
+          userId: authUser._id,
+          productId: productId
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.cartData) {
+        setCartItems(response.data.cartData);
+      } else {
         await getCartDataFromBackend(authUser._id);
       }
     } catch (error) {
-      console.error("Failed to add item to cart:", error);
+      console.error("Failed to remove item from cart:", error);
+      throw error;
     }
   };
 
-  const removeFromCart = (itemId) => {
-    setCartItems(prev => prev.filter(item => item.itemId !== itemId));
-  };
+  const updateQuantity = async (productId, quantity) => {
+    if (!isAuthenticated || !authUser) {
+      throw new Error("User must be logged in to update cart");
+    }
 
-  const updateQuantity = (itemId, quantity) => {
-    setCartItems(prev =>
-      prev.map(item =>
-        item.itemId === itemId ? { ...item, quantity } : item
-      )
-    );
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/cart/update',
+        {
+          userId: authUser._id,
+          productId: productId,
+          quantity: quantity
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.cartData) {
+        setCartItems(response.data.cartData);
+      } else {
+        await getCartDataFromBackend(authUser._id);
+      }
+    } catch (error) {
+      console.error("Failed to update cart quantity:", error);
+      throw error;
+    }
   };
 
   const getTotalAmount = () => {
-    return cartItems.reduce((acc, item) => {
-      const product = products.find(p => p._id === item.itemId);
-      return acc + (product?.price || 0) * item.quantity;
+    return Object.entries(cartItems).reduce((total, [productId, quantity]) => {
+      const product = products.find(p => p._id === productId);
+      return total + (product?.price || 0) * quantity;
     }, 0);
   };
 
+  const getTotalItems = () => {
+    return Object.values(cartItems).reduce((total, quantity) => total + quantity, 0);
+  };
+
   const placeOrder = async (address, paymentMethod = "COD") => {
-    // Use the user from the AuthContext
     if (!authUser) {
-        console.error("Cannot place order, user not logged in.");
-        return;
+      throw new Error("Cannot place order, user not logged in.");
     }
-    const orderPayload = {
-      userId: authUser._id,
-      items: cartItems,
-      amount: getTotalAmount(),
-      address,
-      paymentMethod,
-      payment: paymentMethod !== "COD",
-      date: Date.now()
-    };
 
     try {
-      const res = await axios.post('/api/orders', orderPayload, { withCredentials: true });
-      setCartItems([]);
+      const orderPayload = {
+        userId: authUser._id,
+        items: Object.entries(cartItems).map(([productId, quantity]) => ({
+          productId,
+          quantity
+        })),
+        amount: getTotalAmount(),
+        address,
+        paymentMethod,
+        payment: paymentMethod !== "COD",
+        date: Date.now()
+      };
+
+      const res = await axios.post('http://localhost:5000/orders/create', orderPayload, { withCredentials: true });
+      setCartItems({});
       return res.data;
-    } catch (err) {
-      throw err.response?.data || err;
+    } catch (error) {
+      console.error("Failed to place order:", error);
+      throw error;
     }
   };
 
   const value = {
-    // Note: we no longer provide 'user' from this context, it should be consumed from useAuth()
     products,
     cartItems,
-    setCartItems,
     addToCart,
     removeFromCart,
     updateQuantity,
     getTotalAmount,
-    placeOrder,
+    getTotalItems,
+    placeOrder
   };
 
   return (

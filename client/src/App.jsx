@@ -13,12 +13,14 @@ import Orders from './pages/Orders';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import SearchBar from './components/SearchBar';
 
 
 const App = () => {
   return (
     <div className='flex flex-col min-h-screen'>
       <Navbar />
+      <SearchBar />
       <Routes>
 
           <Route path='/' element={<Home />} />
