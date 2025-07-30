@@ -13,7 +13,7 @@ const LoginForm = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(e);
     setError('');
     setLoading(true);
     try {
