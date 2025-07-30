@@ -20,6 +20,7 @@ const LoginForm = ({ onLogin }) => {
       const res = await fetch('http://localhost:5000/user/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Ensure cookies are sent with the request
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();

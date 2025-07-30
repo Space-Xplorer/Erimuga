@@ -1,6 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { ShopContext } from '../context/ShopContext';
+import React, { useContext, useState } from 'react';
 import axios from 'axios';
+import { ShopContext } from '../context/ShopContext';
+
+const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 const Checkout = () => {
   const { cartItems, getTotalAmount, clearCart } = useContext(ShopContext);
@@ -9,46 +11,111 @@ const Checkout = () => {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
   });
 
   const totalAmount = getTotalAmount();
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
   const handleInputChange = (e) => {
     setUserDetails({ ...userDetails, [e.target.name]: e.target.value });
   };
 
   const handlePlaceOrder = async () => {
+    const items = cartItems.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      priceAtPurchase: item.priceAtPurchase,
+    }));
+
     if (paymentMethod === 'cod') {
-      alert('Order placed successfully via Cash on Delivery!');
-      clearCart();
-    } else {
-      const razorpayOrder = await axios.post('http://localhost:5000/api/razorpay/order', {
-        amount: totalAmount * 100 // Razorpay takes amount in paise
-      });
+      try {
+        await axios.post(
+          'http://localhost:5000/orders/place-order/cod',
+          {
+            userID: 'someUserId', // Replace with actual user ID logic
+            items,
+            amount: totalAmount,
+            address: userDetails,
+          },
+          { withCredentials: true }
+        );
+        alert('Order placed successfully via Cash on Delivery!');
+        clearCart();
+      } catch (err) {
+        console.error('COD Order error:', err);
+        alert('Failed to place COD order.');
+      }
+      return;
+    }
+
+    const razorpayLoaded = await loadRazorpayScript();
+    if (!razorpayLoaded) {
+      alert('Failed to load Razorpay. Try again.');
+      return;
+    }
+
+    try {
+      const razorpayOrder = await axios.post(
+        'http://localhost:5000/orders/place-order/razorpay',
+        { amount: totalAmount * 100 },
+        { withCredentials: true }
+      );
 
       const options = {
-        key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
+        key: razorpayKey,
         amount: razorpayOrder.data.amount,
         currency: 'INR',
         name: 'MyShop Checkout',
         description: 'Order Payment',
-        handler: function (response) {
-          alert('Payment successful! Payment ID: ' + response.razorpay_payment_id);
-          clearCart();
+        order_id: razorpayOrder.data.id,
+        handler: async function (response) {
+          try {
+            await axios.post(
+              'http://localhost:5000/orders/verify-payment',
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                userID: 'someUserId', // Replace with actual user ID logic
+                items,
+                amount: totalAmount,
+                address: userDetails,
+              },
+              { withCredentials: true }
+            );
+
+            alert('Payment successful and order placed!');
+            clearCart();
+          } catch (err) {
+            console.error('Payment verification error:', err);
+            alert('Payment succeeded but order saving failed.');
+          }
         },
         prefill: {
           name: userDetails.name,
           email: userDetails.email,
-          contact: userDetails.phone
+          contact: userDetails.phone,
         },
         theme: {
-          color: '#b22222'
-        }
+          color: '#b22222',
+        },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
+    } catch (err) {
+      console.error('Razorpay order creation error:', err);
+      alert('Something went wrong with payment.');
     }
   };
 
@@ -124,21 +191,22 @@ const Checkout = () => {
         {/* Cart Summary */}
         <div className="bg-white shadow-md rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4 text-[#b22222]">Cart Summary</h2>
-          {Array.isArray(cartItems) && cartItems.length > 0 ? (
+          {cartItems.length > 0 ? (
             <ul className="space-y-4">
               {cartItems.map((item, index) => (
                 <li key={index} className="border-b pb-2">
                   <div className="flex justify-between">
-                    <span className="font-medium">{item.productId.name || 'Product Name'}</span>
+                    <span className="font-medium">
+                      {item.productId?.name || 'Unnamed Product'}
+                    </span>
                     <span>
-                      {item.quantity} x ₹{item.priceAtPurchase} = ₹{item.quantity * item.priceAtPurchase}
+                      {item.quantity} x ₹{item.priceAtPurchase} = ₹
+                      {item.quantity * item.priceAtPurchase}
                     </span>
                   </div>
                 </li>
               ))}
-              <li className="font-bold text-right pt-4 border-t mt-4">
-                Total: ₹{totalAmount}
-              </li>
+              <li className="font-bold text-right pt-4 border-t mt-4">Total: ₹{totalAmount}</li>
             </ul>
           ) : (
             <p>Your cart is empty.</p>

@@ -95,9 +95,37 @@ const [cartItems, setCartItems] = useState([]); // ✅ FIXED
   }
 };
 
-  const removeFromCart = (itemId) => {
-    setCartItems(prev => prev.filter(item => item.itemId !== itemId));
-  };
+  // const removeFromCart = (itemId) => {
+  //   setCartItems(prev => prev.filter(item => item.itemId !== itemId));
+  // };
+
+const removeFromCart = async (itemId) => {
+  try {
+    const response = await fetch('http://localhost:5000/cart/remove', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: authUser._id,
+        productId: itemId,
+      }),
+    });
+
+    const data = await response.json();
+    console.log("✅ Backend response:", data);
+
+    if (response.ok) {
+      // Replace entire cart with updated backend response
+      setCartItems(data.cart); // Sync with fresh backend cart
+    } else {
+      console.warn("❌ Could not remove item:", data.error);
+    }
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+  }
+};
+
 
   const updateQuantity = (itemId, quantity) => {
     setCartItems(prev =>
@@ -106,6 +134,19 @@ const [cartItems, setCartItems] = useState([]); // ✅ FIXED
       )
     );
   };
+  
+
+const clearCart = async () => {
+  try {
+    await axios.delete(`http://localhost:5000/cart/clear`, {
+      data: { userId: authUser._id }, // Send user ID in body
+      withCredentials: true,
+    });
+    setCartItems([]);
+  } catch (error) {
+    console.error("❌ Error clearing cart from backend:", error);
+  }
+};
 
 const getTotalAmount = () => {
   if (!Array.isArray(cartItems)) return 0; // Safety
@@ -151,6 +192,7 @@ const getTotalAmount = () => {
     updateQuantity,
     getTotalAmount,
     placeOrder,
+    clearCart,
   };
 
   return (
