@@ -10,20 +10,14 @@ const ShopContextProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(true);
-  const [sort, setSort] = useState('default');
-  const [filter, setFilter] = useState({ category: '', priceRange: [0, 10000] });
 
-  const Value = {
+  const value = {
     products,
     cartItems,
     search,
     setSearch,
     showSearch,
     setShowSearch,
-    sort,
-    setSort,
-    filter,
-    setFilter
   }
 
   // Fetch products (Public Data)
@@ -173,17 +167,6 @@ const getTotalAmount = () => {
       console.error("Failed to place order:", error);
       throw error;
     }
-  };
-
-  const value = {
-    products,
-    cartItems,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    getTotalAmount,
-    getTotalItems,
-    placeOrder
   };
 
   return (
