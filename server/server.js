@@ -37,16 +37,16 @@ app.get('/health', (req, res) => {
 
 // Load Passport strategies
 app.use(session({
-  secret: "your-session-secret",
+  secret: process.env.SESSION_SECRET || 'yourSecretKey',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: "sessions"
-  }),
-  cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day
+  store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }), // optional
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    httpOnly: true,
+    secure: false, // set to true in production with HTTPS
+  }
 }));
-
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());

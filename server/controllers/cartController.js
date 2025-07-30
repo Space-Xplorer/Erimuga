@@ -87,8 +87,6 @@ const getfromCart = async (req, res) => {
   }
 };
 
-
-
 const removefromcart = async (req, res) => {
   try {
     const { userId, productId } = req.body;
@@ -96,17 +94,33 @@ const removefromcart = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (user.cartData[productId]) {
-      delete user.cartData[productId];
-      await user.save();
-      res.status(200).json({ message: "Product removed from cart", cart: user.cartData });
-    } else {
-      res.status(404).json({ error: "Product not in cart" });
+    const initialLength = user.cartData.length;
+
+    user.cartData = user.cartData.filter(
+      (item) => item.productId.toString() !== productId
+    );
+
+    if (user.cartData.length === initialLength) {
+      return res.status(404).json({ error: "Product not in cart" });
     }
+
+    await user.save();
+    res.status(200).json({ message: "Product removed from cart", cart: user.cartData });
   } catch (error) {
     res.status(500).json({ error: "Failed to remove from cart", details: error.message });
   }
 };
 
 
-export { addtocart, updateincart, getfromCart, removefromcart };
+// DELETE /cart/clear
+const clearCart = async (req, res) => {
+  const { userId } = req.body;
+  try {
+    await User.findByIdAndUpdate(userId, { cartData: [] });
+    res.json({ success: true, message: 'Cart cleared successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear cart' });
+  }
+};
+
+export { addtocart, updateincart, getfromCart, removefromcart, clearCart };
