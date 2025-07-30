@@ -1,11 +1,35 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
+import { Link } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
+import { useAuth } from '../components/Auth/AuthContext';
 
 const ProductCard = ({ product }) => {
-  const { addToCart } = useContext(ShopContext);
+  const { addToCart, cartItems } = useContext(ShopContext);
+  const { isAuthenticated } = useAuth();
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAddToCart = () => {
-    addToCart(product);
+  const getItemQuantity = (productId) => {
+    return cartItems[productId] || 0;
+  };
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault(); // Prevent navigation when clicking the button
+    e.stopPropagation(); // Stop event from bubbling up
+    
+    if (!isAuthenticated) {
+      // You might want to redirect to login or show a message
+      alert("Please login to add items to cart");
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await addToCart(product);
+      setTimeout(() => setIsAdding(false), 500);
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      setIsAdding(false);
+    }
   };
 
   const isNewProduct = (date) => {
@@ -36,14 +60,27 @@ const ProductCard = ({ product }) => {
         <div className='absolute inset-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
       </div>
       <div className='p-4'>
-        <h2 className='text-lg font-semibold mb-2'>{product.name}</h2>
-        <p className='text-gray-600 mb-4'>₹{product.price}</p>
-        <button 
-          onClick={handleAddToCart} 
-          className='w-full bg-[#B22222] text-white py-2 px-4 rounded hover:bg-red-600 transition-colors duration-300 flex items-center justify-center gap-2'
-        >
-          Add to Cart
-        </button>
+        <Link to={`/product/${product._id}`}>
+          <h2 className='text-lg font-semibold mb-2'>{product.name}</h2>
+          <p className='text-gray-600 mb-4'>₹{product.price}</p>
+        </Link>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleAddToCart}
+            disabled={isAdding} 
+            className={`flex-1 py-2 px-4 rounded transition-all duration-300 flex items-center justify-center gap-2
+              ${isAdding 
+                ? 'bg-green-500 text-white cursor-not-allowed' 
+                : 'bg-[#B22222] text-white hover:bg-red-600'}`}
+          >
+            {isAdding ? 'Added!' : 'Add to Cart'}
+          </button>
+          {getItemQuantity(product._id) > 0 && (
+            <div className="bg-[#B22222] text-white px-3 py-2 rounded-full min-w-[32px] text-center">
+              {getItemQuantity(product._id)}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

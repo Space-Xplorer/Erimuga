@@ -11,9 +11,7 @@ const PartialCard = ({ product }) => {
           className="w-full h-48 object-cover group-hover:opacity-90" 
           loading="lazy"
         />
-          <div className="absolute top-2 right-2 bg-[#FFD700]/80 text-black text-xs px-2 py-1 rounded shadow">
-            New
-          </div>
+          
       </div>
     </Link>
   )
