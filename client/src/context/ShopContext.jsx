@@ -200,10 +200,6 @@ const ShopContextProvider = ({ children }) => {
     setSearch,
     showSearch,
     setShowSearch,
-    sort,
-    setSort,
-    filter,
-    setFilter,
     clearCart
   };
 

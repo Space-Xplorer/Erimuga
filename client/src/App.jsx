@@ -16,6 +16,9 @@ import Footer from './components/Footer';
 import SearchBar from './components/SearchBar';
 import Checkout from './pages/Checkout';
 
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AddProduct from './pages/admin/AddProduct';
+
 
 const App = () => {
   return (
@@ -35,6 +38,9 @@ const App = () => {
           <Route path='/place-order' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} />
           <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path='/checkout' element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/add-product" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
       </Routes>
       <Footer />
       
