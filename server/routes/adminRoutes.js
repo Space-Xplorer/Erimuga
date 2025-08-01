@@ -1,13 +1,20 @@
 import express from 'express';
 // import { isAdmin, isLoggedIn } from '../middlewares/auth.js';
-import { getAllOrders, updateOrderStatus } from '../controllers/adminController.js';
+import { getAllOrders, updateOrderStatus, addProduct, getAllProducts, editProduct, deleteProduct} from '../controllers/adminController.js';
 import Order from '../models/orderModel.js';
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/' });
+
 
 const adminRouter = express.Router();
 
 // adminRouter.get('/orders', isLoggedIn, isAdmin, getAllOrders);
 adminRouter.get('/orders', getAllOrders);
 adminRouter.put('/orders/:id', updateOrderStatus);
+adminRouter.post('/add-product', upload.array('images'), addProduct);
+adminRouter.get('/products', getAllProducts);
+adminRouter.put('/edit-product/:id', upload.array('images'), editProduct);
+adminRouter.delete('/delete-product/:id', deleteProduct);
 
 adminRouter.get('/order-stats', async (req, res) => {
   const orders = await Order.find();
@@ -62,6 +69,8 @@ adminRouter.get('/order-stats', async (req, res) => {
     topProduct,
   });
 });
+
+
 
 
 export default adminRouter;

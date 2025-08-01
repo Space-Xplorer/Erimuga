@@ -15,6 +15,7 @@ import cartRouter from './routes/cart.js';
 import orderRouter from './routes/orders.js';
 import adminRoutes from './routes/adminRoutes.js';
 import productMetaRoutes from './routes/productMeta.js';
+import metadataRoutes from './routes/metaDataRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,6 +61,7 @@ app.use("/cart", cartRouter);
 app.use("/orders", orderRouter);
 app.use("/products", productMetaRoutes);
 app.use("/admin", adminRoutes);
+app.use('/metadata', metadataRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');

@@ -7,24 +7,29 @@ export default function AddProductForm() {
     apparelTypes: [],
     subcategories: []
   });
+
   const [formData, setFormData] = useState({
     name: "",
     category: "",
     apparelType: "",
     subcategory: "",
     price: "",
+    availableSizes: "",
+    availableColors: "",
+    isBestSeller: false,
+    images: []
   });
 
   const [showNew, setShowNew] = useState({
     category: false,
     apparelType: false,
-    subcategory: false,
+    subcategory: false
   });
 
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const res = await axios.get("/products/metadata");
+        const res = await axios.get("http://localhost:5000/metadata");
         if (res.data) {
           setMeta({
             categories: res.data.categories || [],
@@ -41,24 +46,77 @@ export default function AddProductForm() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked, files } = e.target;
+    if (type === "checkbox") {
+      setFormData({ ...formData, [name]: checked });
+    } else if (type === "file") {
+      setFormData({ ...formData, images: files });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const toggleNewField = (field) => {
     setShowNew({ ...showNew, [field]: !showNew[field] });
-    setFormData({ ...formData, [field]: "" }); // Clear current selection
+    setFormData({ ...formData, [field]: "" });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const data = new FormData();
+
+    data.append("name", formData.name);
+    data.append("mainCategory", formData.category);
+    data.append("apparelType", formData.apparelType);
+    data.append("subcategory", formData.subcategory);
+    data.append("price", formData.price);
+    data.append("availableSizes", formData.availableSizes);
+    data.append("availableColors", formData.availableColors);
+    data.append("isBestSeller", formData.isBestSeller ? "yes" : "no");
+
+    for (let i = 0; i < formData.images.length; i++) {
+      data.append("images", formData.images[i]);
+    }
+
+    try {
+      const res = await axios.post("http://localhost:5000/admin/add-product", data, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+      alert("Product added successfully!");
+      setFormData({
+        name: "",
+        category: "",
+        apparelType: "",
+        subcategory: "",
+        price: "",
+        availableSizes: "",
+        availableColors: "",
+        description: "",
+        isBestSeller: false,
+        images: []
+      });
+    } catch (err) {
+      console.error("Error adding product:", err);
+      alert("Error adding product");
+    }
   };
 
   return (
-    <form className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-4"
+    >
       <h2 className="text-2xl font-bold text-gray-800">Add Product</h2>
 
+      {/* Product Name */}
       <input
         name="name"
         value={formData.name}
         onChange={handleChange}
         placeholder="Product Name"
-        className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-black"
+        className="w-full border border-gray-300 rounded-xl p-3"
       />
 
       {/* Category */}
@@ -212,6 +270,57 @@ export default function AddProductForm() {
         className="w-full border border-gray-300 rounded-xl p-3"
       />
 
+      {/* Sizes */}
+      <input
+        type="text"
+        name="availableSizes"
+        placeholder="Sizes (comma separated e.g. S,M,L)"
+        value={formData.availableSizes}
+        onChange={handleChange}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      {/* Colors */}
+      <input
+        type="text"
+        name="availableColors"
+        placeholder="Colors (comma separated e.g. Black,Blue)"
+        value={formData.availableColors}
+        onChange={handleChange}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      <textarea
+        name="description"
+        placeholder="Product Description"
+        value={formData.description}
+        onChange={handleChange}
+        rows={4}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      {/* Best Seller Toggle */}
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="isBestSeller"
+          checked={formData.isBestSeller}
+          onChange={handleChange}
+        />
+        <span className="text-sm text-gray-700">Mark as Best Seller</span>
+      </label>
+
+      {/* Image Upload */}
+      <input
+        type="file"
+        name="images"
+        multiple
+        accept="image/*"
+        onChange={handleChange}
+        className="w-full"
+      />
+
+      {/* Submit Button */}
       <button
         type="submit"
         className="w-full bg-black text-white rounded-xl px-4 py-2 hover:bg-gray-800"
