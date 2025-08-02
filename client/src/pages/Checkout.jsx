@@ -31,11 +31,14 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-    const items = cartItems.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      priceAtPurchase: item.priceAtPurchase,
-    }));
+   const items = cartItems.map((item) => ({
+  productId: item.productId,
+  quantity: item.quantity,
+  priceAtPurchase: item.priceAtPurchase,
+  color: item.color,       // ✅ include selected color
+  size: item.size,         // ✅ include selected size
+}));
+
 
     if (paymentMethod === 'cod') {
       try {
@@ -67,7 +70,7 @@ const Checkout = () => {
     try {
       const razorpayOrder = await axios.post(
         'http://localhost:5000/orders/place-order/razorpay',
-        { amount: totalAmount * 100 },
+        { amount: totalAmount},
         { withCredentials: true }
       );
 

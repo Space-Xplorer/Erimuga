@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema({
       quantity: { type: Number, required: true, min: 1 },
       priceAtPurchase: { type: Number }, // optional - snapshot price
       size: { type: String },            // optional - if applicable
-      color: { type: String },           // optional - if applicable
+      color: { type: String },            // optional - if applicable
+      productCode: { type: String, required: true },     // optional - if applicable
     }
   ],
   default: []

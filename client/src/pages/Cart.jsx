@@ -43,7 +43,7 @@ const Cart = () => {
                     ₹{item.priceAtPurchase || product.price} per item
                   </p>
                   <button
-                    onClick={() => removeFromCart(item.productId)}
+                    onClick={() => removeFromCart(item.productCode)}
                     className="text-sm text-red-500 hover:underline"
                   >
                     Remove
