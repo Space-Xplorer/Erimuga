@@ -33,6 +33,7 @@ const Checkout = () => {
   const handlePlaceOrder = async () => {
    const items = cartItems.map((item) => ({
   productId: item.productId,
+  productName: item.productName,
   quantity: item.quantity,
   priceAtPurchase: item.priceAtPurchase,
   color: item.color,       // ✅ include selected color
@@ -200,7 +201,7 @@ const Checkout = () => {
                 <li key={index} className="border-b pb-2">
                   <div className="flex justify-between">
                     <span className="font-medium">
-                      {item.productId?.name || 'Unnamed Product'}
+                      {item.productName || 'Unnamed Product'}
                     </span>
                     <span>
                       {item.quantity} x ₹{item.priceAtPurchase} = ₹

@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   type: [
     {
       productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+      productName: { type: String, required: true }, // optional - for better UX
       quantity: { type: Number, required: true, min: 1 },
       priceAtPurchase: { type: Number }, // optional - snapshot price
       size: { type: String },            // optional - if applicable

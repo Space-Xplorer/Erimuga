@@ -69,8 +69,12 @@ const addtocart = async (req, res) => {
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
+      console.log("✅ Product fetched:", product);
+      console.log("✅ Product name:", product.name);
+
       user.cartData.push({
         productId,
+        productName: product.name, // Ensure product name is included
         quantity,
         size: selectedSize,
         color: selectedColor,
@@ -85,6 +89,7 @@ const addtocart = async (req, res) => {
     res.status(200).json({ message: "Product added to cart", cart: user.cartData });
 
   } catch (error) {
+    console.error("Error in addtocart:", error);
     res.status(500).json({ error: "Failed to add to cart", details: error.message });
   }
 };
@@ -168,11 +173,14 @@ const removefromcart = async (req, res) => {
     const initialLength = user.cartData.length;
 
     // Remove by productCode
-   user.cartData = user.cartData.filter(
-  (item) =>
-    `${item.productCode}` !== productCode &&
-    `${item.productCode || item.productId}-${item.color}-${item.size}` !== productCode
-);
+  user.cartData = user.cartData.filter((item) => {
+  const codeMatch = `${item.productCode}` === productCode;
+  const fullMatch = `${item.productCode || item.productId}-${item.color}-${item.size}` === productCode;
+
+  // Remove item if either of these match
+  return !(codeMatch || fullMatch);
+});
+
 
 
     if (user.cartData.length === initialLength) {
@@ -182,6 +190,7 @@ const removefromcart = async (req, res) => {
     await user.save();
     res.status(200).json({ message: "Product removed from cart", cart: user.cartData });
   } catch (error) {
+    console.error("Error in removefromcart:", error);
     res.status(500).json({ error: "Failed to remove from cart", details: error.message });
   }
 };
