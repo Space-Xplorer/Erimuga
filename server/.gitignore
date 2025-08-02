@@ -1,9 +1,2 @@
-# Environment variables
 .env
-
-# Dependencies
-node_modules/
-
-# Keep config structure but ignore sensitive files
-# /config/*.env
-# /config/secrets.js
+node_modules
