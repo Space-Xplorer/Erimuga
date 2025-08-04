@@ -1,4 +1,7 @@
 import Product from "../models/productModel.js";
+import MainCategory from "../models/mainCategoryModel.js";
+import ApparelType from "../models/apparelTypeModel.js";
+import Subcategory from "../models/subCategoryModel.js";
 import fs from "fs";
 import path from "path";
 import { uploadToCloudinary, uploadMultipleImages } from "../config/cloudinary.js";
@@ -7,6 +10,26 @@ import { uploadToCloudinary, uploadMultipleImages } from "../config/cloudinary.j
 const addProduct = async (req, res) => {
   try {
     const { name, mainCategory, apparelType, subcategory, description, price } = req.body;
+
+    // Helper to upsert a value into a model (case-insensitive)
+    async function upsertType(Model, value) {
+      if (!value) return;
+      const exists = await Model.findOne({ name: { $regex: `^${value}$`, $options: 'i' } });
+      if (!exists) await Model.create({ name: value });
+    }
+
+    // If comma separated, split and upsert all values
+    const upsertAll = async (Model, value) => {
+      if (!value) return;
+      const values = Array.isArray(value) ? value : value.split(',').map(v => v.trim()).filter(Boolean);
+      for (const val of values) {
+        await upsertType(Model, val);
+      }
+    };
+
+    await upsertAll(MainCategory, mainCategory);
+    await upsertAll(ApparelType, apparelType);
+    await upsertAll(Subcategory, subcategory);
     
     // Upload images to Cloudinary
     let cloudinaryUrls = [];

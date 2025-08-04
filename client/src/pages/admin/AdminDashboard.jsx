@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import OrderAnalytics from '../../components/Admin/OrderAnalytics';
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -35,7 +36,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard p-4">
-      <h2 className="text-xl font-bold mb-4">📦 Orders</h2>
+      <OrderAnalytics />
+      <h2 className="text-xl font-bold mb-4 mt-8">📦 Orders</h2>
       {orders.map((order) => (
         <div key={order._id} className="border p-4 my-4 rounded bg-white shadow-md">
           <div className="mb-2">

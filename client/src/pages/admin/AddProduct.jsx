@@ -72,6 +72,7 @@ export default function AddProductForm() {
     data.append("price", formData.price);
     data.append("availableSizes", formData.availableSizes);
     data.append("availableColors", formData.availableColors);
+    data.append("description", formData.description);
     data.append("isBestSeller", formData.isBestSeller ? "yes" : "no");
 
     for (let i = 0; i < formData.images.length; i++) {
