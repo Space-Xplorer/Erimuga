@@ -2,47 +2,6 @@ import User from '../models/userModel.js';
 import Product from '../models/productModel.js';
 import mongoose from 'mongoose';
 
-// const addtocart = async (req, res) => {
-//   try {
-//     const { userId, productId, quantity, size, color, priceAtPurchase } = req.body;
-
-//     const user = await User.findById(userId);
-//     if (!user) return res.status(404).json({ error: "User not found" });
-
-//     // Ensure cartData is initialized
-//     if (!Array.isArray(user.cartData)) user.cartData = [];
-
-//     // Check if the product with same attributes already exists
-//     const existingItem = user.cartData.find(
-//       item =>
-//         item.productId.toString() === productId &&
-//         item.size === size &&
-//         item.color === color
-//     );
-
-//     if (existingItem) {
-//       // If same product + attributes exist, increase quantity
-//       existingItem.quantity += quantity;
-//     } else {
-//       // Add new item to cart
-//       user.cartData.push({
-//         productId,
-//         quantity,
-//         size,
-//         color,
-//         priceAtPurchase,
-//       });
-//     }
-
-//     user.markModified('cartData');
-//     await user.save();
-
-//     res.status(200).json({ message: "Product added to cart", cart: user.cartData });
-
-//   } catch (error) {
-//     res.status(500).json({ error: "Failed to add to cart", details: error.message });
-//   }
-// };
 const addtocart = async (req, res) => {
   try {
     const { userId, productId, selectedSize, selectedColor, quantity } = req.body;
@@ -94,8 +53,6 @@ const addtocart = async (req, res) => {
   }
 };
 
-
-
 // Update quantity of product in cart
 const updateincart = async (req, res) => {
   try {
@@ -138,30 +95,6 @@ const getfromCart = async (req, res) => {
   }
 };
 
-// const removefromcart = async (req, res) => {
-//   try {
-//     const { userId, productId } = req.body;
-
-//     const user = await User.findById(userId);
-//     if (!user) return res.status(404).json({ error: "User not found" });
-
-//     const initialLength = user.cartData.length;
-
-//     user.cartData = user.cartData.filter(
-//       (item) => item.productId.toString() !== productId
-//     );
-
-//     if (user.cartData.length === initialLength) {
-//       return res.status(404).json({ error: "Product not in cart" });
-//     }
-
-//     await user.save();
-//     res.status(200).json({ message: "Product removed from cart", cart: user.cartData });
-//   } catch (error) {
-//     res.status(500).json({ error: "Failed to remove from cart", details: error.message });
-//   }
-// };
-
 
 const removefromcart = async (req, res) => {
   try {
@@ -179,9 +112,7 @@ const removefromcart = async (req, res) => {
 
   // Remove item if either of these match
   return !(codeMatch || fullMatch);
-});
-
-
+  });
 
     if (user.cartData.length === initialLength) {
       return res.status(404).json({ error: "Product not in cart" });
@@ -194,8 +125,6 @@ const removefromcart = async (req, res) => {
     res.status(500).json({ error: "Failed to remove from cart", details: error.message });
   }
 };
-
-
 
 // DELETE /cart/clear
 const clearCart = async (req, res) => {

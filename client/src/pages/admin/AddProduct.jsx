@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "../../config/axios";
+import {useNavigate} from "react-router-dom";
 
 export default function AddProductForm() {
+  const navigate = useNavigate();
   const [meta, setMeta] = useState({
     categories: [],
     apparelTypes: [],
@@ -16,6 +18,7 @@ export default function AddProductForm() {
     price: "",
     availableSizes: "",
     availableColors: "",
+    description: "",
     isBestSeller: false,
     images: []
   });
@@ -26,22 +29,23 @@ export default function AddProductForm() {
     subcategory: false
   });
 
-  useEffect(() => {
-    const fetchMetadata = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/metadata");
-        if (res.data) {
-          setMeta({
-            categories: res.data.categories || [],
-            apparelTypes: res.data.apparelTypes || [],
-            subcategories: res.data.subcategories || []
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching metadata:", error);
-        setMeta({ categories: [], apparelTypes: [], subcategories: [] });
+  const fetchMetadata = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/metadata");
+      if (res.data) {
+        setMeta({
+          categories: res.data.categories || [],
+          apparelTypes: res.data.apparelTypes || [],
+          subcategories: res.data.subcategories || []
+        });
       }
-    };
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+      setMeta({ categories: [], apparelTypes: [], subcategories: [] });
+    }
+  };
+
+  useEffect(() => {
     fetchMetadata();
   }, []);
 
@@ -61,30 +65,88 @@ export default function AddProductForm() {
     setFormData({ ...formData, [field]: "" });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const data = new FormData();
-
-    data.append("name", formData.name);
-    data.append("mainCategory", formData.category);
-    data.append("apparelType", formData.apparelType);
-    data.append("subcategory", formData.subcategory);
-    data.append("price", formData.price);
-    data.append("availableSizes", formData.availableSizes);
-    data.append("availableColors", formData.availableColors);
-    data.append("description", formData.description);
-    data.append("isBestSeller", formData.isBestSeller ? "yes" : "no");
-
-    for (let i = 0; i < formData.images.length; i++) {
-      data.append("images", formData.images[i]);
+  const handleAddNewMeta = async (field, url) => {
+    if (!formData[field]) {
+      alert(`Please enter a ${field}`);
+      return;
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/admin/add-product", data, {
+      await axios.post(`http://localhost:5000/metadata/${url}`, {
+        name: formData[field]
+      });
+      alert(`${field} added!`);
+      setShowNew({ ...showNew, [field]: false });
+      fetchMetadata();
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to add ${field}`);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const promises = [];
+
+      if (
+        formData.category &&
+        !meta.categories.includes(formData.category)
+      ) {
+        promises.push(
+          axios.post("http://localhost:5000/metadata/category", {
+            name: formData.category
+          })
+        );
+      }
+
+      if (
+        formData.apparelType &&
+        !meta.apparelTypes.includes(formData.apparelType)
+      ) {
+        promises.push(
+          axios.post("http://localhost:5000/metadata/apparelType", {
+            name: formData.apparelType
+          })
+        );
+      }
+
+      if (
+        formData.subcategory &&
+        !meta.subcategories.includes(formData.subcategory)
+      ) {
+        promises.push(
+          axios.post("http://localhost:5000/metadata/subcategory", {
+            name: formData.subcategory
+          })
+        );
+      }
+
+      await Promise.all(promises);
+      await fetchMetadata();
+
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("mainCategory", formData.category);
+      data.append("apparelType", formData.apparelType);
+      data.append("subcategory", formData.subcategory);
+      data.append("price", formData.price);
+      data.append("availableSizes", formData.availableSizes);
+      data.append("availableColors", formData.availableColors);
+      data.append("description", formData.description);
+      data.append("isBestSeller", formData.isBestSeller ? "yes" : "no");
+
+      for (let i = 0; i < formData.images.length; i++) {
+        data.append("images", formData.images[i]);
+      }
+
+      await axios.post("http://localhost:5000/admin/add-product", data, {
         headers: {
           "Content-Type": "multipart/form-data"
         }
       });
+
       alert("Product added successfully!");
       setFormData({
         name: "",
@@ -102,6 +164,7 @@ export default function AddProductForm() {
       console.error("Error adding product:", err);
       alert("Error adding product");
     }
+    navigate("/");
   };
 
   return (
@@ -111,7 +174,6 @@ export default function AddProductForm() {
     >
       <h2 className="text-2xl font-bold text-gray-800">Add Product</h2>
 
-      {/* Product Name */}
       <input
         name="name"
         value={formData.name}
@@ -135,8 +197,15 @@ export default function AddProductForm() {
             />
             <button
               type="button"
-              className="text-sm text-gray-600 underline"
+              onClick={() => handleAddNewMeta("category", "category")}
+              className="text-sm text-green-600 underline"
+            >
+              Save
+            </button>
+            <button
+              type="button"
               onClick={() => toggleNewField("category")}
+              className="text-sm text-gray-600 underline"
             >
               Cancel
             </button>
@@ -158,8 +227,8 @@ export default function AddProductForm() {
             </select>
             <button
               type="button"
-              className="text-sm text-gray-600 underline"
               onClick={() => toggleNewField("category")}
+              className="text-sm text-gray-600 underline"
             >
               + Add New
             </button>
@@ -182,8 +251,17 @@ export default function AddProductForm() {
             />
             <button
               type="button"
-              className="text-sm text-gray-600 underline"
+              onClick={() =>
+                handleAddNewMeta("apparelType", "apparelType")
+              }
+              className="text-sm text-green-600 underline"
+            >
+              Save
+            </button>
+            <button
+              type="button"
               onClick={() => toggleNewField("apparelType")}
+              className="text-sm text-gray-600 underline"
             >
               Cancel
             </button>
@@ -205,8 +283,8 @@ export default function AddProductForm() {
             </select>
             <button
               type="button"
-              className="text-sm text-gray-600 underline"
               onClick={() => toggleNewField("apparelType")}
+              className="text-sm text-gray-600 underline"
             >
               + Add New
             </button>
@@ -229,8 +307,17 @@ export default function AddProductForm() {
             />
             <button
               type="button"
-              className="text-sm text-gray-600 underline"
+              onClick={() =>
+                handleAddNewMeta("subcategory", "subcategory")
+              }
+              className="text-sm text-green-600 underline"
+            >
+              Save
+            </button>
+            <button
+              type="button"
               onClick={() => toggleNewField("subcategory")}
+              className="text-sm text-gray-600 underline"
             >
               Cancel
             </button>
@@ -252,8 +339,8 @@ export default function AddProductForm() {
             </select>
             <button
               type="button"
-              className="text-sm text-gray-600 underline"
               onClick={() => toggleNewField("subcategory")}
+              className="text-sm text-gray-600 underline"
             >
               + Add New
             </button>
@@ -261,7 +348,7 @@ export default function AddProductForm() {
         )}
       </div>
 
-      {/* Price */}
+      {/* PRICE */}
       <input
         type="number"
         name="price"
@@ -271,21 +358,21 @@ export default function AddProductForm() {
         className="w-full border border-gray-300 rounded-xl p-3"
       />
 
-      {/* Sizes */}
+      {/* SIZES */}
       <input
         type="text"
         name="availableSizes"
-        placeholder="Sizes (comma separated e.g. S,M,L)"
+        placeholder="Sizes (e.g., S,M,L)"
         value={formData.availableSizes}
         onChange={handleChange}
         className="w-full border border-gray-300 rounded-xl p-3"
       />
 
-      {/* Colors */}
+      {/* COLORS */}
       <input
         type="text"
         name="availableColors"
-        placeholder="Colors (comma separated e.g. Black,Blue)"
+        placeholder="Colors (e.g., Black,Blue)"
         value={formData.availableColors}
         onChange={handleChange}
         className="w-full border border-gray-300 rounded-xl p-3"
@@ -300,7 +387,6 @@ export default function AddProductForm() {
         className="w-full border border-gray-300 rounded-xl p-3"
       />
 
-      {/* Best Seller Toggle */}
       <label className="flex items-center space-x-2">
         <input
           type="checkbox"
@@ -311,7 +397,6 @@ export default function AddProductForm() {
         <span className="text-sm text-gray-700">Mark as Best Seller</span>
       </label>
 
-      {/* Image Upload */}
       <input
         type="file"
         name="images"
@@ -321,7 +406,6 @@ export default function AddProductForm() {
         className="w-full"
       />
 
-      {/* Submit Button */}
       <button
         type="submit"
         className="w-full bg-black text-white rounded-xl px-4 py-2 hover:bg-gray-800"
