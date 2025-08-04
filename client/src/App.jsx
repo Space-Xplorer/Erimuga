@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home';
 import Collection from './pages/Collection';
 import About from './pages/About';
@@ -23,6 +24,7 @@ import AddProduct from './pages/admin/AddProduct';
 const App = () => {
   return (
     <div className='flex flex-col min-h-screen'>
+      <Toaster position="top-right" reverseOrder={false} />
       <Navbar />
       <SearchBar />
       <Routes>
