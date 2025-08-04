@@ -32,7 +32,7 @@ export default function OrderAnalytics() {
       <div className="bg-white rounded-2xl shadow p-4">
         <h2 className="text-lg font-semibold mb-2">Revenue Over Time</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={stats.revenueOverTime}>
+          <LineChart data={stats.revenueOverTime || []}>
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
@@ -46,7 +46,7 @@ export default function OrderAnalytics() {
       <div className="bg-white rounded-2xl shadow p-4">
         <h2 className="text-lg font-semibold mb-2">Orders Per Category</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={stats.ordersByCategory}>
+          <BarChart data={stats.ordersByCategory || []}>
             <XAxis dataKey="category" />
             <YAxis />
             <Tooltip />
@@ -61,7 +61,7 @@ export default function OrderAnalytics() {
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
-              data={stats.paymentMethods}
+              data={stats.paymentMethods || []}
               dataKey="count"
               nameKey="method"
               cx="50%"
@@ -70,7 +70,7 @@ export default function OrderAnalytics() {
               fill="#8884d8"
               label
             >
-              {stats.paymentMethods.map((entry, index) => (
+              {(stats.paymentMethods || []).map((entry, index) => (
                 <Cell key={index} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
