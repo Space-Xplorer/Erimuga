@@ -3,10 +3,9 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  phonenumber: { type: String, unique: true },
+  phonenumber: { type: String, unique: true, sparse: true },
   password: { type: String }, // optional for OAuth users
   googleId: { type: String }, // to store Google OAuth ID
-  usertype: { type: String, default: 'user' }, // 'user' or 'admin'
   cartData: {
   type: [
     {
