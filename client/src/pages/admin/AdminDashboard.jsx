@@ -1,9 +1,12 @@
+// pages/AdminDashboard.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import OrderAnalytics from '../../components/Admin/OrderAnalytics';
+import OrderCard from '../../components/Admin/OrderCard'; 
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 12;
 
   useEffect(() => {
     fetchOrders();
@@ -29,61 +32,44 @@ const AdminDashboard = () => {
     }
   };
 
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
+  // Pagination logic
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
 
   return (
     <div className="admin-dashboard p-4">
-      <OrderAnalytics />
-      <h2 className="text-xl font-bold mb-4 mt-8">📦 Orders</h2>
-      {orders.map((order) => (
-        <div key={order._id} className="border p-4 my-4 rounded bg-white shadow-md">
-          <div className="mb-2">
-            <strong>Order ID:</strong> {order._id}<br />
-            <strong>User ID:</strong> {order.userID}<br />
-            <strong>Order Date:</strong> {formatDate(order.date)}<br />
-            <strong>Status:</strong>{' '}
-            <select
-              value={order.status}
-              onChange={(e) => handleStatusChange(order._id, e.target.value)}
-              className="border p-1 rounded ml-2"
-            >
-              <option>Order Placed</option>
-              <option>Shipped</option>
-              <option>Delivered</option>
-              <option>Cancelled</option>
-            </select><br />
-            <strong>Payment Method:</strong> {order.paymentMethod}<br />
-            <strong>Payment Received:</strong> {order.payment ? '✅ Yes' : '❌ No'}<br />
-            <strong>Total Amount:</strong> ₹{order.amount}<br />
-          </div>
-
-          <div className="mb-2">
-            <strong>Address:</strong><br />
-            {order.address.name}<br />
-            {order.address.email}<br />
-            {order.address.phone}<br />
-            {order.address.address}
-          </div>
-
-          <div>
-            <strong>Items:</strong>
-            <ul className="list-disc list-inside">
-              {order.items.map((item, idx) => (
-                <li key={idx} className="ml-4">
-                  <strong>Product ID:</strong> {item.productId}<br />
-                  <strong>Quantity:</strong> {item.quantity}<br />
-                  <strong>Size:</strong> {item.size}<br />
-                  <strong>Color:</strong> {item.color}<br />
-                  <strong>Price at Purchase:</strong> ₹{item.priceAtPurchase}
-                </li>
-              ))}
-            </ul>
-          </div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">📦 Orders</h2>
+        <div className="space-x-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            ← Prev
+          </button>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 border rounded disabled:opacity-50"
+          >
+            Next →
+          </button>
         </div>
-      ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {currentOrders.map((order) => (
+          <OrderCard
+            key={order._id}
+            order={order}
+            onStatusChange={handleStatusChange}
+          />
+        ))}
+      </div>
     </div>
   );
 };

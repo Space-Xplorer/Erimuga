@@ -21,11 +21,16 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const login = (userData, token) => {
-    setUser(userData);
+    const userWithAdmin = {
+      ...userData,
+      isAdmin: userData.userType === 'admin', // syncs with ProtectedRoute logic
+    };
+    setUser(userWithAdmin);
     setIsAuthenticated(true);
     localStorage.setItem('userAuthToken', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userWithAdmin));
   };
+
 
     const logout = async () => {
     try {
