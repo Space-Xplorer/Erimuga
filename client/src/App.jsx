@@ -17,7 +17,7 @@ import Footer from './components/Footer';
 import SearchBar from './components/SearchBar';
 import Checkout from './pages/Checkout';
 import ProductinDetail from './pages/ProductinDetail';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import AddProduct from './pages/admin/AddProduct';
 
 
