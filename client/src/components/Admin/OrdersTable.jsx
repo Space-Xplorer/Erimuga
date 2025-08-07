@@ -82,7 +82,10 @@ const OrdersTable = ({ orders, onStatusChange, onView }) => {
         </thead>
         <tbody>
           {filteredAndSortedOrders.map(order => (
-            <tr key={order._id} className="border-t">
+            <tr
+              key={order._id}
+              className={`border-t ${order.status === 'Cancelled' ? 'bg-gray-100 text-gray-500' : ''}`}
+            >
               <td className="p-3">{order._id}</td>
               <td className="p-3">{order.userID}</td>
               <td className="p-3">₹{order.amount}</td>
@@ -90,7 +93,11 @@ const OrdersTable = ({ orders, onStatusChange, onView }) => {
                 <select
                   value={order.status}
                   onChange={(e) => onStatusChange(order._id, e.target.value)}
-                  className="border rounded px-2 py-1"
+                  disabled={order.status === 'Cancelled'}
+                  className={`border rounded px-2 py-1 ${
+                    order.status === 'Cancelled' ? 'bg-gray-200 cursor-not-allowed' : ''
+                  }`}
+                  title={order.status === 'Cancelled' ? 'Cannot edit cancelled order' : ''}
                 >
                   <option>Order Placed</option>
                   <option>Shipped</option>

@@ -20,6 +20,7 @@ import ProductinDetail from './pages/ProductinDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProduct from './pages/admin/AddProduct';
 import OrderDetails from './pages/admin/OrderDetails';
+import UserDashboard from './pages/UserDashboard';
 // import Stats from './pages/admin/Stats';
 
 
@@ -31,6 +32,7 @@ const App = () => {
       <Routes>
 
           <Route path='/' element={<Home />} />
+          <Route path='/dashboard' element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
           <Route path='/collection' element={<Collection />} />
           <Route path='/about' element={<About />} />
           <Route path='/contact' element={<Contact />} />
