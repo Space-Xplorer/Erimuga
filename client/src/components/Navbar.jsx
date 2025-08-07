@@ -6,6 +6,16 @@ import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 
 const Navbar = () => {
+  const timerRef = useRef();
+
+  const handleProfileEnter = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setIsProfileOpen(true);
+  };
+
+  const handleProfileLeave = () => {
+    timerRef.current = setTimeout(() => setIsProfileOpen(false), 150);
+  };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef();
@@ -84,44 +94,91 @@ const Navbar = () => {
 
           {/* Profile or Sign In */}
           {isAuthenticated ? (
-            <div className="relative group" ref={profileRef}>
-              <div className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300 focus:outline-none cursor-pointer">
+            <div
+              className="relative flex items-center"
+              ref={profileRef}
+              onMouseEnter={handleProfileEnter}
+              onMouseLeave={handleProfileLeave}
+            >
+              <div className="flex items-center gap-1 py-2 md:p-0 hover:text-yellow-300 cursor-pointer">
                 <FaUserCircle className="text-lg" />
                 <span>{user?.name || 'Profile'}</span>
               </div>
               {/* Dropdown menu */}
-              <div className="hidden group-hover:block absolute right-0 pt-4 z-50">
-                <div className="cursor-pointer w-40 bg-white text-black rounded shadow-md transition-all duration-150">
-                  <Link
-                    to="/dashboard"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/orders"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    Orders
-                  </Link>
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-red-600"
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      authLogout();
-                      navigate('/login');
-                    }}
-                  >
-                    Logout
-                  </button>
+              {isProfileOpen && (
+                <div className="absolute top-full right-0 mt-2 z-50 w-48">
+                  <div className="bg-white text-black rounded-md shadow-lg py-2 space-y-1">
+                    {user?.isAdmin ? (
+                      <>
+                        <Link
+                          to="/admin"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Admin Dashboard
+                        </Link>
+                        <Link
+                          to="/admin/stats"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Stats
+                        </Link>
+                        <Link
+                          to="/admin/products"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Products
+                        </Link>
+                        <Link
+                          to="/orders"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Orders
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/dashboard"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/orders"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Orders
+                        </Link>
+                      </>
+                    )}
+                    <button
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-red-600"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        authLogout();
+                        navigate('/login');
+                      }}
+                    >
+                      Logout
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-1 py-2 md:p-0">
-              <Link to="/login" className="bg-yellow-300 text-[#B22222] font-semibold px-4 py-2 rounded hover:bg-yellow-400 transition-colors duration-200">Sign In</Link>
+              <Link
+                to="/login"
+                className="bg-yellow-300 text-[#B22222] font-semibold px-4 py-2 rounded hover:bg-yellow-400 transition-colors duration-200"
+              >
+                Sign In
+              </Link>
             </div>
           )}
         </div>

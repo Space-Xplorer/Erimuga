@@ -1,13 +1,15 @@
-// import React, { useEffect, useState } from 'react';
+// // /pages/AdminDashboard.jsx
+// import React, { useState, useEffect } from 'react';
 // import axios from 'axios';
-// import OrderAnalytics from '../../components/Admin/OrderAnalytics';
+
+// import AdminSummary from '../components/Admin/AdminSummary';
+// import OrdersTable from '../components/Admin/OrdersTable';    
+// import OrderModal from '../components/Admin/OrderModal';
 
 // const AdminDashboard = () => {
 //   const [orders, setOrders] = useState([]);
-
-//   useEffect(() => {
-//     fetchOrders();
-//   }, []);
+//   const [selectedOrder, setSelectedOrder] = useState(null);
+//   const [showModal, setShowModal] = useState(false);
 
 //   const fetchOrders = async () => {
 //     try {
@@ -17,6 +19,10 @@
 //       console.error('Error fetching orders:', err);
 //     }
 //   };
+
+//   useEffect(() => {
+//     fetchOrders();
+//   }, []);
 
 //   const handleStatusChange = async (orderId, newStatus) => {
 //     try {
@@ -29,81 +35,41 @@
 //     }
 //   };
 
-//   const formatDate = (timestamp) => {
-//     const date = new Date(timestamp);
-//     return date.toLocaleString();
-//   };
-
 //   return (
-//     <div className="admin-dashboard p-4">
-//       <h2 className="text-xl font-bold mb-4 mt-8">📦 Orders</h2>
-//       {orders.map((order) => (
-//         <div key={order._id} className="border p-4 my-4 rounded bg-white shadow-md">
-//           <div className="mb-2">
-//             <strong>Order ID:</strong> {order._id}<br />
-//             <strong>User ID:</strong> {order.userID}<br />
-//             <strong>Order Date:</strong> {formatDate(order.date)}<br />
-//             <strong>Status:</strong>{' '}
-//             <select
-//               value={order.status}
-//               onChange={(e) => handleStatusChange(order._id, e.target.value)}
-//               className="border p-1 rounded ml-2"
-//             >
-//               <option>Order Placed</option>
-//               <option>Shipped</option>
-//               <option>Delivered</option>
-//               <option>Cancelled</option>
-//             </select><br />
-//             <strong>Payment Method:</strong> {order.paymentMethod}<br />
-//             <strong>Payment Received:</strong> {order.payment ? '✅ Yes' : '❌ No'}<br />
-//             <strong>Total Amount:</strong> ₹{order.amount}<br />
-//           </div>
-
-//           <div className="mb-2">
-//             <strong>Address:</strong><br />
-//             {order.address.name}<br />
-//             {order.address.email}<br />
-//             {order.address.phone}<br />
-//             {order.address.address}
-//           </div>
-
-//           <div>
-//             <strong>Items:</strong>
-//             <ul className="list-disc list-inside">
-//               {order.items.map((item, idx) => (
-//                 <li key={idx} className="ml-4">
-//                   <strong>Product ID:</strong> {item.productId}<br />
-//                   <strong>Quantity:</strong> {item.quantity}<br />
-//                   <strong>Size:</strong> {item.size}<br />
-//                   <strong>Color:</strong> {item.color}<br />
-//                   <strong>Price at Purchase:</strong> ₹{item.priceAtPurchase}
-//                 </li>
-//               ))}
-//             </ul>
-//           </div>
-//         </div>
-//       ))}
+//     <div className="p-4">
+//       <h2 className="text-2xl font-bold mb-4">📊 Admin Dashboard</h2>
+//       <AdminSummary orders={orders} />
+//       <OrdersTable
+//         orders={orders}
+//         onStatusChange={handleStatusChange}
+//         onView={(order) => {
+//           setSelectedOrder(order);
+//           setShowModal(true);
+//         }}
+//       />
+//       <OrderModal
+//         order={selectedOrder}
+//         isOpen={showModal}
+//         onClose={() => setShowModal(false)}
+//       />
 //     </div>
 //   );
 // };
 
 // export default AdminDashboard;
-
-
-
-
-// /pages/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import AdminSummary from '../components/Admin/AdminSummary';
-import OrdersTable from '../components/Admin/OrdersTable';    
+import OrdersTable from '../components/Admin/OrdersTable';
 import OrderModal from '../components/Admin/OrderModal';
+import MetadataModal from '../components/Admin/MetadataModal';
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [metaModalOpen, setMetaModalOpen] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -130,21 +96,70 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">📊 Admin Dashboard</h2>
+    <div className="p-6 md:p-10 bg-gray-100 min-h-screen">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">📊 Admin Dashboard</h2>
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <button
+          onClick={() => setMetaModalOpen(true)}
+          className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-xl shadow hover:bg-blue-700 transition"
+        >
+          ➕ Add Metadata
+        </button>
+        <a
+          href="/admin/add-product"
+          className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-xl shadow hover:bg-green-700 transition"
+        >
+          ➕ Add Product
+        </a>
+      </div>
+
+      {/* Summary Cards */}
       <AdminSummary orders={orders} />
-      <OrdersTable
-        orders={orders}
-        onStatusChange={handleStatusChange}
-        onView={(order) => {
-          setSelectedOrder(order);
-          setShowModal(true);
-        }}
-      />
+
+      {/* Orders Table */}
+      <div className="bg-white rounded-2xl shadow p-4 mt-6">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">🧾 Orders</h3>
+        <OrdersTable
+          orders={orders}
+          onStatusChange={handleStatusChange}
+          onView={(order) => {
+            setSelectedOrder(order);
+            setShowModal(true);
+          }}
+          onDelete={async (orderId) => {
+            try {
+              await axios.delete(`http://localhost:5000/admin/orders/${orderId}`);
+              fetchOrders();
+            } catch (err) {
+              console.error('Error deleting order:', err);
+            }
+          }}
+          onMetadataUpdate={async (orderId, metadata) => {
+            try {
+              await axios.put(`http://localhost:5000/admin/orders/${orderId}/metadata`, {
+                metadata,
+              });
+              fetchOrders();
+            } catch (err) {
+              console.error('Error updating metadata:', err);
+            }
+          }}
+        />
+      </div>
+
+      {/* Order Details Modal */}
       <OrderModal
         order={selectedOrder}
         isOpen={showModal}
         onClose={() => setShowModal(false)}
+      />
+
+      {/* Metadata Modal */}
+      <MetadataModal
+        isOpen={metaModalOpen}
+        onClose={() => setMetaModalOpen(false)}
       />
     </div>
   );

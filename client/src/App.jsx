@@ -19,6 +19,8 @@ import Checkout from './pages/Checkout';
 import ProductinDetail from './pages/ProductinDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProduct from './pages/admin/AddProduct';
+import OrderDetails from './pages/admin/OrderDetails';
+// import Stats from './pages/admin/Stats';
 
 
 const App = () => {
@@ -26,7 +28,6 @@ const App = () => {
     <div className='flex flex-col min-h-screen'>
       <Toaster position="top-right" reverseOrder={false} />
       <Navbar />
-      <SearchBar />
       <Routes>
 
           <Route path='/' element={<Home />} />
@@ -44,6 +45,9 @@ const App = () => {
           {/* Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/add-product" element={<ProtectedRoute><AddProduct /></ProtectedRoute>} />
+          <Route path="/admin/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+          {/* <Route path="/admin/stats" element={<ProtectedRoute><Stats /></ProtectedRoute>} />
+          <Route path="/admin/products" element={<ProtectedRoute><ProductList /></ProtectedRoute>} /> */}
       </Routes>
       <Footer />
       
