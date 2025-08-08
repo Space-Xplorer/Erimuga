@@ -166,20 +166,121 @@ const getOrderDetails = async (req, res) => {
 };
 
 
-const updateOrderStatus = async (req, res) => {
+// const updateOrderStatus = async (req, res) => {
+//   try {
+//     const orderId = req.params.id;
+//     const { status } = req.body;
+
+//     const updatedOrder = await orderModel.findByIdAndUpdate(orderId, { status }, { new: true });
+
+//     if (!updatedOrder) {
+//       return res.status(404).json({ error: 'Order not found' });
+//     }
+
+//     res.status(200).json({ message: 'Order status updated', order: updatedOrder });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to update order status', details: error.message });
+//   }
+// };
+
+
+// const updateOrder = async (req, res) => {
+//   try {
+//     const orderId = req.params.id;
+//     const { status, payment, paymentMethod } = req.body;
+
+//     const updateFields = {};
+//     if (status) updateFields.status = status;
+//     if (typeof payment === 'boolean') updateFields.payment = payment;
+//     if (paymentMethod) updateFields.paymentMethod = paymentMethod;
+
+//     const updatedOrder = await orderModel.findByIdAndUpdate(orderId, updateFields, { new: true });
+
+//     if (!updatedOrder) {
+//       return res.status(404).json({ error: 'Order not found' });
+//     }
+
+//     res.status(200).json({ message: 'Order updated successfully', order: updatedOrder });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to update order', details: error.message });
+//   }
+// };
+
+
+// const updateOrder = async (req, res) => {
+//   try {
+//     const orderId = req.params.id;
+//     // ✅ 1. Add 'paymentStatus' to the destructuring
+//     const { status, payment, paymentStatus, paymentMethod } = req.body;
+
+//     const updateFields = {};
+//     if (status) updateFields.status = status;
+//     if (typeof payment === 'boolean') updateFields.payment = payment;
+//     if (paymentMethod) updateFields.paymentMethod = paymentMethod;
+//     // ✅ 2. Add 'paymentStatus' to the update object if it exists
+//     if (paymentStatus) updateFields.paymentStatus = paymentStatus;
+
+//     const updatedOrder = await orderModel.findByIdAndUpdate(
+//       orderId,
+//       updateFields,
+//       { new: true }
+//     );
+
+//     if (!updatedOrder) {
+//       return res.status(404).json({ error: 'Order not found' });
+//     }
+
+//     res.status(200).json({
+//       message: 'Order updated successfully',
+//       order: updatedOrder
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       error: 'Failed to update order',
+//       details: error.message
+//     });
+//   }
+// };
+
+
+// In your backend order controller file
+
+const updateOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const { status } = req.body;
+    
+    // Log the raw data coming from the frontend
+    console.log('--- Order Update Request Received ---');
+    console.log('1. Request Body:', req.body);
 
-    const updatedOrder = await orderModel.findByIdAndUpdate(orderId, { status }, { new: true });
+    const { status, payment, paymentStatus } = req.body;
+
+    const updateFields = {};
+    if (status) updateFields.status = status;
+    if (typeof payment === 'boolean') updateFields.payment = payment;
+    if (paymentStatus) updateFields.paymentStatus = paymentStatus;
+    
+    // Log the data we are preparing to save
+    console.log('2. Fields to be Saved:', updateFields);
+
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      orderId,
+      updateFields,
+      { new: true, runValidators: true } // Added runValidators as a good practice
+    );
+    
+    // Log what the database returned after the update
+    console.log('3. Result from Database:', updatedOrder);
 
     if (!updatedOrder) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    res.status(200).json({ message: 'Order status updated', order: updatedOrder });
+    res.status(200).json({ message: 'Order updated successfully', order: updatedOrder });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update order status', details: error.message });
+    // Log any errors that occurred
+    console.error('5. CRITICAL ERROR:', error);
+    res.status(500).json({ error: 'Failed to update order', details: error.message });
   }
 };
 
@@ -224,7 +325,7 @@ export {
   placeOrderRazorpay,
   getAllOrders,
   getOrderDetails,
-  updateOrderStatus,
+  updateOrder,
   getUserOrders,
   cancelOrder,
   verifyAndPlaceOrder

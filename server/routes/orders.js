@@ -2,7 +2,7 @@ import {placeOrderCOD,
   placeOrderRazorpay,
   getAllOrders,
   getOrderDetails,
-  updateOrderStatus,
+  updateOrder,
   getUserOrders,
   verifyAndPlaceOrder,
   cancelOrder} from '../controllers/orderController.js';
@@ -16,7 +16,7 @@ orderRouter.post('/place-order/razorpay', isLoggedIn, placeOrderRazorpay);
 
 orderRouter.get('/', isLoggedIn, isAdmin, getAllOrders);
 orderRouter.get('/:id', isLoggedIn, getOrderDetails);
-orderRouter.put('/:id/status', isLoggedIn, updateOrderStatus);
+orderRouter.put('/:id/status', isLoggedIn, updateOrder);
 orderRouter.get('/user/:id', isLoggedIn, getUserOrders);
 orderRouter.delete('/:id', isLoggedIn, cancelOrder);
 orderRouter.post('/verify-payment', isLoggedIn, verifyAndPlaceOrder);
