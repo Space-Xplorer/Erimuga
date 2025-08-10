@@ -1,58 +1,76 @@
-import { ChevronDownIcon } from '@heroicons/react/24/solid'
+import { ChevronDownIcon } from '@heroicons/react/24/solid';
 
 const Contact = () => {
   return (
-    <div className="isolate bg-white px-6 sm:py-32 lg:px-8">
-      <div className='container mx-auto max-w-2xl bg-white p-8 rounded-lg shadow-lg'>
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-4xl font-semibold tracking-tight text-balance text-gray-900 sm:text-5xl">Contact Us</h2>
-        <p className="mt-2 text-lg/8 text-gray-600">We will get back to you as soon as possible. Thankyou.</p>
-      </div>
-      <form action="#" method="POST" className="mx-auto mt-7.5">
-        <div className="sm:col-span-2">
-          <div>
-            <label htmlFor="full-name" className="block text-sm/6 font-semibold text-gray-900">
-              Name
+    <div className="isolate bg-[#fffaf5] px-6 sm:py-32 lg:px-8">
+      <div className="container mx-auto max-w-2xl bg-white p-8 rounded-2xl shadow-lg border border-[#b22222]/10">
+        
+        {/* Heading */}
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-4xl font-bold tracking-tight text-[#b22222] sm:text-5xl">
+            Contact Us
+          </h2>
+          <p className="mt-2 text-lg text-gray-700">
+            We’ll get back to you as soon as possible. Thank you for reaching out.
+          </p>
+        </div>
+
+        {/* Form */}
+        <form action="#" method="POST" className="mx-auto mt-8">
+          
+          {/* Name */}
+          <div className="sm:col-span-2">
+            <label htmlFor="full-name" className="block text-sm font-semibold text-gray-900">
+              Name <span className="text-[#b22222]">*</span>
             </label>
-            <div className="mt-1.5 mb-2.5">
+            <div className="mt-1.5 mb-4">
               <input
                 id="full-name"
                 name="full-name"
                 type="text"
                 autoComplete="given-name"
-                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-800 focus:outline-2 focus:-outline-offset-2 focus:outline-yellow-300"
+                placeholder="Your name"
+                required
+                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
               />
             </div>
           </div>
+
+          {/* Email */}
           <div className="sm:col-span-2">
-            <label htmlFor="email" className="block text-sm/6 font-semibold text-gray-900">
-              Email
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-900">
+              Email <span className="text-[#b22222]">*</span>
             </label>
-            <div className="mt-1.5 mb-2.5">
+            <div className="mt-1.5 mb-4">
               <input
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
-                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-yellow-300"
+                placeholder="you@example.com"
+                required
+                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
               />
             </div>
           </div>
+
+          {/* Phone Number */}
           <div className="sm:col-span-2">
-            <label htmlFor="phone-number" className="block text-sm/6 font-semibold text-gray-900">
-              Phone number
+            <label htmlFor="phone-number" className="block text-sm font-semibold text-gray-900">
+              Phone number <span className="text-[#b22222]">*</span>
             </label>
-            <div className="mt-1.5 mb-2.5">
-              <div className="flex rounded-md bg-white outline-1 -outline-offset-1 outline-gray-300 has-[input:focus-within]:outline-2 has-[input:focus-within]:-outline-offset-2 has-[input:focus-within]:outline-yellow-300">
-                <div className="grid shrink-0 grid-cols-1 focus-within:relative">
+            <div className="mt-1.5 mb-4">
+              <div className="flex rounded-md bg-white border border-gray-300 focus-within:border-[#b22222] focus-within:ring-2 focus-within:ring-[#b22222]/40">
+                <div className="grid shrink-0 grid-cols-1 relative">
                   <select
                     id="country"
                     name="country"
                     autoComplete="country"
                     aria-label="Country"
-                    className="col-start-1 row-start-1 w-full appearance-none rounded-md py-2 pr-7 pl-3.5 text-base text-gray-500 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-yellow-300 sm:text-sm/6"
+                    required
+                    className="col-start-1 row-start-1 w-full appearance-none rounded-md py-2 pr-7 pl-3.5 text-base text-gray-500 focus:outline-none"
                   >
-                    <option value="">Select a country</option>
+                    <option value="">Select</option>
                     <option>IN</option>
                     <option>US</option>
                     <option>CA</option>
@@ -60,7 +78,7 @@ const Contact = () => {
                   </select>
                   <ChevronDownIcon
                     aria-hidden="true"
-                    className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                    className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 size-5 text-gray-500"
                   />
                 </div>
                 <input
@@ -68,59 +86,61 @@ const Contact = () => {
                   name="phone-number"
                   type="text"
                   placeholder="9876543210"
-                  className="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6"
+                  required
+                  className="block min-w-0 grow py-2 pr-3 pl-2 text-base text-gray-900 placeholder:text-gray-500 focus:outline-none"
                 />
               </div>
             </div>
           </div>
+
+          {/* Message */}
           <div className="sm:col-span-2">
-            <label htmlFor="message" className="block text-sm/6 font-semibold text-gray-900">
-              Message
+            <label htmlFor="message" className="block text-sm font-semibold text-gray-900">
+              Message <span className="text-[#b22222]">*</span>
             </label>
-            <div className="mt-2.5 mb-2.5">
+            <div className="mt-2.5 mb-4">
               <textarea
                 id="message"
                 name="message"
                 rows={4}
-                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-yellow-300"
-                defaultValue={''}
+                placeholder="Write your message..."
+                required
+                className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
               />
             </div>
           </div>
-          <div className="flex gap-x-4 sm:col-span-2">
-            <div className="flex h-6 items-center">
-              <div className="group relative inline-flex w-8 shrink-0 rounded-full bg-gray-200 p-px inset-ring inset-ring-gray-900/5 outline-offset-2 outline-yellow-300 transition-colors duration-200 ease-in-out has-checked:bg-yellow-400 has-focus-visible:outline-2">
-                <span className="size-4 rounded-full bg-white shadow-xs ring-1 ring-gray-900/5 transition-transform duration-200 ease-in-out group-has-checked:translate-x-3.5" />
-                <input
-                  id="agree-to-policies"
-                  name="agree-to-policies"
-                  type="checkbox"
-                  aria-label="Agree to policies"
-                  className="absolute inset-0 appearance-none focus:outline-hidden"
-                />
-              </div>
-            </div>
-            <label htmlFor="agree-to-policies" className="text-sm/6 text-gray-600">
+
+          {/* Privacy Policy */}
+          <div className="flex items-center gap-x-3 sm:col-span-2">
+            <input
+              id="agree-to-policies"
+              name="agree-to-policies"
+              type="checkbox"
+              required
+              className="h-4 w-4 rounded border-gray-300 text-[#b22222] focus:ring-[#b22222]"
+            />
+            <label htmlFor="agree-to-policies" className="text-sm text-gray-600">
               By selecting this, you agree to our{' '}
-              <a href="#" className="font-semibold whitespace-nowrap text-yellow-300 hover:text-yellow-600">
+              <a href="#" className="font-semibold text-[#b22222] hover:text-[#8b1717]">
                 privacy policy
               </a>
               .
             </label>
           </div>
-        </div>
-        <div className="mt-10">
-          <button
-            type="submit"
-            className="block w-full rounded-md bg-[#B22222] px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-xs hover:bg-[#b22222d4]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B22222]/80"
-          >
-            Let's talk
-          </button>
-        </div>
-      </form>
+
+          {/* Submit Button */}
+          <div className="mt-8">
+            <button
+              type="submit"
+              className="block w-full rounded-md bg-[#b22222] px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-md hover:bg-[#8b1717] transition-colors"
+            >
+              Let's Talk
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-    </div>
-  )
-}
+  );
+};
 
 export default Contact;
