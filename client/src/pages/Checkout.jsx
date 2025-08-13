@@ -1,18 +1,21 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { ShopContext } from '../context/ShopContext';
 
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 const Checkout = () => {
-  const { cartItems, getTotalAmount, clearCart , authUser } = useContext(ShopContext);
+  const { cartItems, getTotalAmount, clearCart, authUser } = useContext(ShopContext);
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [userDetails, setUserDetails] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-  });
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  
+  // Auto-fill default address if user logged in
+  useEffect(() => {
+    if (authUser?._id) {
+      const defaultAddr = authUser.addresses?.find(addr => addr.isDefault) || authUser.addresses?.[0];
+      setSelectedAddress(defaultAddr);
+    }
+  }, [authUser]);
 
   const totalAmount = getTotalAmount();
 
@@ -49,7 +52,14 @@ const Checkout = () => {
             userID: authUser._id,
             items,
             amount: totalAmount,
-            address: userDetails,
+            address: selectedAddress || {
+              street: '',
+              city: '',
+              state: '',
+              postalCode: '',
+              country: 'India',
+              fullAddress: ''
+            },
           },
           { withCredentials: true }
         );
@@ -93,7 +103,14 @@ const Checkout = () => {
                 userID: authUser._id,
                 items,
                 amount: totalAmount,
-                address: userDetails,
+                address: selectedAddress || {
+                  street: '',
+                  city: '',
+                  state: '',
+                  postalCode: '',
+                  country: 'India',
+                  fullAddress: ''
+                },
               },
               { withCredentials: true }
             );
@@ -131,34 +148,107 @@ const Checkout = () => {
         {/* User Form */}
         <div className="bg-white shadow-md rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4 text-[#b22222]">Shipping Information</h2>
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            className="w-full p-2 mb-3 border rounded"
-            onChange={handleInputChange}
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            className="w-full p-2 mb-3 border rounded"
-            onChange={handleInputChange}
-          />
-          <input
-            type="tel"
-            name="phone"
-            placeholder="Phone Number"
-            className="w-full p-2 mb-3 border rounded"
-            onChange={handleInputChange}
-          />
-          <textarea
-            name="address"
-            placeholder="Shipping Address"
-            rows="4"
-            className="w-full p-2 mb-3 border rounded"
-            onChange={handleInputChange}
-          ></textarea>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block mb-1">Full Name</label>
+              <input
+                type="text"
+                className="w-full p-2 border rounded"
+                value={authUser?.name || ''}
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block mb-1">Email</label>
+              <input
+                type="email"
+                className="w-full p-2 border rounded"
+                value={authUser?.email || ''}
+                readOnly
+              />
+            </div>
+            <div>
+              <label className="block mb-1">Phone</label>
+              <input
+                type="tel"
+                className="w-full p-2 border rounded"
+                value={authUser?.phonenumber || ''}
+                readOnly
+              />
+            </div>
+          </div>
+
+          {authUser?.addresses?.length > 0 && (
+            <div className="mb-4">
+              <label className="block mb-2">Saved Addresses</label>
+              <div className="space-y-2">
+                {authUser.addresses.map((addr) => (
+                  <div key={addr._id} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id={`addr-${addr._id}`}
+                      name="address"
+                      checked={selectedAddress?._id === addr._id}
+                      onChange={() => setSelectedAddress(addr)}
+                    />
+                    <label htmlFor={`addr-${addr._id}`} className="flex-1">
+                      {`${addr.street}, ${addr.city}, ${addr.state} - ${addr.postalCode}`}
+                    </label>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="new-address"
+                    name="address"
+                    checked={!selectedAddress}
+                    onChange={() => setSelectedAddress(null)}
+                  />
+                  <label htmlFor="new-address">Use new address</label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedAddress && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block mb-1">Street Address</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">City</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">State</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Postal Code</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" />
+                  Save this address to my profile
+                </label>
+              </div>
+            </div>
+          )}
 
           <h3 className="text-lg font-medium mb-2">Payment Method</h3>
           <div className="flex gap-4 mb-4">
