@@ -1,40 +1,20 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import axios from "../../config/axios";
-import { useNavigate } from "react-router-dom";
-import { useDropzone } from "react-dropzone";
-
-// --- UI COMPONENTS (Helper components for a cleaner look) ---
-
-const FormSection = ({ title, children }) => (
-  <div className="space-y-4 rounded-lg border border-gray-200 p-4 shadow-sm">
-    <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
-    {children}
-  </div>
-);
-
-const Input = (props) => (
-  <input
-    {...props}
-    className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-  />
-);
-
-// --- MAIN COMPONENT ---
+import {useNavigate} from "react-router-dom";
 
 export default function AddProductForm() {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // This state is for the category, apparel type, etc., dropdowns
   const [meta, setMeta] = useState({
     categories: [],
     apparelTypes: [],
-    subcategories: [],
+    subcategories: []
   });
+  const [imagePreviews, setImagePreviews] = useState([]);
+
 
   const [formData, setFormData] = useState({
     name: "",
-    mainCategory: "",
+    category: "",
     apparelType: "",
     subcategory: "",
     price: "",
@@ -42,97 +22,129 @@ export default function AddProductForm() {
     availableColors: "",
     description: "",
     isBestSeller: false,
-    images: [], // This will now store objects like { file, preview }
+    images: []
   });
 
-  // Fetch metadata for dropdowns when the component loads
-  useEffect(() => {
-    const fetchMetadata = async () => {
-      try {
-        const res = await axios.get("/metadata");
-        if (res.data) {
-          setMeta({
-            categories: res.data.categories || [],
-            apparelTypes: res.data.apparelTypes || [],
-            subcategories: res.data.subcategories || [],
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching metadata:", error);
+  const [showNew, setShowNew] = useState({
+    category: false,
+    apparelType: false,
+    subcategory: false
+  });
+
+  const fetchMetadata = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/metadata");
+      if (res.data) {
+        setMeta({
+          categories: res.data.categories || [],
+          apparelTypes: res.data.apparelTypes || [],
+          subcategories: res.data.subcategories || []
+        });
       }
-    };
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+      setMeta({ categories: [], apparelTypes: [], subcategories: [] });
+    }
+  };
+
+  useEffect(() => {
     fetchMetadata();
   }, []);
 
-  // Clean up the image preview URLs when the component is unmounted to prevent memory leaks
-  useEffect(() => {
-    return () => formData.images.forEach(img => URL.revokeObjectURL(img.preview));
-  }, [formData.images]);
-
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-  
-  // --- IMAGE UPLOAD & PREVIEW LOGIC ---
+    const { name, value, type, checked, files } = e.target;
 
-  const onDrop = useCallback((acceptedFiles) => {
-    // Create a preview URL for each accepted file
-    const newImages = acceptedFiles.map(file => Object.assign(file, {
-      preview: URL.createObjectURL(file)
-    }));
-    // Append the new images to the existing ones
-    setFormData(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
-  }, []);
+    if (type === "checkbox") {
+      setFormData({ ...formData, [name]: checked });
+    } else if (type === "file") {
+      const selectedFiles = Array.from(files);
+      setFormData({ ...formData, images: selectedFiles });
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { 'image/*': ['.jpeg', '.png', '.gif', '.webp'] }
-  });
-
-  const removeImage = (indexToRemove) => {
-    // First, free up the memory by revoking the object URL
-    URL.revokeObjectURL(formData.images[indexToRemove].preview);
-    // Then, update the state to remove the image from the array
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove)
-    }));
+      const previews = selectedFiles.map((file) => URL.createObjectURL(file));
+      setImagePreviews(previews);
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
-  // This is the JSX for displaying the image thumbnails
-  const imagePreviews = (
-    <div className="mt-4 grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-      {formData.images.map((img, index) => (
-        <div key={index} className="relative aspect-square rounded-md shadow-md">
-          <img src={img.preview} alt={`preview ${index}`} className="h-full w-full rounded-md object-cover" />
-          <button
-            type="button"
-            onClick={() => removeImage(index)}
-            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white transition-transform hover:scale-110"
-          >
-            &times;
-          </button>
-        </div>
-      ))}
-    </div>
-  );
+  const removeImage = (index) => {
+    const updatedImages = formData.images.filter((_, i) => i !== index);
+    const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
 
-  // --- FORM SUBMISSION LOGIC ---
+    setFormData({ ...formData, images: updatedImages });
+    setImagePreviews(updatedPreviews);
+  };
+
+
+  const toggleNewField = (field) => {
+    setShowNew({ ...showNew, [field]: !showNew[field] });
+    setFormData({ ...formData, [field]: "" });
+  };
+
+  const handleAddNewMeta = async (field, url) => {
+    if (!formData[field]) {
+      alert(`Please enter a ${field}`);
+      return;
+    }
+
+    try {
+      await axios.post(`http://localhost:5000/metadata/${url}`, {
+        name: formData[field]
+      });
+      alert(`${field} added!`);
+      setShowNew({ ...showNew, [field]: false });
+      fetchMetadata();
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to add ${field}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true);
 
     try {
+      const promises = [];
+
+      if (
+        formData.category &&
+        !meta.categories.includes(formData.category)
+      ) {
+        promises.push(
+          axios.post("http://localhost:5000/metadata/category", {
+            name: formData.category
+          })
+        );
+      }
+
+      if (
+        formData.apparelType &&
+        !meta.apparelTypes.includes(formData.apparelType)
+      ) {
+        promises.push(
+          axios.post("http://localhost:5000/metadata/apparelType", {
+            name: formData.apparelType
+          })
+        );
+      }
+
+      if (
+        formData.subcategory &&
+        !meta.subcategories.includes(formData.subcategory)
+      ) {
+        promises.push(
+          axios.post("http://localhost:5000/metadata/subcategory", {
+            name: formData.subcategory
+          })
+        );
+      }
+
+      await Promise.all(promises);
+      await fetchMetadata();
+
       const data = new FormData();
-      // Append all text data
       data.append("name", formData.name);
-      data.append("mainCategory", formData.mainCategory); // Note: Your backend expects 'mainCategory', not 'category'
+      data.append("mainCategory", formData.category);
       data.append("apparelType", formData.apparelType);
       data.append("subcategory", formData.subcategory);
       data.append("price", formData.price);
@@ -140,111 +152,322 @@ export default function AddProductForm() {
       data.append("availableColors", formData.availableColors);
       data.append("description", formData.description);
       data.append("isBestSeller", formData.isBestSeller ? "yes" : "no");
-      
-      // Correctly append each image file
-      formData.images.forEach(imageObject => {
-        data.append("images", imageObject); // Append the file object itself
-      });
 
-      await axios.post("/admin/add-product", data, {
+      for (let i = 0; i < formData.images.length; i++) {
+        data.append("images", formData.images[i]);
+      }
+
+      await axios.post("http://localhost:5000/admin/add-product", data, {
         headers: {
-          "Content-Type": "multipart/form-data",
-        },
+          "Content-Type": "multipart/form-data"
+        }
       });
 
       alert("Product added successfully!");
-      navigate("/admin/products"); // Or wherever you want to redirect after success
+      setFormData({
+        name: "",
+        category: "",
+        apparelType: "",
+        subcategory: "",
+        price: "",
+        availableSizes: "",
+        availableColors: "",
+        description: "",
+        isBestSeller: false,
+        images: []
+      });
     } catch (err) {
       console.error("Error adding product:", err);
-      alert("Error adding product. Please check the console for details.");
-    } finally {
-      setIsSubmitting(false);
+      alert("Error adding product");
     }
+    navigate("/");
   };
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-8">
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto max-w-4xl space-y-8 rounded-lg bg-white p-6 shadow-lg"
-      >
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4">
-            <h2 className="text-3xl font-bold text-gray-900">Add New Product</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-4"
+    >
+      <h2 className="text-2xl font-bold text-gray-800">Add Product</h2>
+
+      <input
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Product Name"
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      {/* Category */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Category</label>
+        {showNew.category ? (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              name="category"
+              placeholder="New category"
+              value={formData.category}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-xl p-2"
+            />
             <button
-                type="button"
-                onClick={() => navigate(-1)} // Go back button
-                className="text-sm font-medium text-gray-600 hover:text-indigo-600"
+              type="button"
+              onClick={() => handleAddNewMeta("category", "category")}
+              className="text-sm text-green-600 underline"
             >
-                Cancel
+              Save
             </button>
-        </div>
-       
-        <FormSection title="Product Details">
-            <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Product Name</label>
-                <Input name="name" value={formData.name} onChange={handleChange} placeholder="e.g., Classic Cotton Tee" required />
-            </div>
-            <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Price ($)</label>
-                <Input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="e.g., 29.99" required />
-            </div>
-             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  name="description"
-                  placeholder="Detailed product description..."
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                />
-            </div>
-        </FormSection>
+            <button
+              type="button"
+              onClick={() => toggleNewField("category")}
+              className="text-sm text-gray-600 underline"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-xl p-2"
+            >
+              <option value="">Select Category</option>
+              {meta.categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => toggleNewField("category")}
+              className="text-sm text-gray-600 underline"
+            >
+              + Add New
+            </button>
+          </div>
+        )}
+      </div>
 
-        <FormSection title="Categorization">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Main Category</label>
-                    <select name="mainCategory" value={formData.mainCategory} onChange={handleChange} required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Select Category</option>
-                        {meta.categories.map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
-                    </select>
-                </div>
-                 <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Apparel Type</label>
-                     <select name="apparelType" value={formData.apparelType} onChange={handleChange} required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Select Type</option>
-                        {meta.apparelTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
-                    </select>
-                </div>
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">Subcategory</label>
-                    <select name="subcategory" value={formData.subcategory} onChange={handleChange} required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="">Select Subcategory</option>
-                        {meta.subcategories.map((sub) => (<option key={sub} value={sub}>{sub}</option>))}
-                    </select>
-                </div>
-            </div>
-        </FormSection>
+      {/* Apparel Type */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Apparel Type</label>
+        {showNew.apparelType ? (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              name="apparelType"
+              placeholder="New apparel type"
+              value={formData.apparelType}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-xl p-2"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                handleAddNewMeta("apparelType", "apparelType")
+              }
+              className="text-sm text-green-600 underline"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleNewField("apparelType")}
+              className="text-sm text-gray-600 underline"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <select
+              name="apparelType"
+              value={formData.apparelType}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-xl p-2"
+            >
+              <option value="">Select Apparel Type</option>
+              {meta.apparelTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => toggleNewField("apparelType")}
+              className="text-sm text-gray-600 underline"
+            >
+              + Add New
+            </button>
+          </div>
+        )}
+      </div>
 
-        <FormSection title="Images">
-            <div {...getRootProps()} className={`cursor-pointer rounded-lg border-2 border-dashed p-10 text-center ${isDragActive ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300'}`}>
-                <input {...getInputProps()} />
-                <p className="text-gray-500">Drag & drop files here, or click to select files</p>
-            </div>
-            {formData.images.length > 0 && imagePreviews}
-        </FormSection>
+      {/* Subcategory */}
+      <div>
+        <label className="block text-sm font-medium mb-1">Subcategory</label>
+        {showNew.subcategory ? (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              name="subcategory"
+              placeholder="New subcategory"
+              value={formData.subcategory}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-xl p-2"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                handleAddNewMeta("subcategory", "subcategory")
+              }
+              className="text-sm text-green-600 underline"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleNewField("subcategory")}
+              className="text-sm text-gray-600 underline"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <select
+              name="subcategory"
+              value={formData.subcategory}
+              onChange={handleChange}
+              className="flex-1 border border-gray-300 rounded-xl p-2"
+            >
+              <option value="">Select Subcategory</option>
+              {meta.subcategories.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => toggleNewField("subcategory")}
+              className="text-sm text-gray-600 underline"
+            >
+              + Add New
+            </button>
+          </div>
+        )}
+      </div>
 
-        <div className="flex justify-end pt-4">
+      {/* PRICE */}
+      <input
+        type="number"
+        name="price"
+        placeholder="Price"
+        value={formData.price}
+        onChange={handleChange}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      {/* SIZES */}
+      <input
+        type="text"
+        name="availableSizes"
+        placeholder="Sizes (e.g., S,M,L)"
+        value={formData.availableSizes}
+        onChange={handleChange}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      {/* COLORS */}
+      <input
+        type="text"
+        name="availableColors"
+        placeholder="Colors (e.g., Black,Blue)"
+        value={formData.availableColors}
+        onChange={handleChange}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      <textarea
+        name="description"
+        placeholder="Product Description"
+        value={formData.description}
+        onChange={handleChange}
+        rows={4}
+        className="w-full border border-gray-300 rounded-xl p-3"
+      />
+
+      <label className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="isBestSeller"
+          checked={formData.isBestSeller}
+          onChange={handleChange}
+        />
+        <span className="text-sm text-gray-700">Mark as Best Seller</span>
+      </label>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Product Images</label>
+        <div className="flex flex-col gap-3">
+          {/* Browse Button */}
+          <input
+            id="imageUpload"
+            type="file"
+            name="images"
+            multiple
+            accept="image/*"
+            onChange={handleChange}
+            className="hidden"
+          />
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-400"
+            type="button"
+            onClick={() => document.getElementById("imageUpload").click()}
+            className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm font-medium"
           >
-            {isSubmitting ? 'Submitting...' : 'Add Product'}
+            📁 Browse Images
           </button>
+
+          {/* Image Previews */}
+          {imagePreviews.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {imagePreviews.map((src, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={src}
+                    alt={`Preview ${index + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg border"
+                  />
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </form>
-    </div>
+      </div>
+
+
+
+
+      <button
+        type="submit"
+        className="w-full bg-black text-white rounded-xl px-4 py-2 hover:bg-gray-800"
+      >
+        Add Product
+      </button>
+    </form>
   );
 }

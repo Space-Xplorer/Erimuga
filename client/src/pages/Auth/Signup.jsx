@@ -1,5 +1,5 @@
 import React from 'react';
-import SignupForm from '../components/Auth/SignupForm';
+import SignupForm from '../../components/Auth/SignupForm';
 import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {

@@ -41,7 +41,7 @@ export const addProduct = async (req, res) => {
       isBestSeller
     } = req.body;
 
-    // Generate structured base product code (e.g. TS-MEN-0001)
+    // Generate structured base product code
     const productCode = await generateBaseProductCode(mainCategory, subcategory, apparelType);
 
     // Upload images to Cloudinary
@@ -51,8 +51,8 @@ export const addProduct = async (req, res) => {
         const result = await uploadToCloudinary(file.path, {
           folder: `erimuga/products/${mainCategory}`,
         });
-        await fs.unlink(file.path); // --- CHANGE: Using async unlink
-        return result.secure_url;
+        await fs.unlink(file.path); // delete temp file
+        return result.url; // FIX: use returned object property
       });
 
       imageUrls = await Promise.all(uploadPromises);
@@ -105,28 +105,49 @@ export const editProduct = async (req, res) => {
       availableSizes,
       availableColors,
       isBestSeller,
+      imagesToDelete // Array of Cloudinary public_ids or URLs
     } = req.body;
 
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-    // Handle optional new image uploads
+    // --- 1. Handle image deletions
+    if (imagesToDelete && Array.isArray(imagesToDelete) && imagesToDelete.length > 0) {
+      for (const img of imagesToDelete) {
+        // If frontend sends URL, extract public_id
+        let publicId = img;
+        if (img.startsWith('http')) {
+          const parts = img.split('/');
+          publicId = parts.slice(-2).join('/').split('.')[0]; // folder/file without extension
+        }
+
+        try {
+          await cloudinary.uploader.destroy(publicId);
+          console.log(`Deleted from Cloudinary: ${publicId}`);
+        } catch (err) {
+          console.error(`Failed to delete from Cloudinary: ${publicId}`, err);
+        }
+
+        // Remove from product.image array
+        product.image = product.image.filter(i => i !== img);
+      }
+    }
+
+    // --- 2. Handle new image uploads
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map(async (file) => {
         const result = await uploadToCloudinary(file.path, {
           folder: `erimuga/products/${mainCategory || product.mainCategory}`,
         });
-        await fs.unlink(file.path); // --- CHANGE: Using async unlink
-        return result.secure_url;
+        await fs.unlink(file.path); // delete temp file
+        return result.url;
       });
 
       const newImageUrls = await Promise.all(uploadPromises);
-      // --- CHANGE: Appending new images to the existing array.
-      // If you want to REPLACE all images, use: product.image = newImageUrls;
-      product.image = product.image.concat(newImageUrls);
+      product.image = product.image.concat(newImageUrls); // Append new ones
     }
 
-    // --- CHANGE: More robust field updates
+    // --- 3. Update fields
     if (name !== undefined) product.name = name;
     if (mainCategory !== undefined) product.mainCategory = mainCategory;
     if (apparelType !== undefined) product.apparelType = apparelType;
@@ -134,7 +155,7 @@ export const editProduct = async (req, res) => {
     if (description !== undefined) product.description = description;
     if (price !== undefined) product.price = price;
     if (isBestSeller !== undefined) product.isBestSeller = isBestSeller;
-    
+
     if (availableSizes !== undefined) {
       product.availableSizes = availableSizes.split(',').map((s) => s.trim());
     }
@@ -144,7 +165,9 @@ export const editProduct = async (req, res) => {
 
     await product.save();
     res.status(200).json({ message: 'Product updated', product });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to edit product', details: err.message });
   }
 };

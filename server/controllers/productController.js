@@ -1,10 +1,4 @@
 import Product from "../models/productModel.js";
-import MainCategory from "../models/mainCategoryModel.js";
-import ApparelType from "../models/apparelTypeModel.js";
-import Subcategory from "../models/subCategoryModel.js";
-import fs from "fs";
-import path from "path";
-import { uploadToCloudinary, uploadMultipleImages } from "../config/cloudinary.js";
 
 // Get all products
 const getProducts = async (req, res) => {
