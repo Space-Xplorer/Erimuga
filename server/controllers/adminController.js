@@ -1,7 +1,7 @@
 import Order from '../models/orderModel.js';
 import Product from '../models/productModel.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { generateBaseProductCode } from '../utils/generatebasecode.js';
 
 export const getAllOrders = async (req, res) => {
@@ -27,7 +27,6 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-
 export const addProduct = async (req, res) => {
   try {
     const {
@@ -52,7 +51,7 @@ export const addProduct = async (req, res) => {
         const result = await uploadToCloudinary(file.path, {
           folder: `erimuga/products/${mainCategory}`,
         });
-        fs.unlinkSync(file.path); // remove local file after upload
+        await fs.unlink(file.path); // --- CHANGE: Using async unlink
         return result.secure_url;
       });
 
@@ -111,28 +110,37 @@ export const editProduct = async (req, res) => {
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-    // Optional new images
+    // Handle optional new image uploads
     if (req.files && req.files.length > 0) {
       const uploadPromises = req.files.map(async (file) => {
         const result = await uploadToCloudinary(file.path, {
-          folder: `erimuga/products/${mainCategory}`,
+          folder: `erimuga/products/${mainCategory || product.mainCategory}`,
         });
-        fs.unlinkSync(file.path);
+        await fs.unlink(file.path); // --- CHANGE: Using async unlink
         return result.secure_url;
       });
 
-      product.image = await Promise.all(uploadPromises);
+      const newImageUrls = await Promise.all(uploadPromises);
+      // --- CHANGE: Appending new images to the existing array.
+      // If you want to REPLACE all images, use: product.image = newImageUrls;
+      product.image = product.image.concat(newImageUrls);
     }
 
-    product.name = name || product.name;
-    product.mainCategory = mainCategory || product.mainCategory;
-    product.apparelType = apparelType || product.apparelType;
-    product.subcategory = subcategory || product.subcategory;
-    product.description = description || product.description;
-    product.price = price || product.price;
-    product.availableSizes = availableSizes?.split(',').map((s) => s.trim()) || product.availableSizes;
-    product.availableColors = availableColors?.split(',').map((c) => c.trim()) || product.availableColors;
-    product.isBestSeller = isBestSeller || product.isBestSeller;
+    // --- CHANGE: More robust field updates
+    if (name !== undefined) product.name = name;
+    if (mainCategory !== undefined) product.mainCategory = mainCategory;
+    if (apparelType !== undefined) product.apparelType = apparelType;
+    if (subcategory !== undefined) product.subcategory = subcategory;
+    if (description !== undefined) product.description = description;
+    if (price !== undefined) product.price = price;
+    if (isBestSeller !== undefined) product.isBestSeller = isBestSeller;
+    
+    if (availableSizes !== undefined) {
+      product.availableSizes = availableSizes.split(',').map((s) => s.trim());
+    }
+    if (availableColors !== undefined) {
+      product.availableColors = availableColors.split(',').map((c) => c.trim());
+    }
 
     await product.save();
     res.status(200).json({ message: 'Product updated', product });
@@ -148,6 +156,9 @@ export const deleteProduct = async (req, res) => {
 
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    // Note: You might want to add logic here to delete images from Cloudinary
+    // to save space, but that requires more complex handling of image public_ids.
 
     await product.deleteOne();
 
