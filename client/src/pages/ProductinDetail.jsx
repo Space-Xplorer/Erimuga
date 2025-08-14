@@ -17,11 +17,18 @@ const ProductinDetail = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [addedMessage, setAddedMessage] = useState(false);
 
+  const [mainImage, setMainImage] = useState(""); // NEW — For switching between images
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const res = await axios.get(`http://localhost:5000/products/${id}`);
         setProduct(res.data);
+
+        // Set first image as main display if available
+        if (res.data.image && res.data.image.length > 0) {
+          setMainImage(res.data.image[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch product:", error);
       }
@@ -51,23 +58,42 @@ const ProductinDetail = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <div className="grid md:grid-cols-2 gap-10">
-        {/* Product Image */}
-        <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center">
-          {product.images?.length > 0 ? (
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full max-h-[500px] object-contain rounded-lg"
-            />
-          ) : (
-            <div className="text-center text-gray-400 text-sm">No image available</div>
+        {/* Product Images Section */}
+        <div className="flex flex-col items-center">
+          <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center w-full">
+            {mainImage ? (
+              <img
+                src={mainImage}
+                alt={product.name}
+                className="w-full max-h-[500px] object-contain rounded-lg"
+              />
+            ) : (
+              <div className="text-center text-gray-400 text-sm">No image available</div>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {product.image?.length > 1 && (
+            <div className="flex gap-3 mt-4 flex-wrap justify-center">
+              {product.image.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className={`w-20 h-20 object-cover rounded-lg border cursor-pointer transition
+                    ${mainImage === img ? "border-[#B22222] border-2" : "border-gray-300"}`}
+                  onClick={() => setMainImage(img)}
+                />
+              ))}
+            </div>
           )}
         </div>
 
         {/* Product Details */}
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
-         {/* Product Description */}
+
+          {/* Product Description */}
           <div className="mt-2">
             <h2 className="text-lg font-semibold text-gray-700">Description:</h2>
             <p className="text-gray-600 mt-1 whitespace-pre-line">{product.description}</p>
@@ -117,7 +143,7 @@ const ProductinDetail = () => {
             </div>
           )}
 
-          {/* Enhanced Add to Cart Button */}
+          {/* Add to Cart */}
           <button
             onClick={handleAddToCart}
             disabled={isAdding}
@@ -135,4 +161,3 @@ const ProductinDetail = () => {
 };
 
 export default ProductinDetail;
-

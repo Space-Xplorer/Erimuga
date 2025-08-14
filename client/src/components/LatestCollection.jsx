@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import PartialCard from './PartialCard';
 import useScreenSize from '../hooks/useScreenSize';
+import NewPartialCard from './NewPartialCard';
 
 const LatestCollection = () => {
   const [products, setProducts] = useState([]);
@@ -41,11 +41,12 @@ const LatestCollection = () => {
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
             {products.map((product) => (
               <div key={product._id} className="flex flex-col">
-                <PartialCard product={product} >
+                <NewPartialCard product={product} >
                 {/* <span className="absolute top-2 right-2 bg-[#FFD700]/80 text-black text-xs px-2 py-1 rounded shadow">
                   New
                 </span> */}
-                </PartialCard>
+
+                </NewPartialCard>
                 <div className="p-3 text-center">
                   <h3 className="font-semibold text-gray-800 text-lg group-hover:text-[#B22222] transition">
                     {product.name}

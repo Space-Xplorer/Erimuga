@@ -47,9 +47,8 @@ export const uploadToCloudinary = async (imagePath, options = {}) => {
     try {
         const sanitizedFilename = sanitizePublicId(path.basename(imagePath, path.extname(imagePath)));
         
-        // Create the full public_id including folder
+        // Ensure folder is set (default to 'erimuga')
         const folder = options.folder || 'erimuga';
-        const public_id = `${folder}/${sanitizedFilename}`;
         
         // Default transformation options
         const defaultTransformation = [
@@ -58,28 +57,19 @@ export const uploadToCloudinary = async (imagePath, options = {}) => {
             { fetch_format: "auto" }
         ];
         
-        // Merge default transformations with any custom ones
         const transformation = [...defaultTransformation, ...(options.transformation || [])];
         
-        // Check if image already exists
-        const exists = await checkAssetExists(public_id);
-        if (exists) {
-            console.log(`Image ${public_id} already exists in Cloudinary, skipping...`);
-            const asset = await cloudinary.api.resource(public_id);
-            return {
-                public_id: asset.public_id,
-                url: asset.secure_url
-            };
-        }
-
+        // Upload options (note: folder now included)
         const uploadOptions = {
+            folder,
             public_id: sanitizedFilename,
             use_filename: false,
             unique_filename: false,
+            transformation,
             ...options
         };
+        
         const result = await cloudinary.uploader.upload(imagePath, uploadOptions);
-
         return {
             public_id: result.public_id,
             url: result.secure_url
@@ -90,17 +80,6 @@ export const uploadToCloudinary = async (imagePath, options = {}) => {
     }
 };
 
-// // Function to handle multiple image uploads
-// export const uploadMultipleImages = async (files) => {
-//     try {
-//         const uploadPromises = files.map(file => uploadToCloudinary(file.path));
-//         const results = await Promise.all(uploadPromises);
-//         return results;
-//     } catch (error) {
-//         console.error('Multiple upload error:', error);
-//         throw new Error('Failed to upload multiple images');
-//     }
-// };
 
 export default cloudinary;
    

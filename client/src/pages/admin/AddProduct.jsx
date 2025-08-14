@@ -9,6 +9,8 @@ export default function AddProductForm() {
     apparelTypes: [],
     subcategories: []
   });
+  const [imagePreviews, setImagePreviews] = useState([]);
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -51,14 +53,28 @@ export default function AddProductForm() {
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+
     if (type === "checkbox") {
       setFormData({ ...formData, [name]: checked });
     } else if (type === "file") {
-      setFormData({ ...formData, images: files });
+      const selectedFiles = Array.from(files);
+      setFormData({ ...formData, images: selectedFiles });
+
+      const previews = selectedFiles.map((file) => URL.createObjectURL(file));
+      setImagePreviews(previews);
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
+
+  const removeImage = (index) => {
+    const updatedImages = formData.images.filter((_, i) => i !== index);
+    const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+
+    setFormData({ ...formData, images: updatedImages });
+    setImagePreviews(updatedPreviews);
+  };
+
 
   const toggleNewField = (field) => {
     setShowNew({ ...showNew, [field]: !showNew[field] });
@@ -397,14 +413,54 @@ export default function AddProductForm() {
         <span className="text-sm text-gray-700">Mark as Best Seller</span>
       </label>
 
-      <input
-        type="file"
-        name="images"
-        multiple
-        accept="image/*"
-        onChange={handleChange}
-        className="w-full"
-      />
+      <div>
+        <label className="block text-sm font-medium mb-1">Product Images</label>
+        <div className="flex flex-col gap-3">
+          {/* Browse Button */}
+          <input
+            id="imageUpload"
+            type="file"
+            name="images"
+            multiple
+            accept="image/*"
+            onChange={handleChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => document.getElementById("imageUpload").click()}
+            className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm font-medium"
+          >
+            📁 Browse Images
+          </button>
+
+          {/* Image Previews */}
+          {imagePreviews.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {imagePreviews.map((src, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={src}
+                    alt={`Preview ${index + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg border"
+                  />
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+
+
 
       <button
         type="submit"
