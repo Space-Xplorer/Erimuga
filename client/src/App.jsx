@@ -9,7 +9,6 @@ import Product from './pages/ProductDetails';
 import Cart from './pages/Cart';
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
-import PlaceOrder from './pages/PlaceOrder';
 import Orders from './pages/Orders';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Navbar from './components/Navbar';
@@ -41,7 +40,7 @@ const App = () => {
           <Route path='/login' element={<Login />} />
           <Route path='/signup' element={<Signup />} />
           <Route path='/product/:id' element={<ProductinDetail />} />
-          <Route path='/place-order' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} />
+          {/* <Route path='/place-order' element={<ProtectedRoute><PlaceOrder /></ProtectedRoute>} /> */}
           <Route path='/orders' element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path='/checkout' element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           {/* Admin Routes */}
