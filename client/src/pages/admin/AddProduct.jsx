@@ -186,7 +186,7 @@ export default function AddProductForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-4"
+      className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md space-y-4 mt-10 mb-10"
     >
       <h2 className="text-2xl font-bold text-gray-800">Add Product</h2>
 
