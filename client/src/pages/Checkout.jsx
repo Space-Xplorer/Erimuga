@@ -33,112 +33,112 @@ const Checkout = () => {
     setUserDetails({ ...userDetails, [e.target.name]: e.target.value });
   };
 
-  const handlePlaceOrder = async () => {
-   const items = cartItems.map((item) => ({
-  productId: item.productId,
-  productName: item.productName,
-  quantity: item.quantity,
-  priceAtPurchase: item.priceAtPurchase,
-  color: item.color,       // ✅ include selected color
-  size: item.size,         // ✅ include selected size
-}));
+const handlePlaceOrder = async () => {
+  const items = cartItems.map((item) => ({
+    productId: item.productId,
+    productName: item.productName,
+    quantity: item.quantity,
+    priceAtPurchase: item.priceAtPurchase,
+    color: item.color,
+    size: item.size,
+  }));
 
-
-    if (paymentMethod === 'cod') {
-      try {
-        await axios.post(
-          'http://localhost:5000/orders/place-order/cod',
-          {
-            userID: authUser._id,
-            items,
-            amount: totalAmount,
-            address: selectedAddress || {
-              street: '',
-              city: '',
-              state: '',
-              postalCode: '',
-              country: 'India',
-              fullAddress: ''
-            },
-          },
-          { withCredentials: true }
-        );
-        alert('Order placed successfully via Cash on Delivery!');
-        clearCart();
-      } catch (err) {
-        console.error('COD Order error:', err);
-        alert('Failed to place COD order.');
-      }
-      return;
-    }
-
-    const razorpayLoaded = await loadRazorpayScript();
-    if (!razorpayLoaded) {
-      alert('Failed to load Razorpay. Try again.');
-      return;
-    }
-
+  if (paymentMethod === 'cod') {
     try {
-      const razorpayOrder = await axios.post(
-        'http://localhost:5000/orders/place-order/razorpay',
-        { amount: totalAmount},
+      await axios.post(
+        'http://localhost:5000/orders/place-order/cod',
+        {
+          userID: authUser._id,
+          items,
+          amount: totalAmount,
+          address: selectedAddress || {
+            street: '',
+            city: '',
+            state: '',
+            postalCode: '',
+            country: 'India',
+            fullAddress: ''
+          },
+        },
         { withCredentials: true }
       );
-
-      const options = {
-        key: razorpayKey,
-        amount: razorpayOrder.data.amount,
-        currency: 'INR',
-        name: 'MyShop Checkout',
-        description: 'Order Payment',
-        order_id: razorpayOrder.data.id,
-        handler: async function (response) {
-          try {
-            await axios.post(
-              'http://localhost:5000/orders/verify-payment',
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                userID: authUser._id,
-                items,
-                amount: totalAmount,
-                address: selectedAddress || {
-                  street: '',
-                  city: '',
-                  state: '',
-                  postalCode: '',
-                  country: 'India',
-                  fullAddress: ''
-                },
-              },
-              { withCredentials: true }
-            );
-
-            alert('Payment successful and order placed!');
-            clearCart();
-          } catch (err) {
-            console.error('Payment verification error:', err);
-            alert('Payment succeeded but order saving failed.');
-          }
-        },
-        prefill: {
-          name: userDetails.name,
-          email: userDetails.email,
-          contact: userDetails.phone,
-        },
-        theme: {
-          color: '#b22222',
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      alert('Order placed successfully via Cash on Delivery!');
+      clearCart();
     } catch (err) {
-      console.error('Razorpay order creation error:', err);
-      alert('Something went wrong with payment.');
+      console.error('COD Order error:', err);
+      alert('Failed to place COD order.');
     }
-  };
+    return;
+  }
+
+  const razorpayLoaded = await loadRazorpayScript();
+  if (!razorpayLoaded) {
+    alert('Failed to load Razorpay. Try again.');
+    return;
+  }
+
+  try {
+    const razorpayOrder = await axios.post(
+      'http://localhost:5000/orders/place-order/razorpay',
+      { amount: totalAmount },
+      { withCredentials: true }
+    );
+
+    const options = {
+      key: razorpayKey,
+      amount: razorpayOrder.data.amount,
+      currency: 'INR',
+      name: 'MyShop Checkout',
+      description: 'Order Payment',
+      order_id: razorpayOrder.data.id,
+      handler: async function (response) {
+        try {
+          await axios.post(
+            'http://localhost:5000/orders/verify-payment',
+            {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              userID: authUser._id,
+              items,
+              amount: totalAmount,
+              address: selectedAddress || {
+                street: '',
+                city: '',
+                state: '',
+                postalCode: '',
+                country: 'India',
+                fullAddress: ''
+              },
+            },
+            { withCredentials: true }
+          );
+
+          alert('Payment successful and order placed!');
+          clearCart();
+        } catch (err) {
+          console.error('Payment verification error:', err);
+          alert('Payment succeeded but order saving failed.');
+        }
+      },
+      prefill: {
+        name: authUser?.name || '',
+        email: authUser?.email || '',
+        contact: authUser?.phonenumber || '',
+      },
+      theme: {
+        color: '#b22222',
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    console.error('Razorpay order creation error:', err);
+    alert('Something went wrong with payment.');
+  }
+};
+
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
