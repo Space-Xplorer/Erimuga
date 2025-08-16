@@ -3,6 +3,7 @@ import axios from 'axios';
 import OrderCard from '../components/User/OrderCard';
 import AddressManager from '../components/User/AddressManager';
 import { ShopContext } from '../context/ShopContext';
+import dotenv from 'dotenv';
 
 const UserDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -22,7 +23,7 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/orders/user/${userId}`, {
+        const res = await axios.get(`meta.env.VITE_BASE_URL/orders/user/${userId}`, {
           withCredentials: true
         });
         setOrders(res.data);
