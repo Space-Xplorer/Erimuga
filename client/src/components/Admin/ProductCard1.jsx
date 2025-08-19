@@ -19,7 +19,7 @@ const ProductCard1 = ({ product, onProductDeleted, onProductEdited }) => {
 
     try {
       await axios.delete(
-        `http://localhost:5000/admin/delete-product/${product._id}`
+        `${import.meta.env.VITE_BASE_URL}/admin/delete-product/${product._id}`
       );
       if (onProductDeleted) onProductDeleted(product._id);
     } catch (err) {

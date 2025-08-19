@@ -23,7 +23,7 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(`meta.env.VITE_BASE_URL/orders/user/${userId}`, {
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/orders/user/${userId}`, {
           withCredentials: true
         });
         setOrders(res.data);
@@ -36,7 +36,7 @@ const UserDashboard = () => {
 
     const fetchUserDetails = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/user/auth/${userId}`, {
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/user/auth/${userId}`, {
           withCredentials: true
         });
         const userData = res.data;
@@ -62,7 +62,7 @@ const UserDashboard = () => {
   const handleProfileUpdate = async () => {
     try {
       const res = await axios.put(
-        'http://localhost:5000/user/update-profile',
+        `${import.meta.env.VITE_BASE_URL}/user/update-profile`,
         profileData,
         { withCredentials: true }
       );

@@ -11,7 +11,7 @@ const BestSellers = () => {
   useEffect(() => {
     const fetchBestSellers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/products');
+        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/products`);
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }

@@ -108,7 +108,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
   // Generic handler for updating any order property
   const handleUpdateOrder = async (orderId, updatePayload) => {
     try {
-      await axios.put(`http://localhost:5000/orders/${orderId}/status`, updatePayload);
+      await axios.put(`${import.meta.env.VITE_BASE_URL}/orders/${orderId}/status`, updatePayload);
       setOrders((prevOrders) =>
         prevOrders.map((o) =>
           o._id === orderId ? { ...o, ...updatePayload } : o

@@ -12,7 +12,7 @@ const SignupForm = ({ onSignup }) => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/user/auth/register', {
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, usertype: 'user' })
@@ -36,7 +36,7 @@ const SignupForm = ({ onSignup }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <a href="http://localhost:8080/user/auth/google" className="w-full flex items-center justify-center gap-2 mt-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition shadow">
+      <a href={`${import.meta.env.VITE_BASE_URL}/user/auth/google`} className="w-full flex items-center justify-center gap-2 mt-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition shadow">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png" alt="Google" className="h-5 w-5" loading="lazy" />
         Sign up with Google
       </a>

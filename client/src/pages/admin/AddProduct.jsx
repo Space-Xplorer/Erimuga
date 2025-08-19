@@ -33,7 +33,7 @@ export default function AddProductForm() {
 
   const fetchMetadata = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/metadata");
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/metadata`);
       if (res.data) {
         setMeta({
           categories: res.data.categories || [],
@@ -88,7 +88,7 @@ export default function AddProductForm() {
     }
 
     try {
-      await axios.post(`http://localhost:5000/metadata/${url}`, {
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/metadata/${url}`, {
         name: formData[field]
       });
       alert(`${field} added!`);
@@ -111,7 +111,7 @@ export default function AddProductForm() {
         !meta.categories.includes(formData.category)
       ) {
         promises.push(
-          axios.post("http://localhost:5000/metadata/category", {
+          axios.post(`${import.meta.env.VITE_BASE_URL}/metadata/category`, {
             name: formData.category
           })
         );
@@ -122,7 +122,7 @@ export default function AddProductForm() {
         !meta.apparelTypes.includes(formData.apparelType)
       ) {
         promises.push(
-          axios.post("http://localhost:5000/metadata/apparelType", {
+          axios.post(`${import.meta.env.VITE_BASE_URL}/metadata/apparelType`, {
             name: formData.apparelType
           })
         );
@@ -133,7 +133,7 @@ export default function AddProductForm() {
         !meta.subcategories.includes(formData.subcategory)
       ) {
         promises.push(
-          axios.post("http://localhost:5000/metadata/subcategory", {
+          axios.post(`${import.meta.env.VITE_BASE_URL}/metadata/subcategory`, {
             name: formData.subcategory
           })
         );
@@ -157,7 +157,7 @@ export default function AddProductForm() {
         data.append("images", formData.images[i]);
       }
 
-      await axios.post("http://localhost:5000/admin/add-product", data, {
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/admin/add-product`, data, {
         headers: {
           "Content-Type": "multipart/form-data"
         }

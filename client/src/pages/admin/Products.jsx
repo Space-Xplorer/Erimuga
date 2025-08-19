@@ -10,7 +10,7 @@ const AdminProducts = () => {
   // Fetch all products from backend
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/admin/products");
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/admin/products`);
       setProducts(res.data);
     } catch (err) {
       setError("Failed to fetch products");

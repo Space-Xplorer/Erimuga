@@ -14,7 +14,7 @@ const AdminDashboard = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/admin/orders');
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/admin/orders`);
       setOrders(res.data);
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -27,7 +27,7 @@ const AdminDashboard = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/admin/orders/${orderId}`, {
+      await axios.put(`${import.meta.env.VITE_BASE_URL}/admin/orders/${orderId}`, {
         status: newStatus,
       });
       fetchOrders();
@@ -71,7 +71,7 @@ const AdminDashboard = () => {
           }}
           onDelete={async (orderId) => {
             try {
-              await axios.delete(`http://localhost:5000/admin/orders/${orderId}`);
+              await axios.delete(`${import.meta.env.VITE_BASE_URL}/admin/orders/${orderId}`);
               fetchOrders();
             } catch (err) {
               console.error('Error deleting order:', err);
@@ -79,7 +79,7 @@ const AdminDashboard = () => {
           }}
           onMetadataUpdate={async (orderId, metadata) => {
             try {
-              await axios.put(`http://localhost:5000/admin/orders/${orderId}/metadata`, {
+              await axios.put(`${import.meta.env.VITE_BASE_URL}/admin/orders/${orderId}/metadata`, {
                 metadata,
               });
               fetchOrders();

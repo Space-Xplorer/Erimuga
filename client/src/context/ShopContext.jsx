@@ -15,7 +15,7 @@ const ShopContextProvider = ({ children }) => {
   const [filter, setFilter] = useState({ category: '', priceRange: [0, 10000] });
 
   useEffect(() => {
-    axios.get('http://localhost:5000/products')
+    axios.get(`${import.meta.env.VITE_BASE_URL}/products`)
       .then((res) => setProducts(res.data))
       .catch((err) => {
         console.error('Error fetching products:', err);
@@ -33,7 +33,7 @@ const ShopContextProvider = ({ children }) => {
 
   const getCartDataFromBackend = async (userId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/cart/get?userId=${userId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/cart/get?userId=${userId}`, {
         withCredentials: true
       });
       const cartArray = res.data.cart;
@@ -67,7 +67,7 @@ const ShopContextProvider = ({ children }) => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/cart/add', {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/cart/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ const ShopContextProvider = ({ children }) => {
     }
 
     try {
-      const res = await axios.delete('http://localhost:5000/cart/remove', {
+      const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/cart/remove`, {
         data: {
           userId: authUser._id,
           productCode,
@@ -126,7 +126,7 @@ const ShopContextProvider = ({ children }) => {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/cart/update',
+        `${import.meta.env.VITE_BASE_URL}/cart/update`,
         {
           userId: authUser._id,
           productId,
@@ -151,7 +151,7 @@ const ShopContextProvider = ({ children }) => {
 
   const clearCart = async () => {
     try {
-      await axios.delete(`http://localhost:5000/cart/clear`, {
+      await axios.delete(`${import.meta.env.VITE_BASE_URL}/cart/clear`, {
         data: { userId: authUser._id },
         withCredentials: true,
       });
@@ -195,7 +195,7 @@ const ShopContextProvider = ({ children }) => {
         date: Date.now()
       };
 
-      const res = await axios.post('http://localhost:5000/orders/create', orderPayload, { withCredentials: true });
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/orders/create`, orderPayload, { withCredentials: true });
       setCartItems([]);
       toast.success("Order placed successfully!");
       return res.data;

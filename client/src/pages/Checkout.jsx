@@ -46,7 +46,7 @@ const handlePlaceOrder = async () => {
   if (paymentMethod === 'cod') {
     try {
       await axios.post(
-        'http://localhost:5000/orders/place-order/cod',
+        `{import.meta.env.VITE_BASE_URL}/orders/place-order/cod`,
         {
           userID: authUser._id,
           items,
@@ -79,7 +79,7 @@ const handlePlaceOrder = async () => {
 
   try {
     const razorpayOrder = await axios.post(
-      'http://localhost:5000/orders/place-order/razorpay',
+      `${import.meta.env.VITE_BASE_URL}/orders/place-order/razorpay`,
       { amount: totalAmount },
       { withCredentials: true }
     );
@@ -94,7 +94,7 @@ const handlePlaceOrder = async () => {
       handler: async function (response) {
         try {
           await axios.post(
-            'http://localhost:5000/orders/verify-payment',
+            `${import.meta.env.VITE_BASE_URL}/orders/verify-payment`,
             {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,

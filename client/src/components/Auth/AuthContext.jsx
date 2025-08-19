@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
     try {
-      await axios.post('http://localhost:5000/user/auth/logout', {}, {
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/user/auth/logout`, {}, {
         withCredentials: true,
       });
     } catch (error) {

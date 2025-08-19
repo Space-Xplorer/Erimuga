@@ -40,7 +40,7 @@ const AddressManager = () => {
   const handleAddAddress = async () => {
     try {
       const response = await axios.put(
-        'http://localhost:5000/users/update-address',
+        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
         { 
           userId: authUser._id,
           address: newAddress,
@@ -65,7 +65,7 @@ const AddressManager = () => {
   const handleUpdateAddress = async () => {
     try {
       const response = await axios.put(
-        'http://localhost:5000/users/update-address',
+        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
         { 
           userId: authUser._id,
           address: editingAddress,
@@ -83,7 +83,7 @@ const AddressManager = () => {
   const handleDeleteAddress = async (addressId) => {
     try {
       const response = await axios.put(
-        'http://localhost:5000/users/update-address',
+        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
         { 
           userId: authUser._id,
           addressId,
@@ -100,7 +100,7 @@ const AddressManager = () => {
   const handleSetDefault = async (addressId) => {
     try {
       const response = await axios.put(
-        'http://localhost:5000/users/update-address',
+        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
         { 
           userId: authUser._id,
           addressId,

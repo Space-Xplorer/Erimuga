@@ -7,7 +7,7 @@ const OrderCard = ({ order }) => {
       const confirmed = window.confirm("Are you sure you want to cancel this order?");
       if (!confirmed) return;
 
-      const res = await axios.delete(`http://localhost:5000/orders/${order._id}`);
+      const res = await axios.delete(`${import.meta.env.VITE_BASE_URL}/orders/${order._id}`);
       
       // ✅ Razorpay specific refund message
       if (order.paymentMethod.toLowerCase() === 'razorpay') {

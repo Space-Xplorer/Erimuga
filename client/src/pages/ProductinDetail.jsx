@@ -22,7 +22,7 @@ const ProductinDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/products/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/products/${id}`);
         setProduct(res.data);
 
         // Set first image as main display if available

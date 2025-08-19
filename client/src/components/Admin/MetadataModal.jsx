@@ -12,7 +12,7 @@ const MetadataModal = ({ isOpen, onClose }) => {
 
     try {
       setLoading(true);
-      await axios.post(`http://localhost:5000/metadata/${type}`, {
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/metadata/${type}`, {
         name: name.trim(),
       });
       alert(`${type} added successfully`);

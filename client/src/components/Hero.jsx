@@ -46,7 +46,7 @@ const Hero = () => {
             </p>
             <Link
               to="/collection"
-              className="inline-block bg-[#D4A373] text-white font-semibold px-6 py-3 rounded hover:bg-[#c88d56] transition"
+              className="inline-block bg-[#B22222] text-white font-semibold px-6 py-3 rounded hover:bg-[#B22222]/20 transition"
             >
               Shop the Collection
             </Link>

@@ -33,8 +33,8 @@ const CollectionPage = () => {
     const fetchData = async () => {
       try {
         const [productsRes, metadataRes] = await Promise.all([
-          fetch('http://localhost:5000/products'),
-          fetch('http://localhost:5000/metadata')
+          fetch(`${import.meta.env.VITE_BASE_URL}/products`),
+          fetch(`${import.meta.env.VITE_BASE_URL}/metadata`)
         ]);
         if (!productsRes.ok || !metadataRes.ok) {
           throw new Error('Failed to fetch data');
