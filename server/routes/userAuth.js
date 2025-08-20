@@ -1,3 +1,4 @@
+import { BASE_URL } from '../config/baseUrl.js';
 import express from "express";
 import passport from "passport";
 import bcrypt from "bcrypt";
@@ -120,7 +121,7 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 
 router.get("/google/callback", passport.authenticate("google", {
   failureRedirect: "/login",
-  successRedirect: "http://localhost:5173/"
+  successRedirect: BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/'
 }));
 
 export default router;

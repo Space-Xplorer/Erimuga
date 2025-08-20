@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 const addtocart = async (req, res) => {
   try {
     const { userId, productId, selectedSize, selectedColor, quantity } = req.body;
-    console.log("Request body:", req.body);
+  // ...removed debug log...
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -28,8 +28,7 @@ const addtocart = async (req, res) => {
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
-      console.log("✅ Product fetched:", product);
-      console.log("✅ Product name:", product.name);
+      // ...removed debug logs...
 
       user.cartData.push({
         productId,

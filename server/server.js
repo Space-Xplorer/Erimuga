@@ -4,6 +4,9 @@ import 'dotenv/config';
 import session from 'express-session';
 import passport from 'passport';
 import MongoStore from "connect-mongo";
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 
 import connectDB from './config/mongodb.js';
 import './config/cloudinary.js';  // Cloudinary config is imported and executed automatically
@@ -15,6 +18,8 @@ import cartRouter from './routes/cart.js';
 import orderRouter from './routes/orders.js';
 import adminRoutes from './routes/adminRoutes.js';
 import metadataRoutes from './routes/metaDataRoutes.js';
+import { BASE_URL } from './config/baseUrl.js';
+import { FRONTEND_URL } from './config/baseUrl.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,8 +27,21 @@ const PORT = process.env.PORT || 3000;
 // Connect to MongoDB
 await connectDB();
 
+// Security headers
+app.use(helmet());
+
+// Logging
+app.use(morgan('combined'));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Adjust this to the client URL
+  origin: FRONTEND_URL,
   credentials: true
 }));
 app.use(express.json());
@@ -66,7 +84,14 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
+
     console.log(`Server is running on port ${PORT}`);
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
 
