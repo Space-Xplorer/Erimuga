@@ -1,287 +1,199 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '../../components/Auth/AuthContext';
+import React, { useState } from "react";
+import { useAuth } from "../../components/Auth/AuthContext";
 
 const AddressManager = () => {
-  const { authUser, updateUser } = useAuth();
-  const [addresses, setAddresses] = useState([]);
-  const [editingAddress, setEditingAddress] = useState(null);
+  const { user, updateUser } = useAuth();
   const [newAddress, setNewAddress] = useState({
-    street: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'India',
-    isDefault: false
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
   });
 
-  useEffect(() => {
-    if (authUser?.addresses) {
-      setAddresses(authUser.addresses);
-    }
-  }, [authUser]);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editAddress, setEditAddress] = useState({
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+  });
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNewAddress({
-      ...newAddress,
-      [name]: type === 'checkbox' ? checked : value
-    });
+  // ✅ Add address
+  const handleAddAddress = () => {
+    if (!newAddress.street || !newAddress.city) {
+      alert("Street and City are required!");
+      return;
+    }
+    const updatedAddresses = [...(user?.addresses || []), newAddress];
+    updateUser({ ...user, addresses: updatedAddresses });
+    setNewAddress({ street: "", city: "", state: "", zip: "" });
+  };
+
+  // ✅ Delete address
+  const handleDeleteAddress = (index) => {
+    const updatedAddresses = (user?.addresses || []).filter((_, i) => i !== index);
+    updateUser({ ...user, addresses: updatedAddresses });
+  };
+
+  // ✅ Edit address
+  const handleEditAddress = (index) => {
+    setEditIndex(index);
+    setEditAddress(user.addresses[index]);
+  };
+
+  // ✅ Save updated address
+  const handleUpdateAddress = () => {
+    const updatedAddresses = [...(user?.addresses || [])];
+    updatedAddresses[editIndex] = editAddress;
+    updateUser({ ...user, addresses: updatedAddresses });
+    setEditIndex(null);
+    setEditAddress({ street: "", city: "", state: "", zip: "" });
   };
 
   const handleEditInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setEditingAddress({
-      ...editingAddress,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  const handleAddAddress = async () => {
-    try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
-        { 
-          userId: authUser._id,
-          address: newAddress,
-          action: 'add'
-        },
-        { withCredentials: true }
-      );
-      updateUser(response.data.user);
-      setNewAddress({
-        street: '',
-        city: '',
-        state: '',
-        postalCode: '',
-        country: 'India',
-        isDefault: false
-      });
-    } catch (err) {
-      console.error('Error adding address:', err);
-    }
-  };
-
-  const handleUpdateAddress = async () => {
-    try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
-        { 
-          userId: authUser._id,
-          address: editingAddress,
-          action: 'update'
-        },
-        { withCredentials: true }
-      );
-      updateUser(response.data.user);
-      setEditingAddress(null);
-    } catch (err) {
-      console.error('Error updating address:', err);
-    }
-  };
-
-  const handleDeleteAddress = async (addressId) => {
-    try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
-        { 
-          userId: authUser._id,
-          addressId,
-          action: 'delete'
-        },
-        { withCredentials: true }
-      );
-      updateUser(response.data.user);
-    } catch (err) {
-      console.error('Error deleting address:', err);
-    }
-  };
-
-  const handleSetDefault = async (addressId) => {
-    try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/users/update-address`,
-        { 
-          userId: authUser._id,
-          addressId,
-          action: 'set-default'
-        },
-        { withCredentials: true }
-      );
-      updateUser(response.data.user);
-    } catch (err) {
-      console.error('Error setting default address:', err);
-    }
+    const { name, value } = e.target;
+    setEditAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Manage Addresses</h3>
-      
-      {/* Add New Address */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h4 className="font-medium mb-3">Add New Address</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="block mb-1">Street Address</label>
-            <input
-              type="text"
-              name="street"
-              value={newAddress.street}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">City</label>
-            <input
-              type="text"
-              name="city"
-              value={newAddress.city}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">State</label>
-            <input
-              type="text"
-              name="state"
-              value={newAddress.state}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div>
-            <label className="block mb-1">Postal Code</label>
-            <input
-              type="text"
-              name="postalCode"
-              value={newAddress.postalCode}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          <div className="col-span-2 flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="isDefault"
-              checked={newAddress.isDefault}
-              onChange={handleInputChange}
-            />
-            <label>Set as default address</label>
-          </div>
-          <button
-            onClick={handleAddAddress}
-            className="col-span-2 bg-[#b22222] text-white py-2 rounded hover:bg-[#a11c1c] transition"
-          >
-            Save Address
-          </button>
-        </div>
-      </div>
+    <div className="p-6 max-w-2xl mx-auto bg-white border rounded-2xl shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-center text-[#b22222]">
+        Manage Addresses
+      </h2>
 
-      {/* Saved Addresses */}
-      <div className="space-y-4">
-        {addresses.map((address) => (
-          <div key={address._id} className="border p-4 rounded-lg">
-            {editingAddress?._id === address._id ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <label className="block mb-1">Street</label>
-                    <input
-                      type="text"
-                      name="street"
-                      value={editingAddress.street}
-                      onChange={handleEditInputChange}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={editingAddress.city}
-                      onChange={handleEditInputChange}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">State</label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={editingAddress.state}
-                      onChange={handleEditInputChange}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">Postal Code</label>
-                    <input
-                      type="text"
-                      name="postalCode"
-                      value={editingAddress.postalCode}
-                      onChange={handleEditInputChange}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
+      {/* Existing Addresses */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold mb-3">Saved Addresses</h3>
+        {user?.addresses?.length > 0 ? (
+          user.addresses.map((address, index) => (
+            <div
+              key={index}
+              className="p-4 border rounded-xl mb-3 flex justify-between items-start bg-gray-50"
+            >
+              {editIndex === index ? (
+                <div className="flex flex-col gap-2 w-full">
+                  <input
+                    type="text"
+                    name="street"
+                    value={editAddress.street}
+                    onChange={handleEditInputChange}
+                    placeholder="Street"
+                    className="border p-2 rounded"
+                  />
+                  <input
+                    type="text"
+                    name="city"
+                    value={editAddress.city}
+                    onChange={handleEditInputChange}
+                    placeholder="City"
+                    className="border p-2 rounded"
+                  />
+                  <input
+                    type="text"
+                    name="state"
+                    value={editAddress.state}
+                    onChange={handleEditInputChange}
+                    placeholder="State"
+                    className="border p-2 rounded"
+                  />
+                  <input
+                    type="text"
+                    name="zip"
+                    value={editAddress.zip}
+                    onChange={handleEditInputChange}
+                    placeholder="ZIP"
+                    className="border p-2 rounded"
+                  />
                   <button
                     onClick={handleUpdateAddress}
-                    className="bg-[#b22222] text-white px-3 py-1 rounded"
+                    className="bg-[#b22222] hover:bg-red-700 text-white px-3 py-2 rounded-lg mt-2 transition"
                   >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingAddress(null)}
-                    className="bg-gray-200 px-3 py-1 rounded"
-                  >
-                    Cancel
+                    Save Changes
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{address.street}</p>
-                    <p>{address.city}, {address.state} - {address.postalCode}</p>
-                    {address.isDefault && (
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">
-                        Default
-                      </span>
-                    )}
-                  </div>
+              ) : (
+                <>
+                  <span className="text-gray-700">
+                    {address?.street}, {address?.city}, {address?.state} -{" "}
+                    {address?.zip}
+                  </span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setEditingAddress({...address})}
-                      className="text-blue-600 hover:underline"
+                      onClick={() => handleEditAddress(index)}
+                      className="bg-[#b22222] hover:bg-red-700 text-white px-3 py-1 rounded-lg transition"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDeleteAddress(address._id)}
-                      className="text-red-600 hover:underline"
+                      onClick={() => handleDeleteAddress(index)}
+                      className="bg-gray-600 hover:bg-gray-800 text-white px-3 py-1 rounded-lg transition"
                     >
                       Delete
                     </button>
                   </div>
-                </div>
-                {!address.isDefault && (
-                  <button
-                    onClick={() => handleSetDefault(address._id)}
-                    className="mt-2 text-sm text-[#b22222] hover:underline"
-                  >
-                    Set as default
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+                </>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 italic">No addresses added yet.</p>
+        )}
+      </div>
+
+      {/* Add New Address */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Add New Address</h3>
+        <div className="flex flex-col gap-3">
+          <input
+            type="text"
+            name="street"
+            value={newAddress.street}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, street: e.target.value })
+            }
+            placeholder="Street"
+            className="border p-2 rounded"
+          />
+          <input
+            type="text"
+            name="city"
+            value={newAddress.city}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, city: e.target.value })
+            }
+            placeholder="City"
+            className="border p-2 rounded"
+          />
+          <input
+            type="text"
+            name="state"
+            value={newAddress.state}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, state: e.target.value })
+            }
+            placeholder="State"
+            className="border p-2 rounded"
+          />
+          <input
+            type="text"
+            name="zip"
+            value={newAddress.zip}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, zip: e.target.value })
+            }
+            placeholder="ZIP"
+            className="border p-2 rounded"
+          />
+          <button
+            onClick={handleAddAddress}
+            className="bg-[#b22222] hover:bg-red-700 text-white px-4 py-2 rounded-lg mt-2 transition"
+          >
+            ➕ Add Address
+          </button>
+        </div>
       </div>
     </div>
   );

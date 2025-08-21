@@ -5,23 +5,53 @@ import dotenv from 'dotenv';
 dotenv.config();
 import crypto from 'crypto';
 
+// const placeOrderCOD = async (req, res) => {
+//   try {
+//     const { userID, items, amount, address } = req.body;
+
+//     const newOrder = new orderModel({
+//       userID,
+//       items,
+//       amount,
+//       address,
+//       paymentMethod: 'COD',
+//       payment: false,
+//       date: Date.now(),
+//     });
+
+//     await newOrder.save();
+
+//     // Clear user's cart after order
+//     await userModel.findByIdAndUpdate(userID, { cartData: {} });
+
+//     res.status(200).json({ message: 'Order placed with COD successfully', order: newOrder });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to place COD order', details: error.message });
+//   }
+// };
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+
 const placeOrderCOD = async (req, res) => {
   try {
-    const { userID, items, amount, address } = req.body;
+    const { userID, items, amount, address, phone } = req.body; // ✅ include phone
 
     const newOrder = new orderModel({
       userID,
       items,
       amount,
       address,
+      phone, // ✅ save phone
       paymentMethod: 'COD',
       payment: false,
       date: Date.now(),
     });
 
     await newOrder.save();
-
-    // Clear user's cart after order
     await userModel.findByIdAndUpdate(userID, { cartData: {} });
 
     res.status(200).json({ message: 'Order placed with COD successfully', order: newOrder });
@@ -30,47 +60,7 @@ const placeOrderCOD = async (req, res) => {
   }
 };
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
 
-// const placeOrderRazorpay = async (req, res) => {
-//   try {
-//     console.log("🔥 Incoming Razorpay order:", req.body);
-
-//     const userID = req.user?._id || req.body.userID;
-//     const { items, amount, address } = req.body;
-
-//     if (!userID || !items || !amount || !address) {
-//       console.log("❌ Missing data", { userID, items, amount, address });
-//       return res.status(400).json({ error: "Missing required data" });
-//     }
-
-//     const razorpay = new Razorpay({
-//       key_id: process.env.RAZORPAY_KEY_ID,
-//       key_secret: process.env.RAZORPAY_SECRET
-//     });
-
-//     const razorpayOrder = await razorpay.orders.create({
-//       amount: amount * 100,
-//       currency: "INR",
-//       receipt: `receipt_order_${Date.now()}`,
-//       payment_capture: 1,
-//     });
-
-//     console.log("✅ Razorpay order created:", razorpayOrder);
-
-//     res.status(200).json({
-//       success: true,
-//       order: razorpayOrder,
-//       key: process.env.RAZORPAY_KEY_ID
-//     });
-//   } catch (error) {
-//     console.error("🔥 Razorpay error:", error);
-//     res.status(500).json({ error: 'Failed to create Razorpay order', details: error.message });
-//   }
-// };
 const placeOrderRazorpay = async (req, res) => {
   try {
     const { amount } = req.body;
@@ -92,6 +82,51 @@ const placeOrderRazorpay = async (req, res) => {
   }
 };
 
+// const verifyAndPlaceOrder = async (req, res) => {
+//   try {
+//     const {
+//       razorpay_order_id,
+//       razorpay_payment_id,
+//       razorpay_signature,
+//       userID,
+//       items,
+//       amount,
+//       address,
+//     } = req.body;
+
+//     // STEP 1: Verify signature
+//     const body = razorpay_order_id + "|" + razorpay_payment_id;
+//     const expectedSignature = crypto
+//      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+//       .update(body.toString())
+//       .digest("hex");
+
+//     if (expectedSignature !== razorpay_signature) {
+//       return res.status(400).json({ error: "Invalid payment signature" });
+//     }
+
+//     // STEP 2: Save order
+//     const newOrder = new orderModel({
+//       userID,
+//       items,
+//       amount,
+//       address,
+//       paymentMethod: 'Razorpay',
+//       payment: true,
+//       date: Date.now(),
+//     });
+
+//     await newOrder.save();
+//     console.log("🟢 Order saved after payment");
+
+//     res.status(200).json({ message: "Order placed successfully" });
+//   } catch (err) {
+//     console.error("🔴 Error verifying or saving order:", err);
+//     res.status(500).json({ error: "Payment verification failed" });
+//   }
+// };
+
+
 const verifyAndPlaceOrder = async (req, res) => {
   try {
     const {
@@ -102,36 +137,26 @@ const verifyAndPlaceOrder = async (req, res) => {
       items,
       amount,
       address,
+      phone, // ✅ accept phone
     } = req.body;
 
-    // STEP 1: Verify signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ error: "Invalid payment signature" });
-    }
-
-    // STEP 2: Save order
+    // verify signature...
+    
     const newOrder = new orderModel({
       userID,
       items,
       amount,
       address,
+      phone, // ✅ save phone
       paymentMethod: 'Razorpay',
       payment: true,
+      paymentStatus: 'paid',
       date: Date.now(),
     });
 
     await newOrder.save();
-    console.log("🟢 Order saved after payment");
-
-    res.status(200).json({ message: "Order placed successfully" });
+    res.status(200).json({ message: "Order placed successfully", order: newOrder });
   } catch (err) {
-    console.error("🔴 Error verifying or saving order:", err);
     res.status(500).json({ error: "Payment verification failed" });
   }
 };

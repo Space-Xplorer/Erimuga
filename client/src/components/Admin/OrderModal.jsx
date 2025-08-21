@@ -28,13 +28,17 @@ const OrderModal = ({ order, isOpen, onClose }) => {
             {/* Address Section */}
             <div>
               <p className="font-medium">Shipping Address:</p>
-              <div className="ml-4 text-gray-600 text-sm space-y-0.5">
-                {address.name && <p><span className="font-medium">Name:</span> {address.name}</p>}
-                {address.address && <p><span className="font-medium">Address:</span> {address.address}</p>}
-                {address.email && <p><span className="font-medium">Email:</span> {address.email}</p>}
-                {address.phone && <p><span className="font-medium">Phone:</span> {address.phone}</p>}
+                <div className="ml-4 text-gray-600 text-sm space-y-0.5">
+                  {address.street && <p><span className="font-medium">Street:</span> {address.street}</p>}
+                  {address.city && <p><span className="font-medium">City:</span> {address.city}</p>}
+                  {address.state && <p><span className="font-medium">State:</span> {address.state}</p>}
+                  {address.zip && <p><span className="font-medium">ZIP:</span> {address.zip}</p>}
+                  {address.country && <p><span className="font-medium">Country:</span> {address.country}</p>}
+                  {order.phone && <p><span className="font-medium">Phone:</span> {order.phone}</p>} {/* ✅ separate phone */}
               </div>
             </div>
+
+          
 
             {/* Items Section */}
             <div>

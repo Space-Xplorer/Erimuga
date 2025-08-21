@@ -6,7 +6,7 @@ import userModel from "../models/userModel.js";
 
 const router = express.Router();
 
-// server/routes/user.js (or auth.js)
+// ✅ Get current logged-in user
 router.get('/me', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user);
@@ -15,20 +15,7 @@ router.get('/me', (req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
-  try {
-    const user = await userModel.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-
+// ✅ Registration
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, userType = "user" } = req.body;
@@ -58,36 +45,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Local Login
-// router.post("/login", passport.authenticate('local'), async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const user = await userModel.findOne({ email });
-    
-//     if (!user) {
-//       return res.status(401).json({ message: "Invalid email or password" });
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       return res.status(401).json({ message: "Invalid email or password" });
-//     }
-
-//     res.status(200).json({
-//       message: "Logged in successfully",
-//       user: {
-//         _id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         userType: user.userType
-//       },
-//       token: user._id // Using user._id as a simple token for now
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Login failed", error: error.message });
-//   }
-// });
-
+// ✅ Local login
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
@@ -109,19 +67,89 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
-// Logout
+// ✅ Logout
 router.post("/logout", (req, res) => {
   req.logout(() => {
     res.status(200).json({ message: "Logged out" });
   });
 });
 
-// Google OAuth
+// ✅ Google OAuth (placed ABOVE /:id)
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-router.get("/google/callback", passport.authenticate("google", {
-  failureRedirect: "/login",
-  successRedirect: BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/'
-}));
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/login",
+  }),
+  (req, res) => {
+    // Redirect back to frontend (dashboard, home, etc.)
+    res.redirect(BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/');
+  }
+);
+
+// ✅ Update addresses
+router.put("/update-address", async (req, res) => {
+  try {
+    const { userId, address, addressId, action } = req.body;
+    const user = await userModel.findById(userId);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    switch (action) {
+      case "add":
+        if (address.isDefault) {
+          user.addresses.forEach((addr) => (addr.isDefault = false));
+        }
+        user.addresses.push(address);
+        break;
+
+      case "update": {
+        const idx = user.addresses.findIndex((a) => a._id.toString() === address._id);
+        if (idx === -1) return res.status(404).json({ message: "Address not found" });
+
+        if (address.isDefault) {
+          user.addresses.forEach((addr) => (addr.isDefault = false));
+        }
+
+        user.addresses[idx] = { ...user.addresses[idx]._doc, ...address };
+        break;
+      }
+
+      case "delete":
+        user.addresses = user.addresses.filter((a) => a._id.toString() !== addressId);
+        break;
+
+      case "set-default":
+        user.addresses.forEach((addr) => {
+          addr.isDefault = addr._id.toString() === addressId;
+        });
+        break;
+
+      default:
+        return res.status(400).json({ message: "Invalid action" });
+    }
+
+    await user.save();
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("updateAddress error:", err);
+    res.status(500).json({ message: "Server error", details: err.message });
+  }
+});
+
+// ✅ IMPORTANT: This must stay LAST so it doesn’t catch /google
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 export default router;

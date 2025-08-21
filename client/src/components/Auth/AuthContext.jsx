@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return !!localStorage.getItem('userAuthToken');
   });
@@ -20,23 +21,28 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  // ✅ Ensure _id is stored
   const login = (userData, token) => {
     const userWithAdmin = {
       ...userData,
-      isAdmin: userData.userType === 'admin', // syncs with ProtectedRoute logic
+      _id: userData._id, // Make sure backend sends this
+      isAdmin: userData.userType === 'admin',
     };
+
     setUser(userWithAdmin);
     setIsAuthenticated(true);
+
     localStorage.setItem('userAuthToken', token);
     localStorage.setItem('user', JSON.stringify(userWithAdmin));
   };
 
-
-    const logout = async () => {
+  const logout = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/user/auth/logout`, {}, {
-        withCredentials: true,
-      });
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/user/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
     } catch (error) {
       console.error("Server-side logout failed:", error);
     } finally {
@@ -47,26 +53,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
-    user,
-    isAuthenticated,
-    login,
-    logout
+
+  // ✅ FIX: Define updateUser INSIDE provider
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = { user, isAuthenticated, login, logout, updateUser };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
+
+
+
 
 export default AuthContext;
