@@ -3,7 +3,7 @@ import axios from "axios";
 import OrderCard from "../components/User/OrderCard";
 import AddressManager from "../components/User/AddressManager";
 import { ShopContext } from "../context/ShopContext";
-import { User, Mail, Phone, MapPin, Package } from "lucide-react"; // ✅ icons
+import { User, Mail, Phone, MapPin, Package } from "lucide-react";
 
 const UserDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -76,40 +76,41 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-[#b22222] mb-8">My Account</h1>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-[#b22222] mb-8">My Account</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Section */}
-        <div className="bg-white rounded-xl shadow hover:shadow-md transition p-6">
-          <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-            <User className="w-5 h-5 text-[#b22222]" /> Profile
-          </h2>
+        <div className="grid grid-cols-1 gap-8 mb-8">
+          {/* Profile Section */}
+          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
+            <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
+              <User className="w-5 h-5 text-[#b22222]" /> Profile
+            </h2>
 
           {editMode ? (
             <div className="space-y-4">
               <div>
-                <label className="block mb-1 text-sm text-gray-600">Name</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Name</label>
                 <input
                   type="text"
                   value={profileData.name}
                   onChange={(e) =>
                     setProfileData({ ...profileData, name: e.target.value })
                   }
-                  className="w-full p-2 border rounded"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm text-gray-600">Email</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Email</label>
                 <input
                   type="email"
                   value={profileData.email}
                   readOnly
-                  className="w-full p-2 border rounded bg-gray-100"
+                  className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm text-gray-600">Phone</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Phone</label>
                 <input
                   type="tel"
                   value={profileData.phoneNumber}
@@ -119,43 +120,44 @@ const UserDashboard = () => {
                       phoneNumber: e.target.value,
                     })
                   }
-                  className="w-full p-2 border rounded"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+                  placeholder="Enter your phone number"
                 />
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleProfileUpdate}
-                  className="flex-1 bg-[#b22222] text-white py-2 rounded-lg hover:bg-[#a11c1c] transition"
+                  className="flex-1 bg-[#b22222] text-white py-3 px-4 rounded-lg hover:bg-[#a11c1c] transition-colors font-medium"
                 >
-                  Save
+                  Save Changes
                 </button>
                 <button
                   onClick={() => setEditMode(false)}
-                  className="flex-1 bg-gray-200 py-2 rounded-lg hover:bg-gray-300 transition"
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
-            <div className="space-y-3 text-gray-700">
-              <p>
-                <span className="text-gray-500 text-sm">Name:</span>{" "}
-                <span className="font-medium">{userDetails?.name || "N/A"}</span>
-              </p>
-              <p>
-                <span className="text-gray-500 text-sm">Email:</span>{" "}
-                <span className="font-medium">{userDetails?.email || "N/A"}</span>
-              </p>
-              <p>
-                <span className="text-gray-500 text-sm">Phone:</span>{" "}
-                <span className="font-medium">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="text-gray-600 text-sm font-medium min-w-[60px]">Name:</div>
+                <div className="font-medium text-gray-800">{userDetails?.name || "N/A"}</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="text-gray-600 text-sm font-medium min-w-[60px]">Email:</div>
+                <div className="font-medium text-gray-800">{userDetails?.email || "N/A"}</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="text-gray-600 text-sm font-medium min-w-[60px]">Phone:</div>
+                <div className="font-medium text-gray-800">
                   {userDetails?.phonenumber || "N/A"}
-                </span>
-              </p>
+                </div>
+              </div>
               <button
                 onClick={() => setEditMode(true)}
-                className="mt-4 bg-[#b22222] text-white px-4 py-2 rounded-lg hover:bg-[#a11c1c] transition"
+                className="w-full mt-6 bg-[#b22222] text-white px-4 py-3 rounded-lg hover:bg-[#a11c1c] transition-colors font-medium"
               >
                 Edit Profile
               </button>
@@ -164,24 +166,28 @@ const UserDashboard = () => {
         </div>
 
         {/* Address Management */}
-        <div className="bg-white rounded-xl shadow hover:shadow-md transition p-6">
-          <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
+        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
+          <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
             <MapPin className="w-5 h-5 text-[#b22222]" /> Address Book
           </h2>
           <AddressManager />
         </div>
+        </div>
 
-        {/* Orders Section */}
-        <div className="bg-white rounded-xl shadow hover:shadow-md transition p-6 lg:col-span-3">
-          <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
+        {/* Orders Section - Full Width */}
+        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
+          <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
             <Package className="w-5 h-5 text-[#b22222]" /> Order History
           </h2>
           {loadingOrders ? (
-            <p className="text-gray-500">Loading orders...</p>
+            <div className="flex justify-center py-8">
+              <p className="text-gray-500">Loading orders...</p>
+            </div>
           ) : orders.length === 0 ? (
-            <p className="text-gray-500 italic">
-              You haven't placed any orders yet.
-            </p>
+            <div className="text-center py-8">
+              <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">You haven't placed any orders yet.</p>
+            </div>
           ) : (
             <div className="space-y-4">
               {orders.map((order) => (

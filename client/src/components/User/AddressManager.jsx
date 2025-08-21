@@ -59,140 +59,157 @@ const AddressManager = () => {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-white border rounded-2xl shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center text-[#b22222]">
+    <div className="w-full bg-white">
+      {/* <h2 className="text-2xl font-bold mb-6 text-center text-[#b22222]">
         Manage Addresses
-      </h2>
+      </h2> */}
 
-      {/* Existing Addresses */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold mb-3">Saved Addresses</h3>
-        {user?.addresses?.length > 0 ? (
-          user.addresses.map((address, index) => (
-            <div
-              key={index}
-              className="p-4 border rounded-xl mb-3 flex justify-between items-start bg-gray-50"
-            >
-              {editIndex === index ? (
-                <div className="flex flex-col gap-2 w-full">
-                  <input
-                    type="text"
-                    name="street"
-                    value={editAddress.street}
-                    onChange={handleEditInputChange}
-                    placeholder="Street"
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    type="text"
-                    name="city"
-                    value={editAddress.city}
-                    onChange={handleEditInputChange}
-                    placeholder="City"
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    type="text"
-                    name="state"
-                    value={editAddress.state}
-                    onChange={handleEditInputChange}
-                    placeholder="State"
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    type="text"
-                    name="zip"
-                    value={editAddress.zip}
-                    onChange={handleEditInputChange}
-                    placeholder="ZIP"
-                    className="border p-2 rounded"
-                  />
-                  <button
-                    onClick={handleUpdateAddress}
-                    className="bg-[#b22222] hover:bg-red-700 text-white px-3 py-2 rounded-lg mt-2 transition"
-                  >
-                    Save Changes
-                  </button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Saved Addresses - Left Column */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800">Saved Addresses</h3>
+          {user?.addresses?.length > 0 ? (
+            <div className="space-y-3">
+              {user.addresses.map((address, index) => (
+                <div
+                  key={index}
+                  className="p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  {editIndex === index ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        name="street"
+                        value={editAddress.street}
+                        onChange={handleEditInputChange}
+                        placeholder="Street"
+                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+                      />
+                      <input
+                        type="text"
+                        name="city"
+                        value={editAddress.city}
+                        onChange={handleEditInputChange}
+                        placeholder="City"
+                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+                      />
+                      <input
+                        type="text"
+                        name="state"
+                        value={editAddress.state}
+                        onChange={handleEditInputChange}
+                        placeholder="State"
+                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+                      />
+                      <input
+                        type="text"
+                        name="zip"
+                        value={editAddress.zip}
+                        onChange={handleEditInputChange}
+                        placeholder="ZIP"
+                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleUpdateAddress}
+                          className="flex-1 bg-[#b22222] hover:bg-[#a11c1c] text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          onClick={() => setEditIndex(null)}
+                          className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-start">
+                      <div className="text-gray-700 leading-relaxed">
+                        <div className="font-medium">{address?.street}</div>
+                        <div className="text-sm text-gray-600">
+                          {address?.city}, {address?.state} - {address?.zip}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={() => handleEditAddress(index)}
+                          className="bg-[#b22222] hover:bg-[#a11c1c] text-white px-3 py-1 rounded-lg transition-colors text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAddress(index)}
+                          className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg transition-colors text-sm font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <span className="text-gray-700">
-                    {address?.street}, {address?.city}, {address?.state} -{" "}
-                    {address?.zip}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditAddress(index)}
-                      className="bg-[#b22222] hover:bg-red-700 text-white px-3 py-1 rounded-lg transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteAddress(index)}
-                      className="bg-gray-600 hover:bg-gray-800 text-white px-3 py-1 rounded-lg transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
+              ))}
             </div>
-          ))
-        ) : (
-          <p className="text-gray-500 italic">No addresses added yet.</p>
-        )}
-      </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">📍</div>
+              <p className="italic">No addresses added yet.</p>
+            </div>
+          )}
+        </div>
 
-      {/* Add New Address */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Add New Address</h3>
-        <div className="flex flex-col gap-3">
-          <input
-            type="text"
-            name="street"
-            value={newAddress.street}
-            onChange={(e) =>
-              setNewAddress({ ...newAddress, street: e.target.value })
-            }
-            placeholder="Street"
-            className="border p-2 rounded"
-          />
-          <input
-            type="text"
-            name="city"
-            value={newAddress.city}
-            onChange={(e) =>
-              setNewAddress({ ...newAddress, city: e.target.value })
-            }
-            placeholder="City"
-            className="border p-2 rounded"
-          />
-          <input
-            type="text"
-            name="state"
-            value={newAddress.state}
-            onChange={(e) =>
-              setNewAddress({ ...newAddress, state: e.target.value })
-            }
-            placeholder="State"
-            className="border p-2 rounded"
-          />
-          <input
-            type="text"
-            name="zip"
-            value={newAddress.zip}
-            onChange={(e) =>
-              setNewAddress({ ...newAddress, zip: e.target.value })
-            }
-            placeholder="ZIP"
-            className="border p-2 rounded"
-          />
-          <button
-            onClick={handleAddAddress}
-            className="bg-[#b22222] hover:bg-red-700 text-white px-4 py-2 rounded-lg mt-2 transition"
-          >
-            ➕ Add Address
-          </button>
+        {/* Add New Address - Right Column */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800">Add New Address</h3>
+          <div className="space-y-4 p-6 bg-gray-50 rounded-lg border border-gray-200">
+            <input
+              type="text"
+              name="street"
+              value={newAddress.street}
+              onChange={(e) =>
+                setNewAddress({ ...newAddress, street: e.target.value })
+              }
+              placeholder="Street"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+            />
+            <input
+              type="text"
+              name="city"
+              value={newAddress.city}
+              onChange={(e) =>
+                setNewAddress({ ...newAddress, city: e.target.value })
+              }
+              placeholder="City"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+            />
+            <input
+              type="text"
+              name="state"
+              value={newAddress.state}
+              onChange={(e) =>
+                setNewAddress({ ...newAddress, state: e.target.value })
+              }
+              placeholder="State"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+            />
+            <input
+              type="text"
+              name="zip"
+              value={newAddress.zip}
+              onChange={(e) =>
+                setNewAddress({ ...newAddress, zip: e.target.value })
+              }
+              placeholder="ZIP"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
+            />
+            <button
+              onClick={handleAddAddress}
+              className="w-full bg-[#b22222] hover:bg-[#a11c1c] text-white px-4 py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+            >
+              ➕ Add Address
+            </button>
+          </div>
         </div>
       </div>
     </div>
