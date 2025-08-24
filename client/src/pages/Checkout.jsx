@@ -326,7 +326,6 @@
 
 // export default Checkout;
 
-
 import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { ShopContext } from "../context/ShopContext";
@@ -348,6 +347,7 @@ const Checkout = () => {
     fullAddress: "",
   });
 
+  // Auto-fill default address if available
   useEffect(() => {
     if (authUser?._id) {
       const defaultAddr =
@@ -407,11 +407,8 @@ const Checkout = () => {
             payment: false,
           },
           {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authUser?.token}`, // ✅ added
-            },
-            withCredentials: true,
+            headers: { "Content-Type": "application/json" },
+            withCredentials: true, // ✅ session cookie
           }
         );
 
@@ -436,11 +433,8 @@ const Checkout = () => {
         `${BASE_URL}/orders/place-order/razorpay`,
         { amount: totalAmount },
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authUser?.token}`, // ✅ added
-          },
-          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true, // ✅ session cookie
         }
       );
 
@@ -469,11 +463,8 @@ const Checkout = () => {
                 payment: true,
               },
               {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${authUser?.token}`, // ✅ added
-                },
-                withCredentials: true,
+                headers: { "Content-Type": "application/json" },
+                withCredentials: true, // ✅ session cookie
               }
             );
 
@@ -489,9 +480,7 @@ const Checkout = () => {
           email: authUser?.email || "",
           contact: phone,
         },
-        theme: {
-          color: "#b22222",
-        },
+        theme: { color: "#b22222" },
       };
 
       const rzp = new window.Razorpay(options);
