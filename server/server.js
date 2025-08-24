@@ -69,7 +69,7 @@ app.use(session({
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day
     httpOnly: true,
-    secure: "true", // ✅ secure in prod
+    secure: true, // ✅ secure in prod
     sameSite: "none", // ✅ helps with cross-site cookies
   }
 }));
