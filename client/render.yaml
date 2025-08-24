@@ -1,0 +1,20 @@
+# Exported from Render on 2025-08-24T18:06:33Z
+services:
+- type: web
+  name: Erimuga-frontend
+  runtime: node
+  repo: https://github.com/Space-Xplorer/Erimuga
+  plan: free
+  envVars:
+  - key: VITE_BASE_URL
+    sync: false
+  - key: VITE_RAZORPAY_SECRET
+    sync: false
+  - key: VITE_RAZORPAY_KEY_ID
+    sync: false
+  region: oregon
+  buildCommand: npm install
+  startCommand: npm run dev
+  autoDeployTrigger: commit
+  rootDir: client
+version: "1"
