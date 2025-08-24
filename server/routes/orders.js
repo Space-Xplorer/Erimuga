@@ -15,10 +15,13 @@ orderRouter.post('/place-order/cod', isLoggedIn, placeOrderCOD);
 orderRouter.post('/place-order/razorpay', isLoggedIn, placeOrderRazorpay);
 
 orderRouter.get('/', isLoggedIn, isAdmin, getAllOrders);
-orderRouter.get('/:id', isLoggedIn, getOrderDetails);
-orderRouter.put('/:id/status', isLoggedIn, updateOrder);
-orderRouter.get('/user/:id', isLoggedIn, getUserOrders);
+
+orderRouter.get('/user/:id', isLoggedIn, getUserOrders);   // 👈 move above
+orderRouter.put('/:id/status', isLoggedIn, updateOrder);   // 👈 more specific before
 orderRouter.delete('/:id', isLoggedIn, cancelOrder);
+orderRouter.get('/:id', isLoggedIn, getOrderDetails);      // 👈 keep generic last
+
 orderRouter.post('/verify-payment', isLoggedIn, verifyAndPlaceOrder);
+
 
 export default orderRouter;

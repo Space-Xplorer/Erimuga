@@ -1,8 +1,10 @@
-import { BASE_URL } from '../config/baseUrl.js';
 import express from "express";
 import passport from "passport";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
+import 'dotenv/config';
+
+const BASE_URL = process.env.BASE_URL;
 
 const router = express.Router();
 

@@ -18,11 +18,13 @@ import cartRouter from './routes/cart.js';
 import orderRouter from './routes/orders.js';
 import adminRoutes from './routes/adminRoutes.js';
 import metadataRoutes from './routes/metaDataRoutes.js';
-import { BASE_URL } from './config/baseUrl.js';
-import { FRONTEND_URL } from './config/baseUrl.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ✅ Environment variables (no need for baseUrl.js file)
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Connect to MongoDB
 await connectDB();
@@ -40,14 +42,17 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// ✅ CORS setup
 app.use(cors({
   origin: FRONTEND_URL,
-  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the public directory
+// Serve static files from the client public directory
 app.use(express.static('../client/public'));
 
 // Health check endpoint
@@ -55,18 +60,20 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'Server is running' });
 });
 
-// Load Passport strategies
+// Sessions
 app.use(session({
   secret: process.env.SESSION_SECRET || 'yourSecretKey',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }), // optional
+  store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }), // ✅ fixed env var name
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day
     httpOnly: true,
-    secure: false, // set to true in production with HTTPS
+    secure: true, // ✅ secure in prod
+    sameSite: "none", // ✅ helps with cross-site cookies
   }
 }));
+
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
@@ -77,15 +84,10 @@ app.use("/products", productRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", orderRouter);
 app.use("/admin", adminRoutes);
-app.use('/metadata', metadataRoutes);
+app.use("/metadata", metadataRoutes);
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
-
-app.listen(PORT, () => {
-
-    console.log(`Server is running on port ${PORT}`);
+  res.send('Hello World!');
 });
 
 // Global error handler
@@ -94,4 +96,7 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running at ${BASE_URL}`);
+});
 
