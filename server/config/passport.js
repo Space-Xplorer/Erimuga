@@ -74,4 +74,7 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
+// ✅ Add passport debugging
+passport.authenticate('local', { session: false });
+
 export default passport;

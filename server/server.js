@@ -117,7 +117,7 @@ mongoStore.on('error', (error) => {
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
-  resave: false,
+  resave: true, // Critical for production
   saveUninitialized: false,
   store: mongoStore,
   cookie: {
@@ -126,13 +126,11 @@ app.use(session({
     sameSite: isProd ? "none" : "lax",
     secure: isProd,
     path: '/',
-    domain: undefined, // Let the browser set the domain
-    // ✅ Enhanced cookie settings for cross-origin
+    domain: undefined, // Critical for cross-origin
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   },
   name: 'erimuga.sid',
-  // ✅ Enhanced session settings
-  rolling: true, // Extend session on each request
+  rolling: true,
   unset: 'destroy'
 }));
 

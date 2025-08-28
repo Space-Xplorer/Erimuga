@@ -47,6 +47,49 @@ router.get('/check-session', (req, res) => {
   });
 });
 
+// ✅ Test endpoint to create a simple session
+router.get('/test-session-create', (req, res) => {
+  console.log('🧪 Test session creation endpoint called');
+  
+  // Create a simple test session
+  req.session.testData = {
+    message: 'Test session created',
+    timestamp: new Date().toISOString(),
+    randomId: Math.random().toString(36).substr(2, 9)
+  };
+  
+  req.session.save((err) => {
+    if (err) {
+      console.error('❌ Session save error:', err);
+      return res.status(500).json({ error: 'Failed to save session' });
+    }
+    
+    console.log('✅ Test session created and saved');
+    res.json({
+      success: true,
+      message: 'Test session created',
+      sessionId: req.sessionID,
+      sessionData: req.session.testData
+    });
+  });
+});
+
+// ✅ Test endpoint to read session data
+router.get('/test-session-read', (req, res) => {
+  console.log('🧪 Test session read endpoint called');
+  console.log('  - Session ID:', req.sessionID);
+  console.log('  - Session exists:', !!req.session);
+  console.log('  - Test data:', req.session.testData);
+  
+  res.json({
+    success: true,
+    sessionId: req.sessionID,
+    sessionExists: !!req.session,
+    testData: req.session.testData,
+    allSessionData: req.session
+  });
+});
+
 // ✅ Get current logged-in user - Enhanced with better error handling
 router.get('/me', (req, res) => {
   try {
