@@ -8,12 +8,58 @@ const BASE_URL = process.env.BASE_URL;
 
 const router = express.Router();
 
-// ✅ Get current logged-in user
+// ✅ Get current logged-in user - Enhanced with better error handling
 router.get('/me', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json(req.user);
-  } else {
-    res.status(401).json({ error: "Not authenticated" });
+  try {
+    if (req.isAuthenticated()) {
+      // Don't send sensitive information
+      const { password, __v, ...safeUser } = req.user.toObject();
+      res.json({
+        success: true,
+        user: safeUser,
+        isAuthenticated: true
+      });
+    } else {
+      res.status(401).json({ 
+        success: false,
+        error: "Not authenticated",
+        isAuthenticated: false 
+      });
+    }
+  } catch (error) {
+    console.error('Error in /me route:', error);
+    res.status(500).json({ 
+      success: false,
+      error: "Server error",
+      isAuthenticated: false 
+    });
+  }
+});
+
+// ✅ Session validation endpoint
+router.get('/validate-session', (req, res) => {
+  try {
+    if (req.isAuthenticated()) {
+      const { password, __v, ...safeUser } = req.user.toObject();
+      res.json({
+        success: true,
+        isAuthenticated: true,
+        user: safeUser,
+        sessionId: req.sessionID
+      });
+    } else {
+      res.json({
+        success: false,
+        isAuthenticated: false,
+        message: "No valid session found"
+      });
+    }
+  } catch (error) {
+    console.error('Session validation error:', error);
+    res.status(500).json({
+      success: false,
+      error: "Session validation failed"
+    });
   }
 });
 
@@ -37,42 +83,96 @@ router.post("/register", async (req, res) => {
     });
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      userType: user.userType,
+      success: true,
+      message: "Registration successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+      }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ error: "Registration failed", details: error.message });
   }
 });
 
-// ✅ Local login
+// ✅ Local login - Enhanced with better session handling
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
-    if (err) return next(err);
-    if (!user) return res.status(401).json({ message: info.message || 'Invalid credentials' });
+    if (err) {
+      console.error('Passport authentication error:', err);
+      return next(err);
+    }
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: info.message || 'Invalid credentials' 
+      });
+    }
 
     req.login(user, (err) => {
-      if (err) return next(err);
-      console.log("User logged in:", user);
-      return res.status(200).json({
-        message: "Login successful",
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          userType: user.userType
+      if (err) {
+        console.error('Login error:', err);
+        return next(err);
+      }
+      
+      console.log("User logged in successfully:", user._id);
+      
+      // Save session explicitly
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ 
+            success: false,
+            error: "Failed to create session" 
+          });
         }
+        
+        return res.status(200).json({
+          success: true,
+          message: "Login successful",
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            userType: user.userType
+          },
+          sessionId: req.sessionID
+        });
       });
     });
   })(req, res, next);
 });
 
-// ✅ Logout
+// ✅ Logout - Enhanced with session cleanup
 router.post("/logout", (req, res) => {
-  req.logout(() => {
-    res.status(200).json({ message: "Logged out" });
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ 
+        success: false,
+        error: "Logout failed" 
+      });
+    }
+    
+    // Destroy session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ 
+          success: false,
+          error: "Failed to destroy session" 
+        });
+      }
+      
+      res.clearCookie('erimuga.sid');
+      res.status(200).json({ 
+        success: true,
+        message: "Logged out successfully" 
+      });
+    });
   });
 });
 
@@ -140,7 +240,7 @@ router.put("/update-address", async (req, res) => {
   }
 });
 
-// ✅ IMPORTANT: This must stay LAST so it doesn’t catch /google
+// ✅ IMPORTANT: This must stay LAST so it doesn't catch /google
 router.get('/:id', async (req, res) => {
   try {
     const user = await userModel.findById(req.params.id);

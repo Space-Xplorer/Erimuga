@@ -30,7 +30,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 await connectDB();
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Logging
 app.use(morgan('combined'));
@@ -42,11 +44,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// ✅ CORS setup
+// ✅ CORS setup - Fixed for authentication
 app.use(cors({
-  origin: FRONTEND_URL,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: [FRONTEND_URL, "http://localhost:5173"],
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json());
@@ -60,23 +63,38 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'Server is running' });
 });
 
-// Sessions
+const isProd = process.env.NODE_ENV === "production";
+
+// ✅ Sessions - Fixed configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'yourSecretKey',
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }), // ✅ fixed env var name
+  store: MongoStore.create({ 
+    mongoUrl: process.env.MONGODB_URI,
+    collectionName: 'sessions'
+  }),
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     httpOnly: true,
-    secure: true, // ✅ secure in prod
-    sameSite: "none", // ✅ helps with cross-site cookies
-  }
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
+    path: '/'
+  },
+  name: 'erimuga.sid'
 }));
 
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
+
+// ✅ Session debugging middleware
+app.use((req, res, next) => {
+  console.log('Session ID:', req.sessionID);
+  console.log('User authenticated:', req.isAuthenticated());
+  console.log('User:', req.user ? req.user._id : 'No user');
+  next();
+});
 
 // Routes
 app.use("/user/auth", userAuthRoutes);
@@ -98,5 +116,8 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running at ${BASE_URL}`);
+  console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
+  console.log(`✅ Session Secret: ${process.env.SESSION_SECRET ? 'Set' : 'Not set'}`);
+  console.log(`✅ MongoDB URI: ${process.env.MONGODB_URI ? 'Set' : 'Not set'}`);
 });
 
