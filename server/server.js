@@ -44,12 +44,28 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// ✅ CORS setup - Fixed for authentication
+// ✅ CORS setup - Enhanced for production
+const isProd = process.env.NODE_ENV === "production";
+const allowedOrigins = isProd 
+  ? [FRONTEND_URL, "https://erimuga-frontend.onrender.com", "https://erimuga.vercel.app"]
+  : [FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"];
+
 app.use(cors({
-  origin: [FRONTEND_URL, "http://localhost:5173"],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["Set-Cookie"]
 }));
 
 app.use(express.json());
@@ -60,26 +76,35 @@ app.use(express.static('../client/public'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'Server is running' });
+  res.status(200).json({ 
+    status: 'Server is running',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+    cors: {
+      allowedOrigins,
+      isProduction: isProd
+    }
+  });
 });
 
-const isProd = process.env.NODE_ENV === "production";
-
-// ✅ Sessions - Fixed configuration
+// ✅ Sessions - Enhanced for production
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ 
     mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions'
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60, // 1 day in seconds
+    autoRemove: 'native'
   }),
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     httpOnly: true,
     sameSite: isProd ? "none" : "lax",
     secure: isProd,
-    path: '/'
+    path: '/',
+    domain: isProd ? undefined : undefined // Let the browser set the domain
   },
   name: 'erimuga.sid'
 }));
@@ -88,13 +113,15 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ✅ Session debugging middleware
-app.use((req, res, next) => {
-  console.log('Session ID:', req.sessionID);
-  console.log('User authenticated:', req.isAuthenticated());
-  console.log('User:', req.user ? req.user._id : 'No user');
-  next();
-});
+// ✅ Session debugging middleware (only in development)
+if (!isProd) {
+  app.use((req, res, next) => {
+    console.log('Session ID:', req.sessionID);
+    console.log('User authenticated:', req.isAuthenticated());
+    console.log('User:', req.user ? req.user._id : 'No user');
+    next();
+  });
+}
 
 // Routes
 app.use("/user/auth", userAuthRoutes);
@@ -110,14 +137,29 @@ app.get('/', (req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  console.error('❌ Global error:', err.stack);
+  
+  // Handle CORS errors specifically
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ 
+      error: 'CORS Error', 
+      message: 'Origin not allowed',
+      allowedOrigins: isProd ? ['Production URLs'] : allowedOrigins
+    });
+  }
+  
+  res.status(err.status || 500).json({ 
+    error: err.message || 'Internal Server Error',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running at ${BASE_URL}`);
   console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
+  console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ Session Secret: ${process.env.SESSION_SECRET ? 'Set' : 'Not set'}`);
   console.log(`✅ MongoDB URI: ${process.env.MONGODB_URI ? 'Set' : 'Not set'}`);
+  console.log(`✅ CORS Origins: ${allowedOrigins.join(', ')}`);
 });
 

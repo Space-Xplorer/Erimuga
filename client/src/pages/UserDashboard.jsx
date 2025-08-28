@@ -4,6 +4,7 @@ import OrderCard from "../components/User/OrderCard";
 import AddressManager from "../components/User/AddressManager";
 import { ShopContext } from "../context/ShopContext";
 import { User, Mail, Phone, MapPin, Package } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const UserDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -16,6 +17,7 @@ const UserDashboard = () => {
   });
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [error, setError] = useState(null);
 
   const { authUser } = useContext(ShopContext);
   const userId = authUser?._id;
@@ -23,13 +25,41 @@ const UserDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        setError(null);
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/orders/user/${userId}`,
           { withCredentials: true }
         );
-        setOrders(res.data);
+        
+        // ✅ Handle new response format
+        if (res.data.success && Array.isArray(res.data.orders)) {
+          setOrders(res.data.orders);
+        } else if (Array.isArray(res.data)) {
+          // Fallback for old format
+          setOrders(res.data);
+        } else {
+          console.warn('Unexpected orders response format:', res.data);
+          setOrders([]);
+        }
       } catch (error) {
         console.error("Error fetching user orders:", error);
+        
+        // ✅ Better error handling for production
+        if (error.response?.status === 401) {
+          setError('Please login to view your orders');
+          toast.error('Authentication required. Please login again.');
+        } else if (error.response?.status === 403) {
+          setError('Access denied');
+          toast.error('You are not authorized to view these orders');
+        } else if (error.response?.status >= 500) {
+          setError('Server error. Please try again later.');
+          toast.error('Server error. Please try again later.');
+        } else {
+          setError('Failed to fetch orders. Please try again.');
+          toast.error('Failed to fetch orders');
+        }
+        
+        setOrders([]);
       } finally {
         setLoadingOrders(false);
       }
@@ -37,6 +67,7 @@ const UserDashboard = () => {
 
     const fetchUserDetails = async () => {
       try {
+        setError(null);
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/user/auth/${userId}`,
           { withCredentials: true }
@@ -50,6 +81,14 @@ const UserDashboard = () => {
         });
       } catch (error) {
         console.error("Error fetching user details:", error);
+        
+        if (error.response?.status === 401) {
+          setError('Please login to view your profile');
+          toast.error('Authentication required. Please login again.');
+        } else {
+          setError('Failed to fetch user details');
+          toast.error('Failed to fetch profile information');
+        }
       } finally {
         setLoadingUser(false);
       }
@@ -58,6 +97,10 @@ const UserDashboard = () => {
     if (userId) {
       fetchOrders();
       fetchUserDetails();
+    } else {
+      setLoadingOrders(false);
+      setLoadingUser(false);
+      setError('User not authenticated');
     }
   }, [userId]);
 
@@ -70,10 +113,32 @@ const UserDashboard = () => {
       );
       setUserDetails(res.data);
       setEditMode(false);
+      toast.success('Profile updated successfully!');
     } catch (err) {
       console.error("Profile update failed:", err);
+      toast.error('Failed to update profile. Please try again.');
     }
   };
+
+  // ✅ Show error state
+  if (error && !loadingOrders && !loadingUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <h2 className="text-xl font-semibold text-red-800 mb-2">Error</h2>
+            <p className="text-red-600">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -121,19 +186,18 @@ const UserDashboard = () => {
                     })
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-                  placeholder="Enter your phone number"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3">
                 <button
                   onClick={handleProfileUpdate}
-                  className="flex-1 bg-[#b22222] text-white py-3 px-4 rounded-lg hover:bg-[#a11c1c] transition-colors font-medium"
+                  className="px-4 py-2 bg-[#b22222] text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Save Changes
                 </button>
                 <button
                   onClick={() => setEditMode(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -141,60 +205,56 @@ const UserDashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-600 text-sm font-medium min-w-[60px]">Name:</div>
-                <div className="font-medium text-gray-800">{userDetails?.name || "N/A"}</div>
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5 text-gray-500" />
+                <span className="text-gray-700">{userDetails?.name || "Loading..."}</span>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-600 text-sm font-medium min-w-[60px]">Email:</div>
-                <div className="font-medium text-gray-800">{userDetails?.email || "N/A"}</div>
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-gray-500" />
+                <span className="text-gray-700">{userDetails?.email || "Loading..."}</span>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-600 text-sm font-medium min-w-[60px]">Phone:</div>
-                <div className="font-medium text-gray-800">
-                  {userDetails?.phonenumber || "N/A"}
-                </div>
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-gray-500" />
+                <span className="text-gray-700">{userDetails?.phonenumber || "Not provided"}</span>
               </div>
               <button
                 onClick={() => setEditMode(true)}
-                className="w-full mt-6 bg-[#b22222] text-white px-4 py-3 rounded-lg hover:bg-[#a11c1c] transition-colors font-medium"
+                className="px-4 py-2 bg-[#b22222] text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Edit Profile
               </button>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Address Management */}
-        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
-          <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
-            <MapPin className="w-5 h-5 text-[#b22222]" /> Address Book
-          </h2>
-          <AddressManager />
-        </div>
-        </div>
+          {/* Addresses Section */}
+          <AddressManager userId={userId} />
 
-        {/* Orders Section - Full Width */}
-        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
-          <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
-            <Package className="w-5 h-5 text-[#b22222]" /> Order History
-          </h2>
-          {loadingOrders ? (
-            <div className="flex justify-center py-8">
-              <p className="text-gray-500">Loading orders...</p>
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">You haven't placed any orders yet.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <OrderCard key={order._id} order={order} />
-              ))}
-            </div>
-          )}
+          {/* Orders Section */}
+          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
+            <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
+              <Package className="w-5 h-5 text-[#b22222]" /> My Orders
+            </h2>
+            
+            {loadingOrders ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#b22222] mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading orders...</p>
+              </div>
+            ) : orders.length > 0 ? (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <OrderCard key={order._id} order={order} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No orders yet</p>
+                <p className="text-sm text-gray-400 mt-1">Start shopping to see your orders here</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

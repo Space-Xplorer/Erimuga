@@ -312,12 +312,34 @@ const updateOrder = async (req, res) => {
 
 const getUserOrders = async (req, res) => {
   try {
+    // ✅ Enhanced security: Check if user is authenticated and requesting their own orders
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     const userId = req.params.id;
+    const authenticatedUserId = req.user._id.toString();
+
+    // ✅ Security check: Ensure user can only access their own orders
+    if (userId !== authenticatedUserId) {
+      console.log(`❌ Unauthorized access attempt: User ${authenticatedUserId} trying to access orders for ${userId}`);
+      return res.status(403).json({ error: 'Forbidden: You can only access your own orders' });
+    }
+
+    console.log(`✅ Fetching orders for user: ${userId}`);
     const orders = await orderModel.find({ userID: userId }).sort({ date: -1 });
 
-    res.status(200).json(orders);
+    res.status(200).json({
+      success: true,
+      orders: orders,
+      count: orders.length
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user orders', details: error.message });
+    console.error('❌ Error in getUserOrders:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch user orders', 
+      details: error.message 
+    });
   }
 };
 
