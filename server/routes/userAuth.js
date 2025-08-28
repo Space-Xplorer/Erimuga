@@ -5,8 +5,21 @@ import userModel from "../models/userModel.js";
 import 'dotenv/config';
 
 const BASE_URL = process.env.BASE_URL;
-
 const router = express.Router();
+
+// ✅ Specific route for getting user by ID (more specific path)
+router.get('/user/:id', async (req, res) => {
+  try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});ss.Router();
 
 // ✅ Get current logged-in user with complete data
 router.get('/me', (req, res) => {
