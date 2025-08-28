@@ -53,14 +53,23 @@ passport.use(new GoogleStrategy({
 
 // Session handling
 passport.serializeUser((user, done) => {
+  console.log('🔐 Passport serializeUser called for user:', user._id);
   done(null, user._id);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
+    console.log('🔐 Passport deserializeUser called for id:', id);
     const user = await userModel.findById(id);
-    done(null, user);
+    if (user) {
+      console.log('✅ Passport deserializeUser successful for user:', user._id);
+      done(null, user);
+    } else {
+      console.log('❌ Passport deserializeUser failed - user not found for id:', id);
+      done(null, false);
+    }
   } catch (err) {
+    console.error('❌ Passport deserializeUser error:', err);
     done(err);
   }
 });

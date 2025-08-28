@@ -8,6 +8,25 @@ const BASE_URL = process.env.BASE_URL;
 
 const router = express.Router();
 
+// ✅ Simple test endpoint to verify session functionality
+router.get('/test-session', (req, res) => {
+  console.log('🧪 Test session endpoint called');
+  console.log('  - Session ID:', req.sessionID);
+  console.log('  - Session exists:', !!req.session);
+  console.log('  - Session data:', req.session);
+  console.log('  - User authenticated:', req.isAuthenticated());
+  console.log('  - User object:', req.user);
+  
+  res.json({
+    sessionId: req.sessionID,
+    sessionExists: !!req.session,
+    sessionData: req.session,
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ✅ Get current logged-in user - Enhanced with better error handling
 router.get('/me', (req, res) => {
   try {
@@ -100,35 +119,46 @@ router.post("/register", async (req, res) => {
 
 // ✅ Local login - Enhanced with better session handling
 router.post('/login', (req, res, next) => {
+  console.log('🔐 Login attempt for email:', req.body.email);
+  
   passport.authenticate('local', (err, user, info) => {
     if (err) {
-      console.error('Passport authentication error:', err);
+      console.error('❌ Passport authentication error:', err);
       return next(err);
     }
     if (!user) {
+      console.log('❌ Login failed - invalid credentials');
       return res.status(401).json({ 
         success: false,
         message: info.message || 'Invalid credentials' 
       });
     }
 
+    console.log('✅ Passport authentication successful for user:', user._id);
+
     req.login(user, (err) => {
       if (err) {
-        console.error('Login error:', err);
+        console.error('❌ Login error:', err);
         return next(err);
       }
       
-      console.log("User logged in successfully:", user._id);
+      console.log("✅ User logged in successfully:", user._id);
+      console.log("  - Session ID:", req.sessionID);
+      console.log("  - Session exists:", !!req.session);
       
       // Save session explicitly
       req.session.save((err) => {
         if (err) {
-          console.error('Session save error:', err);
+          console.error('❌ Session save error:', err);
           return res.status(500).json({ 
             success: false,
             error: "Failed to create session" 
           });
         }
+        
+        console.log("✅ Session saved successfully");
+        console.log("  - Final session ID:", req.sessionID);
+        console.log("  - Final session exists:", !!req.session);
         
         return res.status(200).json({
           success: true,
