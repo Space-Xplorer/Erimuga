@@ -26,10 +26,19 @@ const UserDashboard = () => {
     const fetchOrders = async () => {
       try {
         setError(null);
+        console.log('🔍 Fetching orders for user:', userId);
+        
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/orders/user/${userId}`,
-          { withCredentials: true }
+          { 
+            withCredentials: true,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
         );
+        
+        console.log('✅ Orders response:', res.data);
         
         // ✅ Handle new response format
         if (res.data.success && Array.isArray(res.data.orders)) {
@@ -43,6 +52,8 @@ const UserDashboard = () => {
         }
       } catch (error) {
         console.error("Error fetching user orders:", error);
+        console.error("Error response:", error.response?.data);
+        console.error("Error status:", error.response?.status);
         
         // ✅ Better error handling for production
         if (error.response?.status === 401) {
@@ -120,6 +131,21 @@ const UserDashboard = () => {
     }
   };
 
+  const testSession = async () => {
+    try {
+      console.log('🧪 Testing session...');
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/user/auth/check-session`,
+        { withCredentials: true }
+      );
+      console.log('✅ Session test result:', res.data);
+      toast.success('Session test completed. Check console for details.');
+    } catch (error) {
+      console.error('❌ Session test failed:', error);
+      toast.error('Session test failed. Check console for details.');
+    }
+  };
+
   // ✅ Show error state
   if (error && !loadingOrders && !loadingUser) {
     return (
@@ -144,6 +170,16 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-[#b22222] mb-8">My Account</h1>
+
+        {/* ✅ Debug Session Button */}
+        <div className="mb-4">
+          <button
+            onClick={testSession}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            🧪 Test Session
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 gap-8 mb-8">
           {/* Profile Section */}

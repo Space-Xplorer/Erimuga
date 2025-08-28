@@ -27,6 +27,26 @@ router.get('/test-session', (req, res) => {
   });
 });
 
+// ✅ Simple session check endpoint
+router.get('/check-session', (req, res) => {
+  console.log('🔍 Check session endpoint called');
+  console.log('  - Session ID:', req.sessionID);
+  console.log('  - Session exists:', !!req.session);
+  console.log('  - User authenticated:', req.isAuthenticated());
+  console.log('  - User object:', req.user);
+  console.log('  - Cookies header:', req.headers.cookie);
+  
+  res.json({
+    success: true,
+    sessionId: req.sessionID,
+    sessionExists: !!req.session,
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user ? { _id: req.user._id, email: req.user.email } : null,
+    cookies: req.headers.cookie ? 'Present' : 'Missing',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ✅ Get current logged-in user - Enhanced with better error handling
 router.get('/me', (req, res) => {
   try {

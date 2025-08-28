@@ -64,8 +64,11 @@ app.use(cors({
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  exposedHeaders: ["Set-Cookie"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Cookie"],
+  exposedHeaders: ["Set-Cookie"],
+  // ✅ Enhanced CORS settings for cookies
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(express.json());
@@ -88,25 +91,49 @@ app.get('/health', (req, res) => {
 });
 
 // ✅ Sessions - Enhanced for production
+const mongoStore = MongoStore.create({ 
+  mongoUrl: process.env.MONGODB_URI,
+  collectionName: 'sessions',
+  ttl: 24 * 60 * 60, // 1 day in seconds
+  autoRemove: 'native'
+});
+
+// ✅ Add session store debugging
+mongoStore.on('create', (sessionId) => {
+  console.log('📝 Session created in MongoDB:', sessionId);
+});
+
+mongoStore.on('touch', (sessionId) => {
+  console.log('👆 Session touched in MongoDB:', sessionId);
+});
+
+mongoStore.on('destroy', (sessionId) => {
+  console.log('🗑️ Session destroyed in MongoDB:', sessionId);
+});
+
+mongoStore.on('error', (error) => {
+  console.error('❌ MongoDB session store error:', error);
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ 
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60, // 1 day in seconds
-    autoRemove: 'native'
-  }),
+  store: mongoStore,
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     httpOnly: true,
     sameSite: isProd ? "none" : "lax",
     secure: isProd,
     path: '/',
-    domain: isProd ? undefined : undefined // Let the browser set the domain
+    domain: undefined, // Let the browser set the domain
+    // ✅ Enhanced cookie settings for cross-origin
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   },
-  name: 'erimuga.sid'
+  name: 'erimuga.sid',
+  // ✅ Enhanced session settings
+  rolling: true, // Extend session on each request
+  unset: 'destroy'
 }));
 
 // Passport Middleware
@@ -122,6 +149,18 @@ if (!isProd) {
     next();
   });
 }
+
+// ✅ Enhanced session debugging middleware for all environments
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path}`);
+  console.log('  - Session ID:', req.sessionID);
+  console.log('  - Session exists:', !!req.session);
+  console.log('  - User authenticated:', req.isAuthenticated());
+  console.log('  - User:', req.user ? req.user._id : 'No user');
+  console.log('  - Cookies:', req.headers.cookie ? 'Present' : 'Missing');
+  console.log('  - Origin:', req.headers.origin);
+  next();
+});
 
 // Routes
 app.use("/user/auth", userAuthRoutes);
