@@ -7,6 +7,7 @@ import MongoStore from "connect-mongo";
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 
 import connectDB from './config/mongodb.js';
 import './config/cloudinary.js';  // Cloudinary config is imported and executed automatically
@@ -20,33 +21,77 @@ import adminRoutes from './routes/adminRoutes.js';
 import metadataRoutes from './routes/metaDataRoutes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000; // ✅ Use port 10000 for Render
 
-// ✅ Environment variables (no need for baseUrl.js file)
+// ✅ Environment variables
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const isProd = process.env.NODE_ENV === 'production';
 
 // Connect to MongoDB
 await connectDB();
 
+// ✅ Production optimizations
+if (isProd) {
+  app.set('trust proxy', 1); // Trust Render proxy
+}
+
+// ✅ Compression middleware for better performance
+app.use(compression());
+
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "https://api.cloudinary.com"],
+    },
+  },
+}));
 
-// Logging
-app.use(morgan('combined'));
+// ✅ Enhanced logging for production
+app.use(morgan(isProd ? 'combined' : 'dev'));
 
-// Rate limiting
+// ✅ Enhanced rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: isProd ? 100 : 1000, // Stricter in production
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: 15 * 60 * 1000
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
-// ✅ CORS setup
+// ✅ Enhanced CORS setup for production
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://erimuga.onrender.com', // Production frontend
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
+  credentials: true, // ✅ Essential for session cookies
+  optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
@@ -86,17 +131,51 @@ app.use("/orders", orderRouter);
 app.use("/admin", adminRoutes);
 app.use("/metadata", metadataRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+// ✅ Health check endpoint for monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
-// Global error handler
+app.get('/', (req, res) => {
+  res.json({
+    message: 'EriMuga API Server',
+    version: '1.0.0',
+    status: 'running',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// ✅ Enhanced global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  console.error('Global error handler:', err);
+  
+  // Don't leak error details in production
+  const message = isProd ? 'Internal server error' : err.message;
+  const stack = isProd ? undefined : err.stack;
+  
+  res.status(err.status || 500).json({
+    success: false,
+    error: message,
+    stack: stack
+  });
+});
+
+// ✅ 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `Route ${req.originalUrl} not found`
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running at ${BASE_URL}`);
+  console.log(`📱 Frontend URL: ${FRONTEND_URL}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 

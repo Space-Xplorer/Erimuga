@@ -1,0 +1,57 @@
+services:
+  # Backend API Service
+  - type: web
+    name: erimuga-api
+    runtime: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    plan: starter
+    env: node
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: erimuga-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: BASE_URL
+        value: https://erimuga-api.onrender.com
+      - key: FRONTEND_URL
+        value: https://erimuga.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: erimuga-frontend
+    runtime: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/dist
+    plan: starter
+    env: static
+    autoDeploy: true
+    buildFilter:
+      paths:
+      - client/**
+    envVars:
+      - key: VITE_BASE_URL
+        value: https://erimuga-api.onrender.com
+
+databases:
+  - name: erimuga-db
+    databaseName: erimuga
+    user: erimuga-user
+    plan: starter
