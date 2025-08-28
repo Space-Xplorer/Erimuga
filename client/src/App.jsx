@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
+import { useAuth } from './components/Auth/AuthContext';
 import Home from './pages/Home';
 import Collection from './pages/Collection';
 import About from './pages/About';
@@ -22,6 +23,17 @@ import ProductList from './pages/admin/Products';
 
 
 const App = () => {
+  const { loading } = useAuth();
+
+  // ✅ Show loading spinner while checking session
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#b22222]"></div>
+      </div>
+    );
+  }
+
   return (
     <div className='flex flex-col min-h-screen'>
       <Toaster position="top-right" reverseOrder={false} />

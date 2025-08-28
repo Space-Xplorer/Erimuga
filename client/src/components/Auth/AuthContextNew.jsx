@@ -16,12 +16,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        console.log('🔍 Checking session...');
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/me`, {
           credentials: 'include'
         });
-        
-        console.log('📡 Session check response:', res.status, res.ok);
         
         if (res.ok) {
           const userData = await res.json();
@@ -30,13 +27,12 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(userData));
           console.log('✅ Session restored:', userData);
         } else {
-          console.log('❌ Session check failed, status:', res.status);
           localStorage.removeItem('user');
           setUser(null);
           setIsAuthenticated(false);
         }
       } catch (err) {
-        console.error('❌ Session check failed:', err);
+        console.error('Session check failed:', err);
         localStorage.removeItem('user');
         setUser(null);
         setIsAuthenticated(false);

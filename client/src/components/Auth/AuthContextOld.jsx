@@ -10,18 +10,15 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   // ✅ Check session on app startup
   useEffect(() => {
     const checkSession = async () => {
       try {
-        console.log('🔍 Checking session...');
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/me`, {
-          credentials: 'include'
+          credentials: 'include' // Important: include cookies
         });
-        
-        console.log('📡 Session check response:', res.status, res.ok);
         
         if (res.ok) {
           const userData = await res.json();
@@ -30,13 +27,13 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('user', JSON.stringify(userData));
           console.log('✅ Session restored:', userData);
         } else {
-          console.log('❌ Session check failed, status:', res.status);
+          // Session expired or invalid, clear local storage
           localStorage.removeItem('user');
           setUser(null);
           setIsAuthenticated(false);
         }
       } catch (err) {
-        console.error('❌ Session check failed:', err);
+        console.error('Session check failed:', err);
         localStorage.removeItem('user');
         setUser(null);
         setIsAuthenticated(false);
@@ -50,23 +47,19 @@ export const AuthProvider = ({ children }) => {
     // Check for Google OAuth redirect
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('auth') === 'success') {
+      // Refresh to get user data after Google OAuth
       setTimeout(checkSession, 100);
+      // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  // ✅ Login function - session-based
+  // ✅ Ensure _id is stored
   const login = (userData) => {
-    const userWithAdmin = {
-      ...userData,
-      _id: userData._id,
-      isAdmin: userData.userType === 'admin',
-    };
-
-    setUser(userWithAdmin);
+    setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userWithAdmin));
-    console.log('✅ User logged in:', userWithAdmin);
+    localStorage.setItem('user', JSON.stringify(userData));
+    // Remove token-related code since we use sessions
   };
 
   const logout = async () => {
@@ -76,32 +69,47 @@ export const AuthProvider = ({ children }) => {
         {},
         { withCredentials: true }
       );
-      console.log('✅ Server-side logout successful');
     } catch (error) {
       console.error("Server-side logout failed:", error);
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      localStorage.removeItem('userAuthToken');
       localStorage.removeItem('user');
-      console.log('✅ Local logout completed');
     }
   };
 
-  // ✅ Update user data
+  // ✅ FIX: Define updateUser INSIDE provider
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    console.log('✅ User data updated:', updatedUser);
   };
 
-  const value = { 
-    user, 
-    isAuthenticated, 
-    loading,
-    login, 
-    logout, 
-    updateUser 
-  };
+  // 3. Add session check on app startup
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/me`, {
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const userData = await res.json();
+          setUser(userData);
+          setIsAuthenticated(true);
+          localStorage.setItem('user', JSON.stringify(userData));
+        }
+      } catch (err) {
+        // Session expired, clear local storage
+        localStorage.removeItem('user');
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  const value = { user, isAuthenticated, login, logout, updateUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -13,22 +13,21 @@ const LoginForm = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(e);
+    e.preventDefault();
     setError('');
     setLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Ensure cookies are sent with the request
+        credentials: 'include', // ✅ Include cookies for session
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       if (res.ok) {
-        // Use the AuthContext login function
-        authLogin(data.user, data.token);
+        // ✅ Pass only user data, no token needed for session-based auth
+        authLogin(data.user);
         if (onLogin) onLogin();
-        // Navigate to the previous page or home
         navigate(from, { replace: true });
       } else {
         setError(data.message || 'Invalid email or password');

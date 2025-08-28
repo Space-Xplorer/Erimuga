@@ -8,11 +8,27 @@ const BASE_URL = process.env.BASE_URL;
 
 const router = express.Router();
 
-// ✅ Get current logged-in user
+// ✅ Get current logged-in user with complete data
 router.get('/me', (req, res) => {
+  console.log('🔍 /me endpoint hit - Session ID:', req.sessionID);
+  console.log('🔍 Authenticated?', req.isAuthenticated());
+  console.log('🔍 User in session:', req.user ? req.user.email : 'No user');
+  console.log('🔍 Session data:', req.session);
+  
   if (req.isAuthenticated()) {
-    res.json(req.user);
+    const userData = {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      userType: req.user.userType,
+      phonenumber: req.user.phonenumber || '',
+      addresses: req.user.addresses || [],
+      cartData: req.user.cartData || []
+    };
+    console.log('✅ Returning user data:', userData.email);
+    res.json(userData);
   } else {
+    console.log('❌ Not authenticated, returning 401');
     res.status(401).json({ error: "Not authenticated" });
   }
 });
@@ -51,19 +67,26 @@ router.post("/register", async (req, res) => {
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
-    if (!user) return res.status(401).json({ message: info.message || 'Invalid credentials' });
+    if (!user) return res.status(401).json({ message: info.message });
 
     req.login(user, (err) => {
       if (err) return next(err);
-      console.log("User logged in:", user);
+      
+      // ✅ Return complete user data including addresses
+      const userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+        phonenumber: user.phonenumber || '',
+        addresses: user.addresses || [],
+        cartData: user.cartData || []
+      };
+      
       return res.status(200).json({
         message: "Login successful",
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          userType: user.userType
-        }
+        user: userData,
+        sessionId: req.sessionID // Optional: for tracking
       });
     });
   })(req, res, next);
@@ -85,10 +108,66 @@ router.get(
     failureRedirect: "/login",
   }),
   (req, res) => {
-    // Redirect back to frontend (dashboard, home, etc.)
-    res.redirect(BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/');
+    // ✅ Store complete user data in session
+    const userData = {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      userType: req.user.userType,
+      phonenumber: req.user.phonenumber || '',
+      addresses: req.user.addresses || [],
+      cartData: req.user.cartData || []
+    };
+    
+    // Store in session for frontend to access
+    req.session.userData = userData;
+    
+    // Redirect back to frontend with success parameter
+    const redirectUrl = `${BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/'}?auth=success`;
+    res.redirect(redirectUrl);
   }
 );
+
+// ✅ Update user profile and return updated data
+router.put('/update-profile', async (req, res) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { name, phonenumber } = req.body;
+    const userId = req.user._id;
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      { name, phonenumber },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // ✅ Return complete updated user data for frontend
+    const userData = {
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      userType: updatedUser.userType,
+      phonenumber: updatedUser.phonenumber || '',
+      addresses: updatedUser.addresses || [],
+      cartData: updatedUser.cartData || []
+    };
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: userData
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Failed to update profile', details: error.message });
+  }
+});
 
 // ✅ Update addresses
 router.put("/update-address", async (req, res) => {

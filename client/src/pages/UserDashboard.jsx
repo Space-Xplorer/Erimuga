@@ -3,25 +3,39 @@ import axios from "axios";
 import OrderCard from "../components/User/OrderCard";
 import AddressManager from "../components/User/AddressManager";
 import { ShopContext } from "../context/ShopContext";
+import { useAuth } from "../components/Auth/AuthContext"; // ✅ Import useAuth
 import { User, Mail, Phone, MapPin, Package } from "lucide-react";
 
 const UserDashboard = () => {
   const [orders, setOrders] = useState([]);
-  const [userDetails, setUserDetails] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
-    phoneNumber: "",
+    phonenumber: "",
   });
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [loadingUser, setLoadingUser] = useState(true);
 
   const { authUser } = useContext(ShopContext);
+  const { user, updateUser } = useAuth(); // ✅ Use auth context
   const userId = authUser?._id;
+
+  // ✅ Use user data from auth context instead of fetching separately
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phonenumber: user.phonenumber || '',
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!userId) return;
+      
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/orders/user/${userId}`,
@@ -35,43 +49,28 @@ const UserDashboard = () => {
       }
     };
 
-    const fetchUserDetails = async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/user/auth/${userId}`,
-          { withCredentials: true }
-        );
-        const userData = res.data;
-        setUserDetails(userData);
-        setProfileData({
-          name: userData.name,
-          email: userData.email,
-          phoneNumber: userData.phonenumber || "",
-        });
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      } finally {
-        setLoadingUser(false);
-      }
-    };
-
-    if (userId) {
-      fetchOrders();
-      fetchUserDetails();
-    }
+    fetchOrders();
   }, [userId]);
 
-  const handleProfileUpdate = async () => {
+  // ✅ Updated profile update to sync with auth context
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    setIsUpdating(true);
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/user/update-profile`,
-        profileData,
-        { withCredentials: true }
-      );
-      setUserDetails(res.data);
-      setEditMode(false);
-    } catch (err) {
-      console.error("Profile update failed:", err);
+      const response = await axios.put('/api/user/update-profile', profileData, {
+        withCredentials: true
+      });
+      if (response.data.success) {
+        // Update the auth context with new user data
+        updateUser(response.data.user);
+        setEditMode(false);
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -113,11 +112,11 @@ const UserDashboard = () => {
                 <label className="block mb-2 text-sm font-medium text-gray-700">Phone</label>
                 <input
                   type="tel"
-                  value={profileData.phoneNumber}
+                  value={profileData.phonenumber}
                   onChange={(e) =>
                     setProfileData({
                       ...profileData,
-                      phoneNumber: e.target.value,
+                      phonenumber: e.target.value,
                     })
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
@@ -143,16 +142,16 @@ const UserDashboard = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-600 text-sm font-medium min-w-[60px]">Name:</div>
-                <div className="font-medium text-gray-800">{userDetails?.name || "N/A"}</div>
+                <div className="font-medium text-gray-800">{user?.name || "N/A"}</div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-600 text-sm font-medium min-w-[60px]">Email:</div>
-                <div className="font-medium text-gray-800">{userDetails?.email || "N/A"}</div>
+                <div className="font-medium text-gray-800">{user?.email || "N/A"}</div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-600 text-sm font-medium min-w-[60px]">Phone:</div>
                 <div className="font-medium text-gray-800">
-                  {userDetails?.phonenumber || "N/A"}
+                  {user?.phonenumber || "N/A"}
                 </div>
               </div>
               <button
