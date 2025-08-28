@@ -19,7 +19,7 @@ router.get('/user/:id', async (req, res) => {
     console.error('Error fetching user:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-});ss.Router();
+});
 
 // ✅ Get current logged-in user with complete data
 router.get('/me', (req, res) => {
