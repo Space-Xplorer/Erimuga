@@ -7,7 +7,7 @@ const addressSchema = new mongoose.Schema({
   country: { type: String, required: true, default: 'India' },
   postalCode: { type: String, required: true },
   isDefault: { type: Boolean, default: false }
-}, { _id: false });
+}); // Remove _id: false to allow automatic _id generation
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -29,6 +29,20 @@ const userSchema = new mongoose.Schema({
         size: { type: String },
         color: { type: String },
         productCode: { type: String, required: true },
+      }
+    ],
+    default: []
+  },
+  orders: {
+    type: [
+      {
+        orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+        orderDate: { type: Date, default: Date.now },
+        totalAmount: { type: Number, required: true },
+        status: { type: String, default: 'Order Placed' },
+        paymentMethod: { type: String },
+        items: { type: Array, default: [] },
+        shippingAddress: { type: Object }
       }
     ],
     default: []

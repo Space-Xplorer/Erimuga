@@ -1,6 +1,15 @@
+// ✅ CRITICAL: Handle environment variables properly to prevent path-to-regexp errors
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Remove any problematic DEBUG_URL that might be set by external tools or dependencies
+delete process.env.DEBUG_URL;
+delete process.env.DEBUG;
+
+console.log('🛡️ Cleaned environment variables');
+
 import express from 'express';
 import cors from 'cors';
-import 'dotenv/config';
 import session from 'express-session';
 import passport from 'passport';
 import MongoStore from "connect-mongo";
@@ -8,11 +17,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-
-if (process.env.DEBUG_URL) {
-  delete process.env.DEBUG_URL;
-  console.log('🛡️ Removed problematic DEBUG_URL environment variable');
-}
 
 import connectDB from './config/mongodb.js';
 import './config/cloudinary.js';  // Cloudinary config is imported and executed automatically
@@ -75,17 +79,17 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // ✅ Enhanced CORS setup for production
+const allowedOrigins = [
+  FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://erimuga.onrender.com', // Production frontend
+];
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      FRONTEND_URL,
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://erimuga.onrender.com', // Production frontend
-    ];
     
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
@@ -238,6 +242,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ Session Secret: ${process.env.SESSION_SECRET ? 'Set' : 'Not set'}`);
   console.log(`✅ MongoDB URI: ${process.env.MONGODB_URI ? 'Set' : 'Not set'}`);
-  console.log(`✅ CORS Origins: ${allowedOrigins.join(', ')}`);
 });
 

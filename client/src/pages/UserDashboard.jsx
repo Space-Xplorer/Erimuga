@@ -11,15 +11,18 @@ const UserDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState(null); 
+  const [userDetails, setUserDetails] = useState(null);
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
     phonenumber: "",
   });
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   const { authUser } = useContext(ShopContext);
-  const { user, updateUser } = useAuth(); // ✅ Use auth context
+  const { user, updateUser } = useAuth(); 
   const userId = authUser?._id;
 
   // ✅ Use user data from auth context instead of fetching separately
