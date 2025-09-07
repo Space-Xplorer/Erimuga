@@ -66,18 +66,25 @@ router.post("/register", async (req, res) => {
     });
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      userType: user.userType,
+      success: true,
+      message: "Registration successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        userType: user.userType,
+      }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ error: "Registration failed", details: error.message });
   }
 });
 
-// ✅ Local login
+// ✅ Local login - Enhanced with better session handling
 router.post('/login', (req, res, next) => {
+  console.log('🔐 Login attempt for email:', req.body.email);
+  
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) return res.status(401).json({ message: info.message });
@@ -105,10 +112,33 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
-// ✅ Logout
+// ✅ Logout - Enhanced with session cleanup
 router.post("/logout", (req, res) => {
-  req.logout(() => {
-    res.status(200).json({ message: "Logged out" });
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ 
+        success: false,
+        error: "Logout failed" 
+      });
+    }
+    
+    // Destroy session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ 
+          success: false,
+          error: "Failed to destroy session" 
+        });
+      }
+      
+      res.clearCookie('erimuga.sid');
+      res.status(200).json({ 
+        success: true,
+        message: "Logged out successfully" 
+      });
+    });
   });
 });
 
@@ -232,7 +262,7 @@ router.put("/update-address", async (req, res) => {
   }
 });
 
-// ✅ IMPORTANT: This must stay LAST so it doesn’t catch /google
+// ✅ IMPORTANT: This must stay LAST so it doesn't catch /google
 router.get('/:id', async (req, res) => {
   try {
     const user = await userModel.findById(req.params.id);

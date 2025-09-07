@@ -107,13 +107,45 @@ app.use(express.static('../client/public'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'Server is running' });
+  res.status(200).json({ 
+    status: 'Server is running',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+    cors: {
+      allowedOrigins,
+      isProduction: isProd
+    }
+  });
 });
 
-// Sessions
+// ✅ Sessions - Enhanced for production
+const mongoStore = MongoStore.create({ 
+  mongoUrl: process.env.MONGODB_URI,
+  collectionName: 'sessions',
+  ttl: 24 * 60 * 60, // 1 day in seconds
+  autoRemove: 'native'
+});
+
+// ✅ Add session store debugging
+mongoStore.on('create', (sessionId) => {
+  console.log('📝 Session created in MongoDB:', sessionId);
+});
+
+mongoStore.on('touch', (sessionId) => {
+  console.log('👆 Session touched in MongoDB:', sessionId);
+});
+
+mongoStore.on('destroy', (sessionId) => {
+  console.log('🗑️ Session destroyed in MongoDB:', sessionId);
+});
+
+mongoStore.on('error', (error) => {
+  console.error('❌ MongoDB session store error:', error);
+});
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'yourSecretKey',
-  resave: false,
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+  resave: true, // Critical for production
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
   cookie: {
@@ -127,6 +159,28 @@ app.use(session({
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
+
+// ✅ Session debugging middleware (only in development)
+if (!isProd) {
+  app.use((req, res, next) => {
+    console.log('Session ID:', req.sessionID);
+    console.log('User authenticated:', req.isAuthenticated());
+    console.log('User:', req.user ? req.user._id : 'No user');
+    next();
+  });
+}
+
+// ✅ Enhanced session debugging middleware for all environments
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path}`);
+  console.log('  - Session ID:', req.sessionID);
+  console.log('  - Session exists:', !!req.session);
+  console.log('  - User authenticated:', req.isAuthenticated());
+  console.log('  - User:', req.user ? req.user._id : 'No user');
+  console.log('  - Cookies:', req.headers.cookie ? 'Present' : 'Missing');
+  console.log('  - Origin:', req.headers.origin);
+  next();
+});
 
 // Routes
 app.use("/user/auth", userAuthRoutes);
@@ -180,7 +234,10 @@ app.use('*', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running at ${BASE_URL}`);
-  console.log(`📱 Frontend URL: ${FRONTEND_URL}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
+  console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Session Secret: ${process.env.SESSION_SECRET ? 'Set' : 'Not set'}`);
+  console.log(`✅ MongoDB URI: ${process.env.MONGODB_URI ? 'Set' : 'Not set'}`);
+  console.log(`✅ CORS Origins: ${allowedOrigins.join(', ')}`);
 });
 
