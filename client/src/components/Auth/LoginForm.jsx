@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import toast from 'react-hot-toast';
 
 const LoginForm = ({ onLogin }) => {
   const { login: authLogin } = useAuth();
@@ -13,28 +14,28 @@ const LoginForm = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(e);
+    e.preventDefault();
     setError('');
     setLoading(true);
+    
     try {
       const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Ensure cookies are sent with the request
+        credentials: 'include', // ✅ Include cookies for session
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       if (res.ok) {
-        // Use the AuthContext login function
-        authLogin(data.user, data.token);
+        // ✅ Pass only user data, no token needed for session-based auth
+        authLogin(data.user);
         if (onLogin) onLogin();
-        // Navigate to the previous page or home
         navigate(from, { replace: true });
-      } else {
-        setError(data.message || 'Invalid email or password');
       }
     } catch (err) {
-      setError('Server error. Please try again.');
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
+      toast.error('Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -44,14 +45,32 @@ const LoginForm = ({ onLogin }) => {
     <form onSubmit={handleSubmit}>
       <div className='mb-4'>
         <label className='block text-sm font-medium mb-2' htmlFor='email'>Email</label>
-        <input className='border border-gray-300 p-2 w-full rounded' type='email' id='email' required value={email} onChange={e => setEmail(e.target.value)} />
+        <input 
+          className='border border-gray-300 p-2 w-full rounded' 
+          type='email' 
+          id='email' 
+          required 
+          value={email} 
+          onChange={e => setEmail(e.target.value)} 
+        />
       </div>
       <div className='mb-6'>
         <label className='block text-sm font-medium mb-2' htmlFor='password'>Password</label>
-        <input className='border border-gray-300 p-2 w-full rounded' type='password' id='password' required value={password} onChange={e => setPassword(e.target.value)} />
+        <input 
+          className='border border-gray-300 p-2 w-full rounded' 
+          type='password' 
+          id='password' 
+          required 
+          value={password} 
+          onChange={e => setPassword(e.target.value)} 
+        />
       </div>
       {error && <div className='text-red-600 mb-2 text-sm'>{error}</div>}
-      <button className='bg-[#B22222] text-white font-semibold py-2 rounded w-full hover:bg-red-600 transition-colors duration-200' type='submit' disabled={loading}>
+      <button 
+        className='bg-[#B22222] text-white font-semibold py-2 rounded w-full hover:bg-red-600 transition-colors duration-200' 
+        type='submit' 
+        disabled={loading}
+      >
         {loading ? 'Logging in...' : 'Login'}
       </button>
     </form>
