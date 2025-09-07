@@ -9,8 +9,6 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 
-// ✅ Fix for path-to-regexp DEBUG_URL issue
-// Remove any DEBUG_URL that might cause path-to-regexp errors
 if (process.env.DEBUG_URL) {
   delete process.env.DEBUG_URL;
   console.log('🛡️ Removed problematic DEBUG_URL environment variable');
