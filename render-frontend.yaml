@@ -1,0 +1,11 @@
+# Render.com static site configuration for frontend
+builds:
+  - src: client
+    buildCommand: npm install && npm run build
+    publishDir: dist
+
+# Redirect rules for React Router
+redirects:
+  - from: /*
+    to: /index.html
+    status: 200

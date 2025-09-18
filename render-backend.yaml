@@ -1,0 +1,11 @@
+# Render.com build configuration for backend
+builds:
+  - src: server
+    use: node
+    env: production
+    buildCommand: npm install
+    startCommand: node server.js
+    
+environment:
+  NODE_ENV: production
+  PORT: 10000

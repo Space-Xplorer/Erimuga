@@ -78,12 +78,16 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// ✅ Enhanced CORS setup for production
+// ✅ Enhanced CORS setup for production with custom domain
 const allowedOrigins = [
   FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://erimuga.onrender.com', // Production frontend
+  'https://erimuga.onrender.com', // Production frontend on Render
+  'https://www.erindmuga.in',     // ✅ Custom domain
+  'https://erindmuga.in',         // ✅ Root domain
+  'http://www.erindmuga.in',      // ✅ HTTP version (for development)
+  'http://erindmuga.in'           // ✅ HTTP root domain
 ];
 
 app.use(cors({
