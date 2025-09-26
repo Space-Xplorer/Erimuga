@@ -30,6 +30,9 @@ export const updateOrderStatus = async (req, res) => {
 
 export const addProduct = async (req, res) => {
   try {
+    console.log('addProduct called - req.body:', req.body);
+    console.log('addProduct called - req.files:', req.files);
+    
     const {
       name,
       mainCategory,
@@ -53,7 +56,7 @@ export const addProduct = async (req, res) => {
           folder: `erimuga/products/${mainCategory}`,
         });
         fs.unlinkSync(file.path); // remove local file after upload
-        return result.secure_url;
+        return result.url; // Changed from result.secure_url to result.url
       });
 
       imageUrls = await Promise.all(uploadPromises);
@@ -118,7 +121,7 @@ export const editProduct = async (req, res) => {
           folder: `erimuga/products/${mainCategory}`,
         });
         fs.unlinkSync(file.path);
-        return result.secure_url;
+        return result.url; // Changed from result.secure_url to result.url
       });
 
       product.image = await Promise.all(uploadPromises);

@@ -45,6 +45,7 @@ const sanitizePublicId = (filename) => {
 // Function to upload image to cloudinary with optimizations
 export const uploadToCloudinary = async (imagePath, options = {}) => {
     try {
+        console.log('uploadToCloudinary called with:', imagePath, options);
         const sanitizedFilename = sanitizePublicId(path.basename(imagePath, path.extname(imagePath)));
         
         // Ensure folder is set (default to 'erimuga')

@@ -2,8 +2,7 @@ import express from 'express';
 // import { isAdmin, isLoggedIn } from '../middlewares/auth.js';
 import { getAllOrders, updateOrderStatus, addProduct, getAllProducts, editProduct, deleteProduct} from '../controllers/adminController.js';
 import Order from '../models/orderModel.js';
-import multer from 'multer';
-const upload = multer({ dest: 'uploads/' });
+import upload from '../middlewares/multer.js';
 
 
 const adminRouter = express.Router();

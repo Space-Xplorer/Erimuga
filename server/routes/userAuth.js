@@ -159,14 +159,16 @@ router.get(
       userType: req.user.userType,
       phonenumber: req.user.phonenumber || '',
       addresses: req.user.addresses || [],
-      cartData: req.user.cartData || []
+      cartData: req.user.cartData || [],
+      orders: req.user.orders || [] // ✅ Include orders array
     };
     
     // Store in session for frontend to access
     req.session.userData = userData;
     
     // Redirect back to frontend with success parameter
-    const redirectUrl = `${BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/'}?auth=success`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.erindmuga.in';
+    const redirectUrl = `${frontendUrl}?auth=success`;
     res.redirect(redirectUrl);
   }
 );
