@@ -33,6 +33,13 @@ const UserDashboard = () => {
         email: user.email || '',
         phonenumber: user.phonenumber || '',
       });
+      
+      // ✅ Set orders from user context if available
+      if (user.orders && Array.isArray(user.orders)) {
+        setOrders(user.orders);
+        setLoadingOrders(false);
+        console.log('✅ Orders loaded from user context:', user.orders.length);
+      }
     }
   }, [user]);
 
@@ -42,10 +49,11 @@ const UserDashboard = () => {
       
       try {
         setError(null);
-        console.log('🔍 Fetching orders for user:', userId);
+        console.log('🔍 Fetching orders for user from user data');
         
+        // ✅ Orders are now stored in user model, fetch from auth endpoint
         const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/orders/user/${userId}`,
+          `${import.meta.env.VITE_BASE_URL}/user/auth/me`,
           { 
             withCredentials: true,
             headers: {
@@ -54,16 +62,14 @@ const UserDashboard = () => {
           }
         );
         
-        console.log('✅ Orders response:', res.data);
+        console.log('✅ User data response:', res.data);
         
-        // ✅ Handle new response format
-        if (res.data.success && Array.isArray(res.data.orders)) {
-          setOrders(res.data.orders);
-        } else if (Array.isArray(res.data)) {
-          // Fallback for old format
-          setOrders(res.data);
+        // ✅ Extract orders from user data
+        if (res.data.success && res.data.user && Array.isArray(res.data.user.orders)) {
+          setOrders(res.data.user.orders);
+          console.log('✅ Orders found:', res.data.user.orders.length);
         } else {
-          console.warn('Unexpected orders response format:', res.data);
+          console.warn('No orders found in user data');
           setOrders([]);
         }
       } catch (error) {
