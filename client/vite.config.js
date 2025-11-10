@@ -8,6 +8,10 @@ export default defineConfig(({ mode }) => {
     server: {
       allowedHosts: [
         'erimuga-frontend.onrender.com',
+        // New primary domain
+        'www.erindmuga.com',
+        'erindmuga.com',
+        // Legacy (temporary during migration)
         'www.erindmuga.in',
         'erindmuga.in',
         'localhost'
@@ -18,6 +22,10 @@ export default defineConfig(({ mode }) => {
     preview: {
       allowedHosts: [
         'erimuga-frontend.onrender.com',
+        // New primary domain
+        'www.erindmuga.com',
+        'erindmuga.com',
+        // Legacy (temporary during migration)
         'www.erindmuga.in',
         'erindmuga.in',
         'localhost'

@@ -330,7 +330,13 @@ const allowedOrigins = [
   FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://erimuga.onrender.com',
+  'https://erimuga.onrender.com', // Production frontend on Render
+  // New .com domains
+  'https://www.erindmuga.com',    // ✅ Custom domain (.com)
+  'https://erindmuga.com',        // ✅ Root domain (.com)
+  'http://www.erindmuga.com',     // ✅ HTTP version (.com, dev)
+  'http://erindmuga.com',         // ✅ HTTP root (.com, dev)
+  // Keep .in temporarily during migration
   'https://www.erindmuga.in',
   'https://erindmuga.in',
   'http://www.erindmuga.in',

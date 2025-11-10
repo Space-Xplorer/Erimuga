@@ -167,7 +167,7 @@ router.get(
     req.session.userData = userData;
     
     // Redirect back to frontend with success parameter
-    const frontendUrl = process.env.FRONTEND_URL || 'https://www.erindmuga.in';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.erindmuga.com';
     const redirectUrl = `${frontendUrl}?auth=success`;
     res.redirect(redirectUrl);
   }
