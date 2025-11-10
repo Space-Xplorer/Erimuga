@@ -1,7 +1,7 @@
 ### issues with the latest deployement
-- signup not working
+- signup not working-done
 - Order being placed... but no products show up.
-- Not able to update the order
+- Not able to update the order-done
 - Dashboard not working in mobile screens(also auth context)
 - Need to add google auth
 - Google auth need to also check if mongo has similar mail id. If yes link them both.

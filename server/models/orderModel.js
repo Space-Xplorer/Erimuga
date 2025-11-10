@@ -44,6 +44,51 @@
 // export default Order;
 
 
+// import mongoose from 'mongoose';
+
+// const orderSchema = new mongoose.Schema({
+//   userID: { type: String, required: true },
+
+//   items: [
+//     {
+//       productID: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+//       quantity: { type: Number, required: true }
+//     }
+//   ],
+
+//   amount: { type: Number, required: true },
+
+//   address: {
+//     street: String,
+//     city: String,
+//     state: String,
+//     zip: String,
+//     country: String
+//   },
+
+//   // ✅ Add phone field
+//   phone: { type: String, required: true },
+
+//   status: { type: String, required: true, default: 'Order Placed' },
+
+//   paymentMethod: { type: String, required: true },
+
+//   paymentStatus: { 
+//     type: String, 
+//     trim: true, 
+//     enum: ['pending', 'paid', 'failed'], 
+//     default: 'pending' 
+//   },
+
+//   payment: { type: Boolean, required: true, default: false },
+
+//   date: { type: Date, default: Date.now }
+// });
+
+// const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
+// export default Order;
+
+
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
@@ -66,18 +111,45 @@ const orderSchema = new mongoose.Schema({
     country: String
   },
 
-  // ✅ Add phone field
   phone: { type: String, required: true },
 
-  status: { type: String, required: true, default: 'Order Placed' },
+  // ✅ Order flow status (not payment)
+  status: {
+    type: String,
+    enum: [
+      'Order Placed',
+      'Processing',
+      'Shipped',
+      'Delivered',
+      'Cancelled',
+      'Returned'
+    ],
+    default: 'Order Placed',
+    required: true
+  },
 
-  paymentMethod: { type: String, required: true },
+  paymentMethod: {
+    type: String,
+    required: true,
+    enum: ['Online', 'COD'], // ✅ clear distinction
+  },
 
+  // ✅ Expanded to support both Online & COD states
   paymentStatus: { 
     type: String, 
-    trim: true, 
-    enum: ['pending', 'paid', 'failed'], 
-    default: 'pending' 
+    trim: true,
+    enum: [
+      'pending',
+      'paid',
+      'failed',
+      'COD - Pending',
+      'COD - Received',
+      'refunded',
+      'Razorpay - Pending',
+      'Razorpay - Received',
+      'Razorpay - Refunded'
+    ],
+    default: 'pending'
   },
 
   payment: { type: Boolean, required: true, default: false },
