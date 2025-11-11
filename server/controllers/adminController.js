@@ -144,21 +144,64 @@ export const editProduct = async (req, res) => {
   }
 };
 
-// DELETE PRODUCT ✅
+
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    console.log("🧠 Delete request received for product ID:", id);
 
-    if (!product) return res.status(404).json({ error: "Product not found" });
+    const product = await Product.findById(id);
+    if (!product) {
+      console.warn("⚠️ Product not found for ID:", id);
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
 
-    // Optionally delete images from uploads
-    product.image.forEach((filename) => {
-      const filePath = path.join("uploads", filename);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    console.log("📦 Found product:", {
+      id: product._id,
+      name: product.name,
+      image: product.image,
     });
 
-    res.status(200).json({ message: "Product deleted successfully" });
+    // ✅ Handle all image formats safely
+    if (Array.isArray(product.image)) {
+      // multiple images
+      for (const img of product.image) {
+        if (img?.public_id) {
+          try {
+            await cloudinary.uploader.destroy(img.public_id);
+            console.log("🗑️ Deleted Cloudinary image:", img.public_id);
+          } catch (err) {
+            console.warn("⚠️ Cloudinary deletion failed for", img.public_id, ":", err.message);
+          }
+        }
+      }
+    } else if (product.image?.public_id) {
+      // single image object
+      try {
+        await cloudinary.uploader.destroy(product.image.public_id);
+        console.log("🗑️ Deleted Cloudinary image:", product.image.public_id);
+      } catch (err) {
+        console.warn("⚠️ Cloudinary deletion failed:", err.message);
+      }
+    } else {
+      console.log("ℹ️ No Cloudinary image found (URL or missing public_id). Skipping deletion.");
+    }
+
+    // ✅ Delete product document
+    await Product.findByIdAndDelete(id);
+    console.log("✅ Product deleted successfully:", id);
+
+    // ✅ Clean success response
+    return res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete product" });
+    console.error("❌ Error deleting product:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while deleting product",
+      error: error.message,
+    });
   }
 };
