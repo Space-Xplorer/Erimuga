@@ -85,10 +85,10 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://erimuga.onrender.com', // Production frontend on Render
   // New .com domains
-  'https://www.erindmuga.com',    // ✅ Custom domain (.com)
-  'https://erindmuga.com',        // ✅ Root domain (.com)
-  'http://www.erindmuga.com',     // ✅ HTTP version (.com, dev)
-  'http://erindmuga.com',         // ✅ HTTP root (.com, dev)
+  'https://www.erindmuga.com',    
+  'https://erindmuga.com',        
+  'http://www.erindmuga.com',     
+  'http://erindmuga.com',         
   // Keep .in temporarily during migration
   'https://www.erindmuga.in',
   'https://erindmuga.in',
