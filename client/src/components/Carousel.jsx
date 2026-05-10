@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const images = [
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Assamese_couple_in_traditional_attire.jpg/2560px-Assamese_couple_in_traditional_attire.jpg',
+  'https://blog.indicinspirations.com/wp-content/uploads/2020/05/Eri-Silk-weaver-of-Assam.jpg',
   'https://www.poojn.in/wp-content/uploads/2025/04/Assams-Rich-Culture-PeopleAttireandLanguage-Explained.jpeg.jpg',
 ];
 
