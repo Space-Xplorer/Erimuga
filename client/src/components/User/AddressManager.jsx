@@ -1,294 +1,309 @@
-import React, { useState } from "react";
-import { useAuth } from "../../components/Auth/AuthContext";
-import axios from "axios";
-import toast from "react-hot-toast";
+import React, { useState } from 'react';
+import { useAuth } from '../Auth/AuthContext';
+import axios from '../../config/axios';
+import toast from 'react-hot-toast';
+import { MapPin, Star, Pencil, Trash2, Plus } from 'lucide-react';
+import { useConfirmDialog } from '../ConfirmDialog';
+
+const EMPTY_FORM = {
+  recipientName: '',
+  street: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: 'India',
+  phonenumber: '',
+  landmark: '',
+  addressType: 'Home',
+  isDefault: false,
+};
+
+const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel }) => (
+  <div className="space-y-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Name</label>
+        <input
+          type="text"
+          value={value.recipientName}
+          onChange={e => onChange({ ...value, recipientName: e.target.value })}
+          placeholder="Name on the door"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div className="col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
+        <input
+          type="text"
+          value={value.street}
+          onChange={e => onChange({ ...value, street: e.target.value })}
+          placeholder="House / flat no., Building, Street"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div className="col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+        <input
+          type="text"
+          value={value.landmark}
+          onChange={e => onChange({ ...value, landmark: e.target.value })}
+          placeholder="Near bus stand, landmark…"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+        <input
+          type="text"
+          value={value.city}
+          onChange={e => onChange({ ...value, city: e.target.value })}
+          placeholder="City"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+        <input
+          type="text"
+          value={value.state}
+          onChange={e => onChange({ ...value, state: e.target.value })}
+          placeholder="State"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code *</label>
+        <input
+          type="text"
+          value={value.postalCode}
+          onChange={e => onChange({ ...value, postalCode: e.target.value })}
+          placeholder="6-digit PIN"
+          maxLength={6}
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+        <input
+          type="tel"
+          value={value.phonenumber}
+          onChange={e => onChange({ ...value, phonenumber: e.target.value })}
+          placeholder="10-digit mobile"
+          maxLength={10}
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Address Type</label>
+        <select
+          value={value.addressType}
+          onChange={e => onChange({ ...value, addressType: e.target.value })}
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        >
+          {['Home', 'Work', 'Other'].map(t => <option key={t}>{t}</option>)}
+        </select>
+      </div>
+    </div>
+
+    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+      <input
+        type="checkbox"
+        checked={value.isDefault}
+        onChange={e => onChange({ ...value, isDefault: e.target.checked })}
+        className="accent-[#b22222]"
+      />
+      Set as default delivery address
+    </label>
+
+    <div className="flex gap-2 pt-1">
+      <button
+        onClick={onSubmit}
+        disabled={loading}
+        className="flex-1 bg-[#b22222] text-white py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
+      >
+        {loading ? 'Saving…' : submitLabel}
+      </button>
+      {onCancel && (
+        <button
+          onClick={onCancel}
+          disabled={loading}
+          className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+        >
+          Cancel
+        </button>
+      )}
+    </div>
+  </div>
+);
 
 const AddressManager = () => {
   const { user, updateUser } = useAuth();
-  const [newAddress, setNewAddress] = useState({
-    street: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "India",
-  });
 
-  const [editIndex, setEditIndex] = useState(null);
-  const [editAddress, setEditAddress] = useState({
-    street: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "India",
-  });
+  const [newAddress, setNewAddress] = useState(EMPTY_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const [editAddress, setEditAddress] = useState(EMPTY_FORM);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { confirm, dialog } = useConfirmDialog();
 
-  // ✅ Add address with API call
-  const handleAddAddress = async () => {
-    if (!newAddress.street || !newAddress.city) {
-      toast.error("Street and City are required!");
-      return;
-    }
+  const callApi = async (payload) => {
+    const res = await axios.put('/user/auth/update-address', payload);
+    if (res.data.success) updateUser(res.data.user);
+    return res;
+  };
 
+  const validate = (addr) => {
+    if (!addr.street.trim()) { toast.error('Street address is required'); return false; }
+    if (!addr.city.trim()) { toast.error('City is required'); return false; }
+    if (!addr.state.trim()) { toast.error('State is required'); return false; }
+    if (!/^\d{6}$/.test(addr.postalCode.trim())) { toast.error('PIN code must be 6 digits'); return false; }
+    return true;
+  };
+
+  const handleAdd = async () => {
+    if (!validate(newAddress)) return;
     setLoading(true);
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/user/auth/update-address`,
-        {
-          userId: user._id,
-          address: newAddress,
-          action: "add"
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        updateUser(response.data.user);
-        setNewAddress({ street: "", city: "", state: "", postalCode: "", country: "India" });
-        toast.success("Address added successfully!");
-      }
-    } catch (error) {
-      console.error("Error adding address:", error);
-      toast.error("Failed to add address. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      await callApi({ address: newAddress, action: 'add' });
+      setNewAddress(EMPTY_FORM);
+      setShowForm(false);
+      toast.success('Address added!');
+    } catch { toast.error('Failed to add address'); }
+    finally { setLoading(false); }
   };
 
-  // ✅ Delete address with API call
-  const handleDeleteAddress = async (index) => {
-    const addressId = user.addresses[index]._id;
-    setLoading(true);
-
-    try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/user/auth/update-address`,
-        {
-          userId: user._id,
-          addressId: addressId,
-          action: "delete"
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        updateUser(response.data.user);
-        toast.success("Address deleted successfully!");
-      }
-    } catch (error) {
-      console.error("Error deleting address:", error);
-      toast.error("Failed to delete address. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Edit address
-  const handleEditAddress = (index) => {
-    setEditIndex(index);
-    setEditAddress(user.addresses[index]);
-  };
-
-  // ✅ Save updated address with API call
-  const handleUpdateAddress = async () => {
-    if (!editAddress.street || !editAddress.city) {
-      toast.error("Street and City are required!");
-      return;
-    }
-
+  const handleUpdate = async () => {
+    if (!validate(editAddress)) return;
     setLoading(true);
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/user/auth/update-address`,
-        {
-          userId: user._id,
-          address: { ...editAddress, _id: user.addresses[editIndex]._id },
-          action: "update"
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        updateUser(response.data.user);
-        setEditIndex(null);
-        setEditAddress({ street: "", city: "", state: "", postalCode: "", country: "India" });
-        toast.success("Address updated successfully!");
-      }
-    } catch (error) {
-      console.error("Error updating address:", error);
-      toast.error("Failed to update address. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      await callApi({ address: editAddress, addressId: editingId, action: 'update' });
+      setEditingId(null);
+      toast.success('Address updated!');
+    } catch { toast.error('Failed to update address'); }
+    finally { setLoading(false); }
   };
 
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditAddress((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleDelete = async (addressId) => {
+    const ok = await confirm('Remove this address?', { confirmLabel: 'Remove' });
+    if (!ok) return;
+    setLoading(true);
+    try {
+      await callApi({ addressId, action: 'delete' });
+      toast.success('Address removed');
+    } catch { toast.error('Failed to remove address'); }
+    finally { setLoading(false); }
+  };
+
+  const handleSetDefault = async (addressId) => {
+    setLoading(true);
+    try {
+      await callApi({ addressId, action: 'set-default' });
+      toast.success('Default address updated');
+    } catch { toast.error('Failed to update default'); }
+    finally { setLoading(false); }
+  };
+
+  const startEdit = (addr) => {
+    setEditingId(addr._id);
+    setEditAddress({ ...EMPTY_FORM, ...addr });
+    setShowForm(false);
   };
 
   return (
-    <div className="w-full bg-white">
-      {/* <h2 className="text-2xl font-bold mb-6 text-center text-[#b22222]">
-        Manage Addresses
-      </h2> */}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Saved Addresses - Left Column */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Saved Addresses</h3>
-          {user?.addresses?.length > 0 ? (
-            <div className="space-y-3">
-              {user.addresses.map((address, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                >
-                  {editIndex === index ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        name="street"
-                        value={editAddress.street}
-                        onChange={handleEditInputChange}
-                        placeholder="Street"
-                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-                      />
-                      <input
-                        type="text"
-                        name="city"
-                        value={editAddress.city}
-                        onChange={handleEditInputChange}
-                        placeholder="City"
-                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-                      />
-                      <input
-                        type="text"
-                        name="state"
-                        value={editAddress.state}
-                        onChange={handleEditInputChange}
-                        placeholder="State"
-                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-                      />
-                      <input
-                        type="text"
-                        name="postalCode"
-                        value={editAddress.postalCode}
-                        onChange={handleEditInputChange}
-                        placeholder="Postal Code"
-                        className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleUpdateAddress}
-                          disabled={loading}
-                          className="flex-1 bg-[#b22222] hover:bg-[#a11c1c] disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-                        >
-                          {loading ? "Saving..." : "Save Changes"}
-                        </button>
-                        <button
-                          onClick={() => setEditIndex(null)}
-                          disabled={loading}
-                          className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between items-start">
-                      <div className="text-gray-700 leading-relaxed">
-                        <div className="font-medium">{address?.street}</div>
-                        <div className="text-sm text-gray-600">
-                          {address?.city}, {address?.state} - {address?.postalCode}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => handleEditAddress(index)}
-                          disabled={loading}
-                          className="bg-[#b22222] hover:bg-[#a11c1c] disabled:bg-gray-400 text-white px-3 py-1 rounded-lg transition-colors text-sm font-medium"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAddress(index)}
-                          disabled={loading}
-                          className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white px-3 py-1 rounded-lg transition-colors text-sm font-medium"
-                        >
-                          {loading ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">📍</div>
-              <p className="italic">No addresses added yet.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Add New Address - Right Column */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Add New Address</h3>
-          <div className="space-y-4 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <input
-              type="text"
-              name="street"
-              value={newAddress.street}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, street: e.target.value })
-              }
-              placeholder="Street"
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-            />
-            <input
-              type="text"
-              name="city"
-              value={newAddress.city}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, city: e.target.value })
-              }
-              placeholder="City"
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-            />
-            <input
-              type="text"
-              name="state"
-              value={newAddress.state}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, state: e.target.value })
-              }
-              placeholder="State"
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-            />
-            <input
-              type="text"
-              name="postalCode"
-              value={newAddress.postalCode}
-              onChange={(e) =>
-                setNewAddress({ ...newAddress, postalCode: e.target.value })
-              }
-              placeholder="Postal Code"
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] transition-colors"
-            />
-            <button
-              onClick={handleAddAddress}
-              disabled={loading}
-              className="w-full bg-[#b22222] hover:bg-[#a11c1c] disabled:bg-gray-400 text-white px-4 py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              {loading ? "Adding..." : "➕ Add Address"}
-            </button>
-          </div>
-        </div>
+    <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
+          <MapPin className="w-5 h-5 text-[#b22222]" /> My Addresses
+        </h2>
+        {!showForm && (
+          <button
+            onClick={() => { setShowForm(true); setEditingId(null); }}
+            className="flex items-center gap-1 text-sm text-[#b22222] border border-[#b22222] px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Add New
+          </button>
+        )}
       </div>
+
+      {/* Saved addresses */}
+      {user?.addresses?.length > 0 ? (
+        <div className="space-y-3 mb-5">
+          {user.addresses.map(addr => (
+            <div
+              key={addr._id}
+              className={`border rounded-xl p-4 transition-colors ${addr.isDefault ? 'border-[#b22222] bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}
+            >
+              {editingId === addr._id ? (
+                <AddressForm
+                  value={editAddress}
+                  onChange={setEditAddress}
+                  onSubmit={handleUpdate}
+                  onCancel={() => setEditingId(null)}
+                  loading={loading}
+                  submitLabel="Save Changes"
+                />
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 text-sm text-gray-700 space-y-0.5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-gray-800">
+                        {addr.recipientName || addr.street}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                        {addr.addressType || 'Home'}
+                      </span>
+                      {addr.isDefault && (
+                        <span className="text-xs bg-[#b22222] text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Star className="w-3 h-3" fill="currentColor" /> Default
+                        </span>
+                      )}
+                    </div>
+                    {addr.recipientName && <div>{addr.street}</div>}
+                    {addr.landmark && <div className="text-gray-500">{addr.landmark}</div>}
+                    <div>{addr.city}, {addr.state} — {addr.postalCode}</div>
+                    {addr.phonenumber && <div className="text-gray-500">{addr.phonenumber}</div>}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    <button onClick={() => startEdit(addr)} className="flex items-center gap-1 text-xs text-gray-600 border border-gray-300 px-2.5 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+                      <Pencil className="w-3 h-3" /> Edit
+                    </button>
+                    {!addr.isDefault && (
+                      <button onClick={() => handleSetDefault(addr._id)} disabled={loading} className="flex items-center gap-1 text-xs text-[#b22222] border border-[#b22222] px-2.5 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                        <Star className="w-3 h-3" /> Default
+                      </button>
+                    )}
+                    <button onClick={() => handleDelete(addr._id)} disabled={loading} className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2.5 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                      <Trash2 className="w-3 h-3" /> Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6 text-gray-400 mb-4">
+          <MapPin className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">No saved addresses yet</p>
+        </div>
+      )}
+
+      {/* Add new address form */}
+      {showForm && (
+        <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">New Address</h3>
+          <AddressForm
+            value={newAddress}
+            onChange={setNewAddress}
+            onSubmit={handleAdd}
+            onCancel={() => { setShowForm(false); setNewAddress(EMPTY_FORM); }}
+            loading={loading}
+            submitLabel="Add Address"
+          />
+        </div>
+      )}
+      {dialog}
     </div>
   );
 };

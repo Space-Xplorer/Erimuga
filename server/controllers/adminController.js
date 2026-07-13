@@ -1,38 +1,118 @@
 import Order from '../models/orderModel.js';
 import Product from '../models/productModel.js';
-import { uploadToCloudinary } from '../config/cloudinary.js';
+import User from '../models/userModel.js';
+import ContactMessage from '../models/contactMessageModel.js';
+import cloudinary, { uploadToCloudinary } from '../config/cloudinary.js';
 import fs from 'fs';
 import { generateBaseProductCode } from '../utils/generatebasecode.js';
 
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().sort({ date: -1 });
+    const orders = await Order.find()
+      .populate('userID', 'name email')
+      .populate('items.productID', 'name colors')
+      .sort({ date: -1 });
     res.status(200).json(orders);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 };
 
-export const updateOrderStatus = async (req, res) => {
+export const getOrderStats = async (req, res) => {
   try {
-    const { status } = req.body;
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const orders = await Order.find();
 
-    order.status = status;
-    await order.save();
-    res.status(200).json({ message: 'Order status updated', order });
+    const totalOrders = orders.length;
+    const totalRevenue = orders
+      .filter(o => o.status !== 'Cancelled')
+      .reduce((sum, o) => sum + (o.amount || 0), 0);
+
+    const revenueOverTime = {};
+    const paymentMethods = {};
+    const topProducts = {};
+
+    orders.forEach(o => {
+      const date = new Date(o.date).toISOString().split('T')[0];
+      if (o.status !== 'Cancelled') {
+        revenueOverTime[date] = (revenueOverTime[date] || 0) + (o.amount || 0);
+      }
+
+      paymentMethods[o.paymentMethod] = (paymentMethods[o.paymentMethod] || 0) + 1;
+
+      (o.items || []).forEach(item => {
+        const name = item.productName || item.productID?.toString() || 'Unknown';
+        topProducts[name] = (topProducts[name] || 0) + (item.quantity || 1);
+      });
+    });
+
+    const formattedRevenueOverTime = Object.entries(revenueOverTime)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, revenue]) => ({ date, revenue }));
+
+    const formattedPaymentMethods = Object.entries(paymentMethods)
+      .map(([method, count]) => ({ method, count }));
+
+    const topProduct = Object.entries(topProducts)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+    const shipped = orders.filter(o => o.status === 'Shipped').length;
+    const delivered = orders.filter(o => o.status === 'Delivered').length;
+    const cancelled = orders.filter(o => o.status === 'Cancelled').length;
+
+    res.json({
+      totalOrders,
+      totalRevenue,
+      shipped,
+      delivered,
+      cancelled,
+      revenueOverTime: formattedRevenueOverTime,
+      paymentMethods: formattedPaymentMethods,
+      topProduct,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update order status' });
+    res.status(500).json({ error: 'Failed to fetch order stats', details: error.message });
   }
 };
 
 
+const parseVariants = (sizes, colors, variantsJson) => {
+  if (variantsJson) {
+    try { return JSON.parse(variantsJson); } catch { /* fall through */ }
+  }
+  const sizeArr = sizes ? sizes.split(',').map(s => s.trim()).filter(Boolean) : [''];
+  const colorArr = colors ? colors.split(',').map(c => c.trim()).filter(Boolean) : [''];
+  const variants = [];
+  for (const size of sizeArr) {
+    for (const color of colorArr) {
+      variants.push({ size, color, stock: 0 });
+    }
+  }
+  return variants;
+};
+
+// Uploads files (in order) and groups them into `colors` by the parallel
+// `imageColorIndex` array sent from the admin form (index into `colorsMeta`).
+const buildColorsFromUpload = async (req, mainCategory, colorsMeta) => {
+  const imageColorIndex = req.body.imageColorIndex ? JSON.parse(req.body.imageColorIndex) : [];
+
+  let uploaded = [];
+  if (req.files && req.files.length > 0) {
+    uploaded = await Promise.all(req.files.map(async (file) => {
+      const result = await uploadToCloudinary(file.path, { folder: `erimuga/products/${mainCategory}` });
+      fs.unlinkSync(file.path);
+      return { url: result.url, public_id: result.public_id };
+    }));
+  }
+
+  return colorsMeta.map((c, idx) => {
+    const existing = c.existingImages || [];
+    const newOnes = uploaded.filter((_, i) => imageColorIndex[i] === idx);
+    return { name: c.name, swatchHex: c.swatchHex || '', images: [...existing, ...newOnes] };
+  });
+};
+
 export const addProduct = async (req, res) => {
   try {
-    console.log('addProduct called - req.body:', req.body);
-    console.log('addProduct called - req.files:', req.files);
-    
     const {
       name,
       mainCategory,
@@ -42,27 +122,20 @@ export const addProduct = async (req, res) => {
       price,
       availableSizes,
       availableColors,
-      isBestSeller
+      isBestSeller,
+      variants: variantsJson,
+      colorsMeta: colorsMetaJson,
     } = req.body;
 
-    // Generate structured base product code (e.g. TS-MEN-0001)
     const productCode = await generateBaseProductCode(mainCategory, subcategory, apparelType);
 
-    // Upload images to Cloudinary
-    let imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(async (file) => {
-        const result = await uploadToCloudinary(file.path, {
-          folder: `erimuga/products/${mainCategory}`,
-        });
-        fs.unlinkSync(file.path); // remove local file after upload
-        return result.url; // Changed from result.secure_url to result.url
-      });
+    const colorsMeta = colorsMetaJson ? JSON.parse(colorsMetaJson) : [];
+    const colors = await buildColorsFromUpload(req, mainCategory, colorsMeta);
 
-      imageUrls = await Promise.all(uploadPromises);
-    }
+    const sizes = availableSizes?.split(',').map(s => s.trim()).filter(Boolean) || [];
+    const colorNames = availableColors?.split(',').map(c => c.trim()).filter(Boolean) || [];
+    const variants = parseVariants(availableSizes, availableColors, variantsJson);
 
-    // Create new product
     const newProduct = new Product({
       productCode,
       name,
@@ -71,17 +144,16 @@ export const addProduct = async (req, res) => {
       subcategory,
       description,
       price,
-      image: imageUrls,
-      availableSizes: availableSizes?.split(',').map((s) => s.trim()),
-      availableColors: availableColors?.split(',').map((c) => c.trim()),
-      isBestSeller: isBestSeller || 'no'
+      colors,
+      availableSizes: sizes,
+      availableColors: colorNames,
+      variants,
+      isBestSeller: isBestSeller || 'no',
     });
 
     await newProduct.save();
-
     res.status(201).json({ message: 'Product added successfully', product: newProduct });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to add product', details: err.message });
   }
 };
@@ -95,7 +167,6 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// EDIT PRODUCT ✅
 export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -109,22 +180,28 @@ export const editProduct = async (req, res) => {
       availableSizes,
       availableColors,
       isBestSeller,
+      variants: variantsJson,
+      colorsMeta: colorsMetaJson,
     } = req.body;
 
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
-    // Optional new images
-    if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(async (file) => {
-        const result = await uploadToCloudinary(file.path, {
-          folder: `erimuga/products/${mainCategory}`,
-        });
-        fs.unlinkSync(file.path);
-        return result.url; // Changed from result.secure_url to result.url
-      });
+    if (colorsMetaJson) {
+      const colorsMeta = JSON.parse(colorsMetaJson);
+      const newColors = await buildColorsFromUpload(req, mainCategory || product.mainCategory, colorsMeta);
 
-      product.image = await Promise.all(uploadPromises);
+      // Clean up any Cloudinary images the admin removed in this edit
+      const keptPublicIds = new Set(
+        newColors.flatMap((c) => c.images.map((img) => img.public_id).filter(Boolean))
+      );
+      const oldPublicIds = product.colors.flatMap((c) => c.images.map((img) => img.public_id).filter(Boolean));
+      const removedPublicIds = oldPublicIds.filter((pid) => !keptPublicIds.has(pid));
+      await Promise.all(removedPublicIds.map((pid) =>
+        cloudinary.uploader.destroy(pid).catch((err) => console.warn('Cloudinary cleanup failed for', pid, err.message))
+      ));
+
+      product.colors = newColors;
     }
 
     product.name = name || product.name;
@@ -133,9 +210,20 @@ export const editProduct = async (req, res) => {
     product.subcategory = subcategory || product.subcategory;
     product.description = description || product.description;
     product.price = price || product.price;
-    product.availableSizes = availableSizes?.split(',').map((s) => s.trim()) || product.availableSizes;
-    product.availableColors = availableColors?.split(',').map((c) => c.trim()) || product.availableColors;
     product.isBestSeller = isBestSeller || product.isBestSeller;
+
+    if (availableSizes !== undefined) {
+      product.availableSizes = availableSizes.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (availableColors !== undefined) {
+      product.availableColors = availableColors.split(',').map(c => c.trim()).filter(Boolean);
+    }
+
+    product.variants = parseVariants(
+      availableSizes ?? product.availableSizes.join(','),
+      availableColors ?? product.availableColors.join(','),
+      variantsJson
+    );
 
     await product.save();
     res.status(200).json({ message: 'Product updated', product });
@@ -159,33 +247,19 @@ export const deleteProduct = async (req, res) => {
     console.log("📦 Found product:", {
       id: product._id,
       name: product.name,
-      image: product.image,
+      colors: product.colors?.length || 0,
     });
 
-    // ✅ Handle all image formats safely
-    if (Array.isArray(product.image)) {
-      // multiple images
-      for (const img of product.image) {
-        if (img?.public_id) {
-          try {
-            await cloudinary.uploader.destroy(img.public_id);
-            console.log("🗑️ Deleted Cloudinary image:", img.public_id);
-          } catch (err) {
-            console.warn("⚠️ Cloudinary deletion failed for", img.public_id, ":", err.message);
-          }
-        }
-      }
-    } else if (product.image?.public_id) {
-      // single image object
+    // ✅ Delete every colour's images from Cloudinary
+    const publicIds = (product.colors || []).flatMap((c) => c.images.map((img) => img.public_id).filter(Boolean));
+    await Promise.all(publicIds.map(async (pid) => {
       try {
-        await cloudinary.uploader.destroy(product.image.public_id);
-        console.log("🗑️ Deleted Cloudinary image:", product.image.public_id);
+        await cloudinary.uploader.destroy(pid);
+        console.log("🗑️ Deleted Cloudinary image:", pid);
       } catch (err) {
-        console.warn("⚠️ Cloudinary deletion failed:", err.message);
+        console.warn("⚠️ Cloudinary deletion failed for", pid, ":", err.message);
       }
-    } else {
-      console.log("ℹ️ No Cloudinary image found (URL or missing public_id). Skipping deletion.");
-    }
+    }));
 
     // ✅ Delete product document
     await Product.findByIdAndDelete(id);
@@ -203,5 +277,70 @@ export const deleteProduct = async (req, res) => {
       message: "Internal server error while deleting product",
       error: error.message,
     });
+  }
+};
+
+export const getAllCustomers = async (req, res) => {
+  try {
+    const users = await User.find({ userType: 'user' }, 'name email phonenumber createdAt').sort({ createdAt: -1 });
+
+    const orders = await Order.aggregate([
+      {
+        $group: {
+          _id: '$userID',
+          orderCount: { $sum: 1 },
+          totalSpent: { $sum: { $cond: [{ $ne: ['$status', 'Cancelled'] }, '$amount', 0] } },
+        }
+      }
+    ]);
+
+    const orderMap = {};
+    orders.forEach(o => { orderMap[o._id] = o; });
+
+    const customers = users.map(u => ({
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      phone: u.phonenumber || '—',
+      orderCount: orderMap[u._id.toString()]?.orderCount || 0,
+      totalSpent: orderMap[u._id.toString()]?.totalSpent || 0,
+      joinedAt: u.createdAt,
+    }));
+
+    res.json(customers);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch customers', details: err.message });
+  }
+};
+
+export const getCustomerDetail = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id, 'name email phonenumber createdAt');
+    if (!user) return res.status(404).json({ error: 'Customer not found' });
+
+    const orders = await Order.find({ userID: req.params.id }).sort({ date: -1 });
+
+    res.json({ user, orders });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch customer detail', details: err.message });
+  }
+};
+
+export const getContactMessages = async (req, res) => {
+  try {
+    const messages = await ContactMessage.find().sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch messages', details: err.message });
+  }
+};
+
+export const markContactMessageRead = async (req, res) => {
+  try {
+    const message = await ContactMessage.findByIdAndUpdate(req.params.id, { read: true }, { new: true });
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    res.json({ message: 'Marked as read', contactMessage: message });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update message', details: err.message });
   }
 };

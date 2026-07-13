@@ -1,103 +1,21 @@
-// import mongoose from 'mongoose';
-
-// const orderSchema = new mongoose.Schema({
-//   userID: { type: String, required: true },
-
-//   items: [
-//     {
-//       productID: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-//       quantity: { type: Number, required: true }
-//     }
-//   ],
-
-//   amount: { type: Number, required: true },
-
-//   address: {
-//     street: String,
-//     city: String,
-//     state: String,
-//     zip: String,
-//     country: String
-//   },
-
-//   status: { type: String, required: true, default: 'Order Placed' },
-
-//   paymentMethod: { type: String, required: true },
-
-//   // ✅ Added defaults for consistency
-//   paymentStatus: { 
-//     type: String, 
-//     trim: true, 
-//     enum: ['pending', 'paid', 'failed'], 
-//     default: 'pending' 
-//   },
-
-//   payment: { type: Boolean, required: true, default: false },
-
-//   // ✅ Better handling for date
-//   date: { type: Date, default: Date.now }
-// });
-
-// // Always check if model already exists to avoid overwrite error in dev
-// const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
-
-// export default Order;
-
-
-// import mongoose from 'mongoose';
-
-// const orderSchema = new mongoose.Schema({
-//   userID: { type: String, required: true },
-
-//   items: [
-//     {
-//       productID: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-//       quantity: { type: Number, required: true }
-//     }
-//   ],
-
-//   amount: { type: Number, required: true },
-
-//   address: {
-//     street: String,
-//     city: String,
-//     state: String,
-//     zip: String,
-//     country: String
-//   },
-
-//   // ✅ Add phone field
-//   phone: { type: String, required: true },
-
-//   status: { type: String, required: true, default: 'Order Placed' },
-
-//   paymentMethod: { type: String, required: true },
-
-//   paymentStatus: { 
-//     type: String, 
-//     trim: true, 
-//     enum: ['pending', 'paid', 'failed'], 
-//     default: 'pending' 
-//   },
-
-//   payment: { type: Boolean, required: true, default: false },
-
-//   date: { type: Date, default: Date.now }
-// });
-
-// const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
-// export default Order;
-
-
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
-  userID: { type: String, required: true },
+  // Human-readable order number, e.g. ERM-2026-00042
+  orderNumber: { type: String, unique: true, sparse: true },
 
+  userID: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true, index: true },
+
+  // Snapshot of items at time of purchase so product edits don't affect history
   items: [
     {
       productID: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-      quantity: { type: Number, required: true }
+      productName: { type: String },
+      productCode: { type: String },
+      price: { type: Number },
+      quantity: { type: Number, required: true },
+      size: { type: String },
+      color: { type: String },
     }
   ],
 
@@ -108,35 +26,28 @@ const orderSchema = new mongoose.Schema({
     city: String,
     state: String,
     zip: String,
-    country: String
+    postalCode: String,
+    country: String,
   },
 
   phone: { type: String, required: true },
 
-  // ✅ Order flow status (not payment)
   status: {
     type: String,
-    enum: [
-      'Order Placed',
-      'Processing',
-      'Shipped',
-      'Delivered',
-      'Cancelled',
-      'Returned'
-    ],
+    enum: ['Order Placed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'],
     default: 'Order Placed',
-    required: true
+    required: true,
+    index: true,
   },
 
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['Online', 'COD'], // ✅ clear distinction
+    enum: ['Online', 'COD'],
   },
 
-  // ✅ Expanded to support both Online & COD states
-  paymentStatus: { 
-    type: String, 
+  paymentStatus: {
+    type: String,
     trim: true,
     enum: [
       'pending',
@@ -153,6 +64,15 @@ const orderSchema = new mongoose.Schema({
   },
 
   payment: { type: Boolean, required: true, default: false },
+
+  couponCode: { type: String, default: null },
+  discountAmount: { type: Number, default: 0 },
+
+  // Timeline of status changes, for customer-facing order tracking
+  statusHistory: {
+    type: [{ status: String, changedAt: { type: Date, default: Date.now } }],
+    default: [],
+  },
 
   date: { type: Date, default: Date.now }
 });

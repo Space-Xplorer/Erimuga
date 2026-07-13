@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext'; // Adjust the path if needed
 import { useNavigate } from 'react-router-dom';
+import { getProductThumbnail } from '../utils/productImage';
 
 const Cart = () => {
   const {
@@ -27,15 +28,24 @@ const Cart = () => {
             return (
               <div
                 key={item._id || item.productId}
-                className="flex items-center bg-white p-4 md:p-6 rounded-xl shadow gap-4"
+                className="flex flex-col sm:flex-row sm:items-center bg-white p-4 md:p-6 rounded-xl shadow gap-4"
               >
-                <img
-                  src={product.image?.[0] || '/fallback.jpg'}
-                  alt={product.name}
-                  className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg"
-                />
+                <div className="flex items-center gap-4">
+                  <img
+                    src={getProductThumbnail(product)}
+                    alt={product.name}
+                    className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg shrink-0"
+                  />
 
-                <div className="flex-grow">
+                  <div className="flex-grow sm:hidden">
+                    <p className="font-semibold text-lg text-gray-800">{product.name}</p>
+                    <p className="text-sm text-gray-500">Size: {item.size || 'N/A'}</p>
+                    <p className="text-sm text-gray-500 mb-1">Color: {item.color || 'N/A'}</p>
+                    <p className="text-sm text-gray-500">₹{item.priceAtPurchase || product.price} per item</p>
+                  </div>
+                </div>
+
+                <div className="hidden sm:block flex-grow">
                   <p className="font-semibold text-lg text-gray-800">{product.name}</p>
                   <p className="text-sm text-gray-500">Size: {item.size || 'N/A'}</p>
                   <p className="text-sm text-gray-500 mb-1">Color: {item.color || 'N/A'}</p>
@@ -50,7 +60,7 @@ const Cart = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between sm:justify-end gap-4">
                   <input
                     type="number"
                     value={item.quantity}
@@ -64,6 +74,13 @@ const Cart = () => {
                     ₹{((item.priceAtPurchase || product.price) * item.quantity).toFixed(2)}
                   </p>
                 </div>
+
+                <button
+                  onClick={() => removeFromCart(item.productCode)}
+                  className="sm:hidden text-sm text-red-500 hover:underline text-left"
+                >
+                  Remove
+                </button>
               </div>
             );
           })}

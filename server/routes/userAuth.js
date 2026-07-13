@@ -2,24 +2,11 @@ import express from "express";
 import passport from "passport";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
+import { validateRegister, validateLogin, validateAddress } from '../middlewares/validate.js';
 import 'dotenv/config';
 
 const BASE_URL = process.env.BASE_URL;
 const router = express.Router();
-
-// ✅ Specific route for getting user by ID (more specific path)
-router.get('/user/:id', async (req, res) => {
-  try {
-    const user = await userModel.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
 // ✅ Get current logged-in user with complete data
 router.get('/me', (req, res) => {
@@ -47,7 +34,7 @@ router.get('/me', (req, res) => {
 });
 
 // ✅ Registration
-router.post("/register", async (req, res) => {
+router.post("/register", validateRegister, async (req, res) => {
   try {
     const { name, email, password, userType = "user" } = req.body;
 
@@ -82,7 +69,7 @@ router.post("/register", async (req, res) => {
 });
 
 // ✅ Local login - Enhanced with better session handling
-router.post('/login', (req, res, next) => {
+router.post('/login', validateLogin, (req, res, next) => {
   console.log('🔐 Login attempt for email:', req.body.email);
   
   passport.authenticate('local', (err, user, info) => {
@@ -214,24 +201,32 @@ router.put('/update-profile', async (req, res) => {
   }
 });
 
-// ✅ Update addresses
+// ✅ Update addresses — userId always from session, never from body
 router.put("/update-address", async (req, res) => {
+  if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+
   try {
-    const { userId, address, addressId, action } = req.body;
-    const user = await userModel.findById(userId);
+    const { address, addressId, action } = req.body;
+    const user = await userModel.findById(req.user._id);
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
     switch (action) {
-      case "add":
-        if (address.isDefault) {
+      case "add": {
+        if (!validateAddress(address, res)) return;
+        // First address added is automatically the default
+        const isFirst = user.addresses.length === 0;
+        if (address.isDefault || isFirst) {
           user.addresses.forEach((addr) => (addr.isDefault = false));
+          address.isDefault = true;
         }
         user.addresses.push(address);
         break;
+      }
 
       case "update": {
-        const idx = user.addresses.findIndex((a) => a._id.toString() === address._id);
+        if (!validateAddress(address, res)) return;
+        const idx = user.addresses.findIndex((a) => a._id.toString() === (address._id || addressId));
         if (idx === -1) return res.status(404).json({ message: "Address not found" });
 
         if (address.isDefault) {
@@ -242,9 +237,17 @@ router.put("/update-address", async (req, res) => {
         break;
       }
 
-      case "delete":
+      case "delete": {
+        const deletingDefault = user.addresses.find(
+          (a) => a._id.toString() === addressId && a.isDefault
+        );
         user.addresses = user.addresses.filter((a) => a._id.toString() !== addressId);
+        // Auto-promote the first remaining address to default if the deleted one was default
+        if (deletingDefault && user.addresses.length > 0) {
+          user.addresses[0].isDefault = true;
+        }
         break;
+      }
 
       case "set-default":
         user.addresses.forEach((addr) => {
@@ -256,25 +259,11 @@ router.put("/update-address", async (req, res) => {
         return res.status(400).json({ message: "Invalid action" });
     }
 
+    user.markModified('addresses');
     await user.save();
     res.json({ success: true, user });
   } catch (err) {
-    console.error("updateAddress error:", err);
     res.status(500).json({ message: "Server error", details: err.message });
-  }
-});
-
-// ✅ IMPORTANT: This must stay LAST so it doesn't catch /google
-router.get('/:id', async (req, res) => {
-  try {
-    const user = await userModel.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Internal server error' });
   }
 });
 

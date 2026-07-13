@@ -1,6 +1,6 @@
 // components/Admin/MetadataModal.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 const MetadataModal = ({ isOpen, onClose }) => {
   const [type, setType] = useState('category');
@@ -12,7 +12,7 @@ const MetadataModal = ({ isOpen, onClose }) => {
 
     try {
       setLoading(true);
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/metadata/${type}`, {
+      await axios.post(`/metadata/${type}`, {
         name: name.trim(),
       });
       alert(`${type} added successfully`);

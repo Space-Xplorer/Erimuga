@@ -29,6 +29,10 @@ import cartRouter from './routes/cart.js';
 import orderRouter from './routes/orders.js';
 import adminRoutes from './routes/adminRoutes.js';
 import metadataRoutes from './routes/metaDataRoutes.js';
+import couponRouter from './routes/couponRoutes.js';
+import reviewRouter from './routes/reviewRoutes.js';
+import bannerRouter from './routes/bannerRoutes.js';
+import ContactMessage from './models/contactMessageModel.js';
 
 // ✅ Basic setup
 const app = express();
@@ -36,6 +40,22 @@ const PORT = process.env.PORT || 10000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const isProd = process.env.NODE_ENV === 'production';
+
+// ✅ Fail loudly instead of booting with a broken/insecure config
+const REQUIRED_ENV_VARS = [
+  'MONGODB_URI',
+  'SESSION_SECRET',
+  'RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET',
+  'CLOUDINARY_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
+];
+const missingEnvVars = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
+if (missingEnvVars.length > 0) {
+  console.error(`❌ Missing required environment variable(s): ${missingEnvVars.join(', ')}`);
+  process.exit(1);
+}
 
 // ✅ Connect to MongoDB
 await connectDB();
@@ -108,16 +128,6 @@ app.use(cookieParser());
 // ✅ Serve static files
 app.use(express.static('../client/public'));
 
-// ✅ Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'Server running',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-    cors: { allowedOrigins, isProduction: isProd }
-  });
-});
-
 // ✅ SINGLE MongoStore instance (fix)
 const mongoStore = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,
@@ -135,7 +145,7 @@ mongoStore.on('error', err => console.error('❌ MongoDB session store error:', 
 // ✅ Session setup (fixed to use shared store)
 app.use(session({
   name: 'erimuga.sid',
-  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+  secret: process.env.SESSION_SECRET,
   resave: false,              // ✅ must be false for stable sessions
   saveUninitialized: false,   // ✅ prevents empty sessions
   store: mongoStore,
@@ -171,8 +181,24 @@ app.use("/cart", cartRouter);
 app.use("/orders", orderRouter);
 app.use("/admin", adminRoutes);
 app.use("/metadata", metadataRoutes);
+app.use("/coupons", couponRouter);
+app.use("/reviews", reviewRouter);
+app.use("/banners", bannerRouter);
 
-// ✅ Global health & info
+app.post('/contact', async (req, res) => {
+  try {
+    const { name, email, phone, message } = req.body;
+    if (!name?.trim() || !email?.trim() || !message?.trim()) {
+      return res.status(400).json({ error: 'Name, email, and message are required' });
+    }
+    await ContactMessage.create({ name, email, phone, message });
+    res.json({ success: true, message: 'Message received! We will get back to you soon.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to send message', details: err.message });
+  }
+});
+
+// ✅ Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',

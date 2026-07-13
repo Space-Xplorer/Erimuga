@@ -3,7 +3,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend, ResponsiveContainer
 } from 'recharts';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 import { format } from 'date-fns';
 
 const COLORS = ['#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#FF6666'];
@@ -12,9 +12,8 @@ export default function OrderAnalytics() {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    axios.get('/admin/order-stats').then(res => {
-      setStats(res.data);
-    });
+    axios.get('/admin/order-stats')
+      .then(res => setStats(res.data));
   }, []);
 
   if (!stats) return <div className="p-4 text-center">Loading stats...</div>;

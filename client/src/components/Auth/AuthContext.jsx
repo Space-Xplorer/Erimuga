@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 const AuthContext = createContext(null);
 
@@ -13,26 +13,13 @@ export const AuthProvider = ({ children }) => {
     const checkSession = async () => {
       try {
         console.log('🔍 Checking session...');
-        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/me`, {
-          credentials: 'include'
-        });
-        
-        console.log('📡 Session check response:', res.status, res.ok);
-        
-        if (res.ok) {
-          const userData = await res.json();
-          setUser(userData);
-          setIsAuthenticated(true);
-          localStorage.setItem('user', JSON.stringify(userData));
-          console.log('✅ Session restored:', userData);
-        } else {
-          console.log('❌ Session check failed, status:', res.status);
-          localStorage.removeItem('user');
-          setUser(null);
-          setIsAuthenticated(false);
-        }
+        const res = await axios.get('/user/auth/me');
+        setUser(res.data);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(res.data));
+        console.log('✅ Session restored:', res.data);
       } catch (err) {
-        console.error('❌ Session check failed:', err);
+        console.log('❌ Session check failed:', err.response?.status || err.message);
         localStorage.removeItem('user');
         setUser(null);
         setIsAuthenticated(false);
@@ -53,47 +40,16 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ Login function - session-based
   const login = (userData) => {
-    const userWithAdmin = {
-      ...userData,
-      _id: userData._id,
-      isAdmin: userData.userType === 'admin',
-    };
-
-    setUser(userWithAdmin);
+    setUser(userData);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userWithAdmin));
-    console.log('✅ User logged in:', userWithAdmin);
+    localStorage.setItem('user', JSON.stringify(userData));
+    console.log('✅ User logged in:', userData);
   };
-
-  // // ✅ Enhanced login function
-  // const login = async (userData) => {
-  //   try {
-  //     const response = await axios.post(`${BASE_URL}/user/auth/login`, userData, {
-  //       withCredentials: true
-  //     });
-
-  //     if (response.data.success) {
-  //       setUser(response.data.user);
-  //       setIsAuthenticated(true);
-  //       console.log('✅ Login successful:', response.data.user._id);
-  //       return { success: true, user: response.data.user };
-  //     } else {
-  //       throw new Error(response.data.message || 'Login failed');
-  //     }
-  //   } catch (error) {
-  //     console.error('❌ Login error:', error);
-  //     throw error;
-  //   }
-  // };
 
   // ✅ Enhanced logout function
   const logout = async () => {
     try {
-      await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/user/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
+      await axios.post('/user/auth/logout', {});
       console.log('✅ Server-side logout successful');
     } catch (error) {
       console.error("❌ Server-side logout failed:", error);

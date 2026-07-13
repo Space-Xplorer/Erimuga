@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 // ✅ Centralized constants for statuses to prevent typos and ease maintenance
 const ORDER_STATUSES = {
@@ -108,7 +108,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
   // Generic handler for updating any order property
   const handleUpdateOrder = async (orderId, updatePayload) => {
     try {
-      await axios.put(`${import.meta.env.VITE_BASE_URL}/orders/${orderId}/status`, updatePayload);
+      await axios.put(`/orders/${orderId}/status`, updatePayload);
       setOrders((prevOrders) =>
         prevOrders.map((o) =>
           o._id === orderId ? { ...o, ...updatePayload } : o
@@ -182,7 +182,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
         <table className="min-w-full bg-white">
           <thead style={{ backgroundColor: '#b22222' }}>
             <tr>
-              {['Order ID', 'User ID', 'Amount', 'Status', 'Payment Status', 'Date', 'Actions'].map((heading) => (
+              {['Order #', 'Customer', 'Amount', 'Status', 'Payment Status', 'Date', 'Actions'].map((heading) => (
                 <th key={heading} className="p-3 text-left text-white text-sm font-semibold">
                   {heading}
                 </th>
@@ -206,8 +206,8 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
                     : 'bg-[#fff5f5]'
                 }`}
               >
-                <td className="p-3">{order._id}</td>
-                <td className="p-3">{order.userID}</td>
+                <td className="p-3">{order.orderNumber || order._id}</td>
+                <td className="p-3">{order.userID?.name || 'Unknown'}</td>
                 <td className="p-3 font-semibold">₹{order.amount}</td>
                 <td className="p-3">
                   <select

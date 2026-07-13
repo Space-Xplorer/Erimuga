@@ -19,7 +19,11 @@ const OrderModal = ({ order, isOpen, onClose }) => {
           </Dialog.Title>
 
           <div className="space-y-3 text-sm text-gray-700">
-            <p><span className="font-medium">User ID:</span> {order.userID}</p>
+            <p>
+              <span className="font-medium">Customer:</span>{' '}
+              {order.userID?.name || 'Unknown'}
+              {order.userID?.email && <span className="text-gray-400"> ({order.userID.email})</span>}
+            </p>
             <p><span className="font-medium">Payment:</span> {order.payment ? '✅ Yes' : '❌ No'}</p>
             <p><span className="font-medium">Payment Method:</span> {order.paymentMethod || 'N/A'}</p>
             <p><span className="font-medium">Amount:</span> ₹{order.amount}</p>
@@ -43,15 +47,24 @@ const OrderModal = ({ order, isOpen, onClose }) => {
             {/* Items Section */}
             <div>
               <p className="font-medium">Items:</p>
-              <ul className="mt-1 pl-4 space-y-1 list-disc">
-                {order.items.map((item, i) => (
-                  <li key={i} className="text-sm text-gray-600">
-                    <span className="font-medium">ID:</span> {item.productId} | 
-                    <span className="font-medium"> Qty:</span> {item.quantity} | 
-                    <span className="font-medium"> Size:</span> {item.size || '—'} | 
-                    <span className="font-medium"> Color:</span> {item.color || '—'}
-                  </li>
-                ))}
+              <ul className="mt-2 space-y-2">
+                {order.items.map((item, i) => {
+                  const thumb = item.productID?.image?.[0];
+                  const name = item.productName || item.productID?.name || 'Product';
+                  return (
+                    <li key={i} className="flex items-center gap-3 text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
+                      {thumb ? (
+                        <img src={thumb} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-gray-200 shrink-0" />
+                      )}
+                      <span>
+                        <span className="font-medium text-gray-800">{name}</span>
+                        {' — '}Qty: {item.quantity} | Size: {item.size || '—'} | Colour: {item.color || '—'}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>

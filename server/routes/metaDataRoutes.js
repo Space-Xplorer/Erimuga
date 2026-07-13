@@ -9,18 +9,21 @@ import {
   addSubcategory,
   deleteSubcategory,
 } from '../controllers/metadataController.js';
+import { isLoggedIn, isAdmin } from '../middlewares/auth.js';
 
 const router = express.Router();
 
+// Public: storefront filters need to read metadata
 router.get('/', getMetadata);
 
-router.post('/category', addCategory);
-router.delete('/category/:name', deleteCategory);
+// Admin-only: mutating metadata (only ever called from the admin UI)
+router.post('/category', isLoggedIn, isAdmin, addCategory);
+router.delete('/category/:name', isLoggedIn, isAdmin, deleteCategory);
 
-router.post('/apparelType', addApparelType);
-router.delete('/apparelType/:name', deleteApparelType);
+router.post('/apparelType', isLoggedIn, isAdmin, addApparelType);
+router.delete('/apparelType/:name', isLoggedIn, isAdmin, deleteApparelType);
 
-router.post('/subcategory', addSubcategory);
-router.delete('/subcategory/:name', deleteSubcategory);
+router.post('/subcategory', isLoggedIn, isAdmin, addSubcategory);
+router.delete('/subcategory/:name', isLoggedIn, isAdmin, deleteSubcategory);
 
 export default router;

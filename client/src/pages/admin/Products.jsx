@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../../config/axios";
 import ProductCard1 from "../../components/Admin/ProductCard1";
 
 const AdminProducts = () => {
@@ -10,7 +10,7 @@ const AdminProducts = () => {
   // Fetch all products from backend
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/admin/products`);
+      const res = await axios.get('/admin/products');
       setProducts(res.data);
     } catch (err) {
       setError("Failed to fetch products");

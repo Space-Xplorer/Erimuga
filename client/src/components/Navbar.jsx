@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaBars, FaTimes, FaSearch, FaUserCircle } from 'react-icons/fa';
+import { FaShoppingCart, FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from './Auth/AuthContext';
 import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
+import SearchBar from './SearchBar';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,12 +14,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const { isAuthenticated, user, logout: authLogout } = useAuth();
-  const { cartItems } = useContext(ShopContext);
-
-  // Cart total calculation for guests
-  const getTotalCartItems = () => {
-    return Object.values(cartItems).reduce((total, quantity) => total + quantity, 0);
-  };
+  const { getTotalItems } = useContext(ShopContext);
 
   // Profile dropdown handlers
   const handleProfileEnter = () => {
@@ -30,10 +26,8 @@ const Navbar = () => {
     timerRef.current = setTimeout(() => setIsProfileOpen(false), 150);
   };
 
-  // Cart count (logged in vs guest)
-  const cartCount = isAuthenticated
-    ? user?.cartData?.reduce((total, item) => total + (item.quantity || 0), 0) || 0
-    : getTotalCartItems();
+  // Single source of truth: live cartItems from ShopContext
+  const cartCount = getTotalItems();
 
   return (
     <nav className="bg-[#B22222] text-white px-6 py-4">
@@ -51,9 +45,8 @@ const Navbar = () => {
           <Link to="/collection" className="hover:text-yellow-300">Collection</Link>
           <Link to="/about" className="hover:text-yellow-300">About</Link>
           <Link to="/contact" className="hover:text-yellow-300">Contact</Link>
-          <Link to="/search" className="flex items-center gap-1 hover:text-yellow-300">
-            <FaSearch /> Search
-          </Link>
+
+          <SearchBar />
 
           {/* Cart Icon */}
           <Link to="/cart" className="relative hover:text-yellow-300 transition">
@@ -84,6 +77,10 @@ const Navbar = () => {
                       <Link to="/admin" className="block px-4 py-2 hover:bg-gray-100">Admin Dashboard</Link>
                       <Link to="/admin/add-product" className="block px-4 py-2 hover:bg-gray-100">Add Products</Link>
                       <Link to="/admin/products" className="block px-4 py-2 hover:bg-gray-100">Products</Link>
+                      <Link to="/admin/customers" className="block px-4 py-2 hover:bg-gray-100">Customers</Link>
+                      <Link to="/admin/coupons" className="block px-4 py-2 hover:bg-gray-100">Coupons</Link>
+                      <Link to="/admin/messages" className="block px-4 py-2 hover:bg-gray-100">Messages</Link>
+                      <Link to="/admin/banners" className="block px-4 py-2 hover:bg-gray-100">Homepage Carousel</Link>
                     </>
                   ) : (
                     <>
@@ -127,9 +124,9 @@ const Navbar = () => {
           <Link to="/collection" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Collection</Link>
           <Link to="/about" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">About</Link>
           <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Contact</Link>
-          <Link to="/search" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-1 hover:text-yellow-300">
-            <FaSearch /> Search
-          </Link>
+          <div className="pt-2">
+            <SearchBar mobile />
+          </div>
           <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="relative hover:text-yellow-300 transition">
             <FaShoppingCart className="text-lg" />
             {cartCount > 0 && (
@@ -140,11 +137,15 @@ const Navbar = () => {
           </Link>
           {isAuthenticated ? (
             <>
-              {user?.isAdmin ? (
+              {user?.userType === 'admin' ? (
                 <>
                   <Link to="/admin" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Admin Dashboard</Link>
                   <Link to="/admin/add-product" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Add Products</Link>
                   <Link to="/admin/products" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Products</Link>
+                  <Link to="/admin/customers" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Customers</Link>
+                  <Link to="/admin/coupons" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Coupons</Link>
+                  <Link to="/admin/messages" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Messages</Link>
+                  <Link to="/admin/banners" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Homepage Carousel</Link>
                 </>
               ) : (
                 <>

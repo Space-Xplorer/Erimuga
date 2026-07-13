@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
+import axios from '../../config/axios';
 
 const LoginForm = ({ onLogin }) => {
   const { login: authLogin } = useAuth();
@@ -19,23 +20,16 @@ const LoginForm = ({ onLogin }) => {
     setLoading(true);
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/user/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ✅ Include cookies for session
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        // ✅ Pass only user data, no token needed for session-based auth
-        authLogin(data.user);
-        if (onLogin) onLogin();
-        navigate(from, { replace: true });
-      }
+      const res = await axios.post('/user/auth/login', { email, password });
+      // ✅ Pass only user data, no token needed for session-based auth
+      authLogin(res.data.user);
+      if (onLogin) onLogin();
+      navigate(from, { replace: true });
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || err.message || 'Login failed. Please try again.');
-      toast.error('Login failed. Please check your credentials.');
+      const message = err.response?.data?.message || 'Invalid email or password';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

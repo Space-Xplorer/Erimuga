@@ -8,30 +8,39 @@ export default defineConfig(({ mode }) => {
     server: {
       allowedHosts: [
         'erimuga-frontend.onrender.com',
-        // New primary domain
         'www.erindmuga.com',
         'erindmuga.com',
-        // Legacy (temporary during migration)
-        'www.erindmuga.in',
-        'erindmuga.in',
-        'localhost'
-      ], 
-      host: '0.0.0.0',
-      port: parseInt(process.env.PORT) || 5173, // 👈 important for Render
-    },
-    preview: {
-      allowedHosts: [
-        'erimuga-frontend.onrender.com',
-        // New primary domain
-        'www.erindmuga.com',
-        'erindmuga.com',
-        // Legacy (temporary during migration)
         'www.erindmuga.in',
         'erindmuga.in',
         'localhost'
       ],
       host: '0.0.0.0',
-      port: parseInt(process.env.PORT) || 4173, // for `vite preview`
+      port: parseInt(process.env.PORT) || 5173,
+    },
+    preview: {
+      allowedHosts: [
+        'erimuga-frontend.onrender.com',
+        'www.erindmuga.com',
+        'erindmuga.com',
+        'www.erindmuga.in',
+        'erindmuga.in',
+        'localhost'
+      ],
+      host: '0.0.0.0',
+      port: parseInt(process.env.PORT) || 4173,
+    },
+    build: {
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-ui': ['lucide-react', 'react-hot-toast', 'framer-motion'],
+            'vendor-charts': ['recharts', 'date-fns'],
+            'vendor-http': ['axios'],
+          },
+        },
+      },
     },
   }
 })

@@ -1,24 +1,25 @@
 import mongoose from 'mongoose';
 
 const addressSchema = new mongoose.Schema({
+  recipientName: { type: String },
   street: { type: String, required: true },
   city: { type: String, required: true },
   state: { type: String, required: true },
   country: { type: String, required: true, default: 'India' },
   postalCode: { type: String, required: true },
+  phonenumber: { type: String },
+  landmark: { type: String },
+  addressType: { type: String, enum: ['Home', 'Work', 'Other'], default: 'Home' },
   isDefault: { type: Boolean, default: false }
-}); // Remove _id: false to allow automatic _id generation
+});
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  phonenumber: { type: String, unique: true, sparse: true }, 
-  password: { type: String }, // optional for OAuth users
-  googleId: { type: String }, // to store Google OAuth ID
-  addresses: {
-    type: [addressSchema],
-    default: []
-  },
+  phonenumber: { type: String, unique: true, sparse: true },
+  password: { type: String },
+  googleId: { type: String },
+  addresses: { type: [addressSchema], default: [] },
   cartData: {
     type: [
       {
@@ -33,27 +34,12 @@ const userSchema = new mongoose.Schema({
     ],
     default: []
   },
-  orders: {
-    type: [
-      {
-        orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
-        orderDate: { type: Date, default: Date.now },
-        totalAmount: { type: Number, required: true },
-        status: { type: String, default: 'Order Placed' },
-        paymentMethod: { type: String },
-        items: { type: Array, default: [] },
-        shippingAddress: { type: Object }
-      }
-    ],
-    default: []
-  },
   userType: {
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
   }
-
-}, { minimize: false });
+}, { minimize: false, timestamps: true });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);
 export default userModel;

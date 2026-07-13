@@ -1,7 +1,21 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import { ShopContext } from '../context/ShopContext';
 import { useAuth } from '../components/Auth/AuthContext';
+import { getProductThumbnail } from '../utils/productImage';
+
+const MiniStars = ({ rating, count }) => {
+  if (!rating || !count) return null;
+  return (
+    <div className="flex items-center gap-1 mb-2">
+      {[1,2,3,4,5].map(n => (
+        <Star key={n} className={`w-3.5 h-3.5 ${n <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+      ))}
+      <span className="text-xs text-gray-400 ml-0.5">({count})</span>
+    </div>
+  );
+};
 
 const ProductCard = ({ product }) => {
   const { cartItems } = useContext(ShopContext);
@@ -9,7 +23,10 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
 
   const getItemQuantity = (productId) => {
-    return cartItems[productId] || 0;
+    if (!Array.isArray(cartItems)) return 0;
+    return cartItems
+      .filter((item) => (item.productId?._id || item.productId) === productId)
+      .reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const handleViewProduct = (e) => {
@@ -37,7 +54,7 @@ const ProductCard = ({ product }) => {
           </div>
         )}
         <img 
-          src={product.image && product.image[0] ? product.image[0] : '/placeholder.jpg'} 
+          src={getProductThumbnail(product)}
           alt={product.name || 'Product image'} 
           className='w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110' 
         />
@@ -45,7 +62,8 @@ const ProductCard = ({ product }) => {
       </div>
       <div className='p-4'>
         <Link to={`/product/${product._id}`}>
-          <h2 className='text-lg font-semibold mb-2'>{product.name}</h2>
+          <h2 className='text-lg font-semibold mb-1'>{product.name}</h2>
+          <MiniStars rating={product.avgRating} count={product.reviewCount} />
           <p className='text-gray-600 mb-4'>₹{product.price}</p>
         </Link>
         <div className="flex items-center gap-2">

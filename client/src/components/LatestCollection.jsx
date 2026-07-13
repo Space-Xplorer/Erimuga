@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from '../config/axios';
 import useScreenSize from '../hooks/useScreenSize';
 import NewPartialCard from './NewPartialCard';
 
@@ -11,13 +12,9 @@ const LatestCollection = () => {
   useEffect(() => {
     const fetchLatestProducts = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/products`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        const data = await response.json();
+        const res = await axios.get('/products');
         // Sort products by creation date (newest first) and get only the number that fit in one row
-        const sortedProducts = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const sortedProducts = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         const latestProducts = sortedProducts.slice(0, productsPerRow);
         setProducts(latestProducts);
       } catch (err) {

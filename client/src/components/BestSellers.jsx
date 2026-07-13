@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from '../config/axios';
 import PartialCard from './PartialCard';
 import useScreenSize from '../hooks/useScreenSize';
 
@@ -11,12 +12,8 @@ const BestSellers = () => {
   useEffect(() => {
     const fetchBestSellers = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BASE_URL}/products`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        const data = await response.json();
-        setProducts(data.filter(product => product.isBestSeller === 'yes')); // Filter for best sellers
+        const res = await axios.get('/products');
+        setProducts(res.data.filter(product => product.isBestSeller === 'yes')); // Filter for best sellers
       } catch (err) {
         setError(err.message);
       } finally {

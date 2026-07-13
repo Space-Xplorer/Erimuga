@@ -1,5 +1,6 @@
 import multer from "multer";
 import path from "path";
+import crypto from "crypto";
 
 // Set up storage with destination and filename
 const storage = multer.diskStorage({
@@ -7,7 +8,9 @@ const storage = multer.diskStorage({
     callback(null, "uploads/"); // <-- ensure this folder exists!
   },
   filename: function (req, file, callback) {
-    callback(null, file.originalname); // use original file name
+    // UUID-prefixed to avoid collisions and path-traversal via crafted originalname
+    const ext = path.extname(file.originalname).toLowerCase();
+    callback(null, `${crypto.randomUUID()}${ext}`);
   },
 });
 

@@ -1,188 +1,234 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { createContext, useState, useEffect, useRef } from 'react';
+import axios from '../config/axios';
 import { useAuth } from '../components/Auth/AuthContext';
 import toast from 'react-hot-toast';
 
 export const ShopContext = createContext(null);
 
+// Pre-login ("guest") cart, kept in localStorage in the same shape as the
+// server-side cartData so every consuming component can treat it identically.
+const GUEST_CART_KEY = 'erimuga_guest_cart';
+
+const readGuestCart = () => {
+  try {
+    const raw = localStorage.getItem(GUEST_CART_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeGuestCart = (cart) => {
+  try {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+  } catch {
+    // localStorage unavailable (private browsing, quota) — cart just won't persist across reloads
+  }
+};
+
 const ShopContextProvider = ({ children }) => {
-  const { isAuthenticated, user: authUser, isLoading } = useAuth();
+  const { isAuthenticated, user: authUser, loading: isLoading } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(true);
+  const wasAuthenticatedRef = useRef(false);
 
-  const BASE_URL = import.meta.env.VITE_BASE_URL;
+  // BroadcastChannel for multi-tab cart sync
+  const channelRef = useRef(null);
+  useEffect(() => {
+    const channel = new BroadcastChannel('erimuga_cart');
+    channelRef.current = channel;
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'CART_UPDATE') {
+        setCartItems(event.data.cart);
+      }
+    };
+    return () => channel.close();
+  }, []);
+
+  const broadcastCart = (cart) => {
+    channelRef.current?.postMessage({ type: 'CART_UPDATE', cart });
+  };
 
   // Fetch products once
   useEffect(() => {
-    axios.get(`${BASE_URL}/products`, { withCredentials: true })
+    axios.get('/products')
       .then(res => setProducts(res.data))
-      .catch(err => {
-        console.error('Error fetching products:', err);
-        toast.error('Failed to load products');
-      });
+      .catch(() => toast.error('Failed to load products'));
   }, []);
 
-  // Fetch cart whenever authUser changes (but not during loading)
+  // Fetch/merge cart whenever auth state changes
   useEffect(() => {
-    if (!isLoading && isAuthenticated && authUser?._id) {
-      fetchCart(authUser._id);
-    } else if (!isLoading && !isAuthenticated) {
-      setCartItems([]);
+    if (isLoading) return;
+
+    if (isAuthenticated && authUser?._id) {
+      const wasGuest = !wasAuthenticatedRef.current;
+      if (wasGuest) {
+        mergeGuestCartIntoAccount();
+      } else {
+        fetchCart();
+      }
+    } else {
+      setCartItems(readGuestCart());
     }
+
+    wasAuthenticatedRef.current = isAuthenticated;
   }, [isAuthenticated, authUser, isLoading]);
 
-  const fetchCart = async (userId) => {
+  const fetchCart = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/cart/get?userId=${userId}`, { withCredentials: true });
-      if (Array.isArray(res.data.cart)) {
-        setCartItems(res.data.cart);
-      } else {
-        setCartItems([]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch cart:', err);
+      const res = await axios.get('/cart/get');
+      const cart = Array.isArray(res.data.cart) ? res.data.cart : [];
+      setCartItems(cart);
+    } catch {
       setCartItems([]);
     }
+  };
+
+  // Runs once right after a guest becomes authenticated (local login, register+login, or Google OAuth redirect)
+  const mergeGuestCartIntoAccount = async () => {
+    const guestCart = readGuestCart();
+    if (guestCart.length > 0) {
+      try {
+        await axios.post('/cart/merge', { items: guestCart });
+      } catch {
+        // best-effort — fall through to whatever the server already has
+      }
+      writeGuestCart([]);
+    }
+    await fetchCart();
   };
 
   const addToCart = async (product, quantity = 1, selectedSize, selectedColor) => {
-    if (!isAuthenticated || !authUser?._id) {
-      toast.error("Please login to add items to cart");
+    if (isAuthenticated && authUser?._id) {
+      try {
+        const res = await axios.post('/cart/add', {
+          productId: product._id,
+          quantity,
+          selectedSize,
+          selectedColor
+        });
+
+        if (Array.isArray(res.data.cart)) {
+          setCartItems(res.data.cart);
+          broadcastCart(res.data.cart);
+          toast.success('Added to cart!');
+        } else {
+          toast.error('Failed to add to cart');
+        }
+      } catch {
+        toast.error('Failed to add to cart');
+      }
       return;
     }
 
-    try {
-      const res = await axios.post(`${BASE_URL}/cart/add`, {
-        userId: authUser._id,
-        productId: product._id,
-        quantity,
-        selectedSize,
-        selectedColor
-      }, { withCredentials: true });
-
-      if (Array.isArray(res.data.cart)) {
-        setCartItems(res.data.cart);
-        toast.success("Added to cart!");
-      } else {
-        toast.error("Failed to add to cart");
-      }
-    } catch (err) {
-      console.error('Add to cart error:', err);
-      toast.error("Failed to add to cart");
-    }
+    // Guest — persist locally, same shape as the server cart
+    const productCode = `${product.productCode}-${selectedColor}-${selectedSize}`;
+    setCartItems(prev => {
+      const list = Array.isArray(prev) ? prev : [];
+      const existingIdx = list.findIndex(item => item.productCode === productCode);
+      const next = existingIdx >= 0
+        ? list.map((item, i) => i === existingIdx ? { ...item, quantity: item.quantity + Number(quantity || 1) } : item)
+        : [...list, {
+            productId: product._id,
+            productName: product.name,
+            quantity: Number(quantity) || 1,
+            size: selectedSize,
+            color: selectedColor,
+            priceAtPurchase: product.price,
+            productCode,
+          }];
+      writeGuestCart(next);
+      broadcastCart(next);
+      return next;
+    });
+    toast.success('Added to cart!');
   };
 
   const removeFromCart = async (productCode) => {
-    if (!isAuthenticated || !authUser?._id) {
-      toast.error("Please login to modify your cart");
+    if (isAuthenticated) {
+      try {
+        const res = await axios.delete('/cart/remove', {
+          data: { productCode },
+        });
+
+        if (Array.isArray(res.data.cart)) {
+          setCartItems(res.data.cart);
+          broadcastCart(res.data.cart);
+          toast.success('Item removed from cart');
+        } else {
+          await fetchCart();
+        }
+      } catch {
+        toast.error('Failed to remove item');
+      }
       return;
     }
 
-    try {
-      const res = await axios.delete(`${BASE_URL}/cart/remove`, {
-        data: { userId: authUser._id, productCode },
-        withCredentials: true
-      });
-      
-      if (Array.isArray(res.data.cart)) {
-        setCartItems(res.data.cart);
-        toast.success("Item removed from cart");
-      } else {
-        await fetchCart(authUser._id);
-        toast.success("Item removed");
-      }
-    } catch (err) {
-      console.error('Remove cart error:', err);
-      toast.error("Failed to remove item");
-    }
+    setCartItems(prev => {
+      const next = (Array.isArray(prev) ? prev : []).filter(item => item.productCode !== productCode);
+      writeGuestCart(next);
+      broadcastCart(next);
+      return next;
+    });
+    toast.success('Item removed from cart');
   };
 
   const updateQuantity = async (productId, quantity) => {
-    if (!authUser?._id) {
-      toast.error("Please login to update cart");
+    if (isAuthenticated) {
+      try {
+        const res = await axios.put(`/cart/update/${productId}`, {
+          productId,
+          quantity
+        });
+
+        if (res.data.cartData) {
+          setCartItems(res.data.cartData);
+          broadcastCart(res.data.cartData);
+        } else {
+          await fetchCart();
+        }
+      } catch {
+        toast.error('Failed to update cart');
+      }
       return;
     }
 
-    try {
-      const res = await axios.post(`${BASE_URL}/cart/update`, {
-        userId: authUser._id,
-        productId,
-        quantity
-      }, { withCredentials: true });
-      
-      if (res.data.cartData) {
-        setCartItems(res.data.cartData);
-        toast.success("Cart updated");
-      } else {
-        await fetchCart(authUser._id);
-        toast.success("Quantity updated");
-      }
-    } catch (err) {
-      console.error('Update quantity error:', err);
-      toast.error("Failed to update cart");
-    }
+    setCartItems(prev => {
+      const list = Array.isArray(prev) ? prev : [];
+      const next = Number(quantity) <= 0
+        ? list.filter(item => item.productId !== productId)
+        : list.map(item => item.productId === productId ? { ...item, quantity: Number(quantity) } : item);
+      writeGuestCart(next);
+      broadcastCart(next);
+      return next;
+    });
   };
 
   const clearCart = async () => {
-    if (!authUser?._id) return;
-    
-    try {
-      await axios.delete(`${BASE_URL}/cart/clear`, { 
-        data: { userId: authUser._id }, 
-        withCredentials: true 
-      });
-      setCartItems([]);
-      toast.success("Cart cleared");
-    } catch (err) {
-      console.error('Clear cart error:', err);
-      toast.error("Failed to clear cart");
+    if (isAuthenticated) {
+      try {
+        await axios.delete('/cart/clear');
+      } catch {
+        // clear locally regardless
+      }
+    } else {
+      writeGuestCart([]);
     }
+    setCartItems([]);
+    broadcastCart([]);
   };
 
   const getTotalAmount = () => {
     if (!Array.isArray(cartItems)) return 0;
-    return cartItems.reduce((total, item) => {
-      const productPrice = item.priceAtPurchase || 0;
-      return total + productPrice * item.quantity;
-    }, 0);
+    return cartItems.reduce((total, item) => total + (item.priceAtPurchase || 0) * item.quantity, 0);
   };
 
   const getTotalItems = () => {
     if (!Array.isArray(cartItems)) return 0;
     return cartItems.reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const placeOrder = async (address, paymentMethod = 'COD') => {
-    if (!authUser?._id) {
-      toast.error("Please login to place order");
-      return;
-    }
-
-    try {
-      const payload = {
-        userId: authUser._id,
-        items: cartItems.map(item => ({ 
-          productId: item.productId, 
-          quantity: item.quantity 
-        })),
-        amount: getTotalAmount(),
-        address,
-        paymentMethod,
-        payment: paymentMethod !== 'COD',
-        date: Date.now()
-      };
-
-      const res = await axios.post(`${BASE_URL}/orders/create`, payload, { withCredentials: true });
-      setCartItems([]);
-      toast.success("Order placed successfully!");
-      return res.data;
-    } catch (err) {
-      console.error('Place order error:', err);
-      toast.error("Failed to place order");
-      throw err;
-    }
   };
 
   return (
@@ -196,7 +242,7 @@ const ShopContextProvider = ({ children }) => {
       clearCart,
       getTotalAmount,
       getTotalItems,
-      placeOrder,
+      fetchCart,
       search,
       setSearch,
       showSearch,
