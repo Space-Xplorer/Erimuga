@@ -40,8 +40,8 @@ const CustomerRow = ({ customer }) => {
       <tr className="hover:bg-gray-50 transition-colors">
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#b22222]/10 flex items-center justify-center">
-              <User className="w-4 h-4 text-[#b22222]" />
+            <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
+              <User className="w-4 h-4 text-brand" />
             </div>
             <div>
               <div className="font-medium text-gray-800 text-sm">{customer.name}</div>
@@ -61,7 +61,7 @@ const CustomerRow = ({ customer }) => {
           <button
             onClick={loadOrders}
             disabled={loading}
-            className="flex items-center gap-1 text-xs text-[#b22222] hover:underline disabled:opacity-50"
+            className="flex items-center gap-1 text-xs text-brand hover:underline disabled:opacity-50"
           >
             {loading ? '…' : expanded ? <><ChevronUp className="w-3.5 h-3.5" /> Hide</> : <><ChevronDown className="w-3.5 h-3.5" /> Orders</>}
           </button>
@@ -137,7 +137,7 @@ export default function Customers() {
           { label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString('en-IN')}` },
         ].map(stat => (
           <div key={stat.label} className="bg-white rounded-xl shadow-sm p-4 text-center">
-            <div className="text-2xl font-bold text-[#b22222]">{stat.value}</div>
+            <div className="text-2xl font-bold text-brand">{stat.value}</div>
             <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
           </div>
         ))}
@@ -149,7 +149,7 @@ export default function Customers() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search by name or email…"
-        className="w-full sm:w-72 border border-gray-300 rounded-xl px-4 py-2 mb-4 text-sm focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        className="w-full sm:w-72 border border-gray-300 rounded-xl px-4 py-2 mb-4 text-sm focus:ring-2 focus:ring-brand focus:border-brand"
       />
 
       {loading ? (

@@ -28,66 +28,31 @@ const SignupForm = ({ onSignup }) => {
     }
   };
 
+  const field = 'w-full rounded-lg border border-paper-deep bg-paper p-2.5 text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30';
+
   return (
-    <form onSubmit={handleSubmit}>
-      {/* ✅ Google Signup */}
-      <a
-        href={`${import.meta.env.VITE_BASE_URL}/user/auth/google`}
-        className="w-full flex items-center justify-center gap-2 mt-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition shadow"
-      >
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png"
-          alt="Google"
-          className="h-5 w-5"
-          loading="lazy"
-        />
-        Sign up with Google
-      </a>
-
-      <div className='mb-4'>
-        <label className='block text-sm font-medium mb-2' htmlFor='name'>Name</label>
-        <input
-          className='border border-gray-300 p-2 w-full rounded'
-          type='text'
-          id='name'
-          required
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink-soft" htmlFor="name">Name</label>
+        <input className={field} type="text" id="name" required value={name} onChange={e => setName(e.target.value)} />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink-soft" htmlFor="email">Email</label>
+        <input className={field} type="email" id="email" required value={email} onChange={e => setEmail(e.target.value)} />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink-soft" htmlFor="password">Password</label>
+        <input className={field} type="password" id="password" required value={password} onChange={e => setPassword(e.target.value)} />
       </div>
 
-      <div className='mb-4'>
-        <label className='block text-sm font-medium mb-2' htmlFor='email'>Email</label>
-        <input
-          className='border border-gray-300 p-2 w-full rounded'
-          type='email'
-          id='email'
-          required
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-      </div>
-
-      <div className='mb-6'>
-        <label className='block text-sm font-medium mb-2' htmlFor='password'>Password</label>
-        <input
-          className='border border-gray-300 p-2 w-full rounded'
-          type='password'
-          id='password'
-          required
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-      </div>
-
-      {error && <div className='text-red-600 mb-2 text-sm'>{error}</div>}
+      {error && <div className="text-sm text-red-600">{error}</div>}
 
       <button
-        className='bg-[#B22222] text-white font-semibold py-2 rounded w-full hover:bg-red-600 transition-colors duration-200'
-        type='submit'
+        className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:opacity-90 disabled:opacity-60"
+        type="submit"
         disabled={loading}
       >
-        {loading ? 'Signing up...' : 'Sign Up'}
+        {loading ? 'Creating account…' : 'Create account'}
       </button>
     </form>
   );

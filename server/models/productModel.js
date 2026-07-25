@@ -22,9 +22,18 @@ const colorSchema = new Schema({
 const productSchema = new Schema({
   productCode: { type: String, required: true, unique: true },
   name: { type: String, required: true },
-  mainCategory: { type: String, required: true },
-  apparelType: { type: String, required: true },
-  subcategory: { type: String, required: true },
+
+  // Category is stored twice on purpose: the slug strings keep filtering and
+  // card rendering cheap (no populate), while the refs make the parent/child
+  // relationship real and let us block deletes that would orphan products.
+  mainCategory: { type: String, required: true },   // slug, e.g. "sarees"
+  subcategory: { type: String, required: true },    // slug, e.g. "eri-silk"
+  mainCategoryId: { type: Schema.Types.ObjectId, ref: 'MainCategory', required: true },
+  subcategoryId: { type: Schema.Types.ObjectId, ref: 'Subcategory', required: true },
+
+  // Cross-cutting, optional, unrelated to the category tree.
+  tags: { type: [String], default: [] },
+
   description: { type: String, required: true },
   price: { type: Number, required: true },
   // Images grouped per colour. `image` below is a derived flat list for
@@ -48,7 +57,9 @@ const productSchema = new Schema({
 
 productSchema.index({ mainCategory: 1 });
 productSchema.index({ subcategory: 1 });
-productSchema.index({ apparelType: 1 });
+productSchema.index({ mainCategoryId: 1 });
+productSchema.index({ subcategoryId: 1 });
+productSchema.index({ tags: 1 });
 
 // Backward-compatible flat image list for cards/thumbnails that don't need a specific colour.
 productSchema.virtual('image').get(function () {

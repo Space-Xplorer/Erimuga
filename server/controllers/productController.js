@@ -1,14 +1,11 @@
 import Product from "../models/productModel.js";
-import MainCategory from "../models/mainCategoryModel.js";
-import ApparelType from "../models/apparelTypeModel.js";
-import Subcategory from "../models/subCategoryModel.js";
-import fs from "fs";
-import path from "path";
-import { uploadToCloudinary, uploadMultipleImages } from "../config/cloudinary.js";
+import slugify from "../utils/slugify.js";
+
+const MAX_LIMIT = 100;
 
 const getProducts = async (req, res) => {
   try {
-    const { search, mainCategory, apparelType, subcategory, sortBy } = req.query;
+    const { search, mainCategory, subcategory, tag, sortBy, page, limit } = req.query;
 
     const query = {};
     if (search) {
@@ -17,15 +14,31 @@ const getProducts = async (req, res) => {
         { description: { $regex: search, $options: 'i' } },
       ];
     }
-    if (mainCategory) query.mainCategory = mainCategory;
-    if (apparelType) query.apparelType = apparelType;
-    if (subcategory) query.subcategory = subcategory;
+    // Category params are slugs. slugify() is applied so a display name
+    // ("Eri Silk") coming from an older client still resolves.
+    if (mainCategory) query.mainCategory = slugify(mainCategory);
+    if (subcategory) query.subcategory = slugify(subcategory);
+    if (tag) query.tags = tag;
 
     let sort = { date: -1 }; // default: newest first
     if (sortBy === 'priceLowHigh') sort = { price: 1 };
     else if (sortBy === 'priceHighLow') sort = { price: -1 };
 
-    const products = await Product.find(query).sort(sort);
+    // Unbounded by default previously — a growing catalogue would have kept
+    // shipping the whole thing to every client.
+    const perPage = Math.min(Number(limit) || MAX_LIMIT, MAX_LIMIT);
+    const currentPage = Math.max(Number(page) || 1, 1);
+
+    const [products, total] = await Promise.all([
+      Product.find(query).sort(sort).skip((currentPage - 1) * perPage).limit(perPage),
+      Product.countDocuments(query),
+    ]);
+
+    // Kept as a bare array: every existing caller does `res.data.map(...)`.
+    // Pagination travels in headers so those callers keep working.
+    res.set('X-Total-Count', String(total));
+    res.set('X-Page', String(currentPage));
+    res.set('X-Per-Page', String(perPage));
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch products" });

@@ -16,8 +16,9 @@ const CollectionPage = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
-  const [metadata, setMetadata] = useState({ categories: [], apparelTypes: [], subcategories: [] });
-  const [filters, setFilters] = useState({ mainCategory: '', apparelType: '', subcategory: '', size: '', color: '' });
+  const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [filters, setFilters] = useState({ mainCategory: '', subcategory: '', tag: '', size: '', color: '' });
   const [sortOption, setSortOption] = useState('Newest');
   const [gridView, setGridView] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -32,17 +33,19 @@ const CollectionPage = () => {
         const params = {};
         if (searchQuery) params.search = searchQuery;
         if (filters.mainCategory) params.mainCategory = filters.mainCategory;
-        if (filters.apparelType) params.apparelType = filters.apparelType;
         if (filters.subcategory) params.subcategory = filters.subcategory;
+        if (filters.tag) params.tag = filters.tag;
         if (sortOption === 'Price Low to High') params.sortBy = 'priceLowHigh';
         else if (sortOption === 'Price High to Low') params.sortBy = 'priceHighLow';
 
-        const [productsRes, metadataRes] = await Promise.all([
+        const [productsRes, catRes, tagRes] = await Promise.all([
           axios.get('/products', { params }),
-          axios.get('/metadata'),
+          axios.get('/categories'),
+          axios.get('/categories/tags'),
         ]);
         setProducts(productsRes.data);
-        setMetadata(metadataRes.data);
+        setCategories(catRes.data);
+        setTags((tagRes.data || []).map((t) => t.name));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -50,7 +53,7 @@ const CollectionPage = () => {
       }
     };
     fetchData();
-  }, [searchQuery, filters.mainCategory, filters.apparelType, filters.subcategory, sortOption]);
+  }, [searchQuery, filters.mainCategory, filters.subcategory, filters.tag, sortOption]);
 
   // Reset page when the client-side (size/color) filters change
   useEffect(() => { setPage(1); }, [filters.size, filters.color]);
@@ -67,11 +70,17 @@ const CollectionPage = () => {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters(prev => ({
+      ...prev,
+      [name]: value,
+      // A subcategory is only valid within its parent, so switching category
+      // must clear it.
+      ...(name === 'mainCategory' ? { subcategory: '' } : {}),
+    }));
   };
   const handleSizeClick = (size) => setFilters(prev => ({ ...prev, size: prev.size === size ? '' : size }));
   const handleColorClick = (color) => setFilters(prev => ({ ...prev, color: prev.color === color ? '' : color }));
-  const resetFilters = () => setFilters({ mainCategory: '', apparelType: '', subcategory: '', size: '', color: '' });
+  const resetFilters = () => setFilters({ mainCategory: '', subcategory: '', tag: '', size: '', color: '' });
 
   const uniqueColors = Array.from(new Set(products.flatMap(p => p.availableColors || [])));
   const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -80,7 +89,7 @@ const CollectionPage = () => {
   if (error) return <div className="text-center py-20 text-red-600">Error: {error}</div>;
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <h1 className="text-3xl sm:text-4xl font-bold text-center mb-2">
         {searchQuery ? `Search results for "${searchQuery}"` : 'Explore Our Collection'}
       </h1>
@@ -88,7 +97,7 @@ const CollectionPage = () => {
         <p className="text-center text-gray-500 text-sm mb-6">
           {filteredProducts.length} result{filteredProducts.length !== 1 ? 's' : ''} found
           {' · '}
-          <a href="/collection" className="text-[#b22222] underline hover:text-red-700">Clear search</a>
+          <a href="/collection" className="text-brand underline hover:text-red-700">Clear search</a>
         </p>
       )}
 
@@ -105,7 +114,7 @@ const CollectionPage = () => {
         {showMobileFilters && (
           <div className="lg:hidden">
             <SidebarFilters
-              filters={filters} metadata={metadata} uniqueColors={uniqueColors} allSizes={allSizes}
+              filters={filters} categories={categories} tags={tags} uniqueColors={uniqueColors} allSizes={allSizes}
               onFilterChange={handleFilterChange} onSizeClick={handleSizeClick} onColorClick={handleColorClick} onReset={resetFilters}
             />
           </div>
@@ -113,7 +122,7 @@ const CollectionPage = () => {
 
         <aside className="hidden lg:block w-full lg:w-1/4">
           <SidebarFilters
-            filters={filters} metadata={metadata} uniqueColors={uniqueColors} allSizes={allSizes}
+            filters={filters} categories={categories} tags={tags} uniqueColors={uniqueColors} allSizes={allSizes}
             onFilterChange={handleFilterChange} onSizeClick={handleSizeClick} onColorClick={handleColorClick} onReset={resetFilters}
           />
         </aside>
@@ -146,7 +155,7 @@ const CollectionPage = () => {
                     <button
                       key={item}
                       onClick={() => setPage(item)}
-                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${page === item ? 'bg-[#b22222] text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100'}`}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${page === item ? 'bg-brand text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-100'}`}
                     >
                       {item}
                     </button>

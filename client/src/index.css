@@ -1,1 +1,88 @@
 @import "tailwindcss";
+
+/*
+  Erimuga design tokens.
+
+  The palette is built around naturally dyed handloom: madder red as the brand
+  mark, warm undyed paper as the ground, and a muted gold for accents. Prefer
+  these tokens over raw hex values so a palette change stays a one-file edit.
+*/
+@theme {
+  /* Brand — deep madder, the existing #b22222 pulled slightly warmer/darker */
+  --color-brand: #9c2a21;
+  --color-brand-dark: #7a1f19;
+  --color-brand-light: #c2544a;
+
+  /* Ground — warm papers rather than pure white, which reads cold next to silk */
+  --color-paper: #faf7f2;
+  --color-paper-dim: #f2ece3;
+  --color-paper-deep: #e8dfd2;
+
+  /* Ink — warm near-blacks and greys */
+  --color-ink: #1f1b18;
+  --color-ink-soft: #4a423c;
+  --color-ink-muted: #857a70;
+
+  /* Accent — muted gold for rules, numerals and small marks */
+  --color-accent: #a68a52;
+
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Editorial headings want to be large and tightly set */
+  --tracking-editorial: 0.18em;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* Small caps label used above section headings and category names. */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-editorial);
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+
+  /* Horizontal product rails: native scroll, snapped, no scrollbar chrome. */
+  .rail {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .rail > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

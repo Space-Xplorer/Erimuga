@@ -28,7 +28,8 @@ import productRouter from './routes/product.js';
 import cartRouter from './routes/cart.js';
 import orderRouter from './routes/orders.js';
 import adminRoutes from './routes/adminRoutes.js';
-import metadataRoutes from './routes/metaDataRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import homepageRoutes from './routes/homepageRoutes.js';
 import couponRouter from './routes/couponRoutes.js';
 import reviewRouter from './routes/reviewRoutes.js';
 import bannerRouter from './routes/bannerRoutes.js';
@@ -117,6 +118,8 @@ app.use(cors({
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true, // ✅ Needed for session cookies
+  // Pagination metadata travels in headers; without this the browser hides them.
+  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Per-Page'],
   optionsSuccessStatus: 200
 }));
 
@@ -180,7 +183,8 @@ app.use("/products", productRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", orderRouter);
 app.use("/admin", adminRoutes);
-app.use("/metadata", metadataRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/homepage", homepageRoutes);
 app.use("/coupons", couponRouter);
 app.use("/reviews", reviewRouter);
 app.use("/banners", bannerRouter);

@@ -12,7 +12,9 @@ adminRouter.get('/orders', isLoggedIn, isAdmin, getAllOrders);
 // that was the one the admin UI actually calls; this duplicate route/controller has been removed.
 adminRouter.post('/add-product', isLoggedIn, isAdmin, upload.array('images'), validateProduct, addProduct);
 adminRouter.get('/products', isLoggedIn, isAdmin, getAllProducts);
-adminRouter.put('/edit-product/:id', isLoggedIn, isAdmin, upload.array('images'), editProduct);
+// Edit now runs the same validation as add — it previously ran none, so an edit
+// could write a category pair that add would have rejected.
+adminRouter.put('/edit-product/:id', isLoggedIn, isAdmin, upload.array('images'), validateProduct, editProduct);
 adminRouter.delete('/delete-product/:id', isLoggedIn, isAdmin, deleteProduct);
 adminRouter.get('/order-stats', isLoggedIn, isAdmin, getOrderStats);
 adminRouter.get('/customers', isLoggedIn, isAdmin, getAllCustomers);

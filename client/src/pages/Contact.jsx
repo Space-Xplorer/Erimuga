@@ -28,14 +28,21 @@ const Contact = () => {
     } finally { setSubmitting(false); }
   };
 
+  const field = 'block w-full rounded-lg border border-paper-deep bg-paper px-3.5 py-2.5 text-ink placeholder:text-ink-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30';
+
   if (sent) {
     return (
-      <div className="isolate bg-[#fffaf5] px-6 py-32 lg:px-8">
-        <div className="container mx-auto max-w-2xl bg-white p-8 rounded-2xl shadow-lg border border-[#b22222]/10 text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Message Received!</h2>
-          <p className="text-gray-600">Thank you for reaching out. We will get back to you as soon as possible.</p>
-          <button onClick={() => setSent(false)} className="mt-6 text-sm text-[#b22222] underline hover:text-red-700">
+      <div className="bg-paper px-6 py-28 lg:px-8">
+        <div className="mx-auto max-w-xl border border-paper-deep bg-paper-dim p-10 text-center">
+          <p className="eyebrow">Thank you</p>
+          <h2 className="mt-3 font-display text-3xl text-ink">Message received</h2>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+            Thank you for reaching out. We'll get back to you as soon as possible.
+          </p>
+          <button
+            onClick={() => setSent(false)}
+            className="mt-6 border-b border-ink/25 pb-1 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
+          >
             Send another message
           </button>
         </div>
@@ -44,67 +51,44 @@ const Contact = () => {
   }
 
   return (
-    <div className="isolate bg-[#fffaf5] px-6 sm:py-32 lg:px-8">
-      <div className="container mx-auto max-w-2xl bg-white p-8 rounded-2xl shadow-lg border border-[#b22222]/10">
-        <div className="mx-auto max-w-2xl text-center mb-8">
-          <h2 className="text-4xl font-bold tracking-tight text-[#b22222] sm:text-5xl">Contact Us</h2>
-          <p className="mt-2 text-lg text-gray-700">We'll get back to you as soon as possible.</p>
+    <div className="bg-paper px-6 py-16 sm:py-24 lg:px-8">
+      <div className="mx-auto max-w-xl">
+        <div className="text-center">
+          <p className="eyebrow">Get in touch</p>
+          <h1 className="mt-3 font-display text-5xl text-ink">Contact us</h1>
+          <p className="mt-3 text-sm text-ink-soft">We'll get back to you as soon as possible.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="mt-10 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Name <span className="text-[#b22222]">*</span></label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={set('name')}
-              placeholder="Your name"
-              required
-              className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
-            />
+            <label className="mb-1.5 block text-sm font-medium text-ink-soft">Name *</label>
+            <input type="text" value={form.name} onChange={set('name')} placeholder="Your name" required className={field} />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Email <span className="text-[#b22222]">*</span></label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={set('email')}
-              placeholder="you@example.com"
-              required
-              className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
-            />
+            <label className="mb-1.5 block text-sm font-medium text-ink-soft">Email *</label>
+            <input type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" required className={field} />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Phone number</label>
+            <label className="mb-1.5 block text-sm font-medium text-ink-soft">Phone number</label>
             <input
               type="tel"
               value={form.phone}
               onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
               placeholder="10-digit mobile number"
-              className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-700 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
+              className={field}
             />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1">Message <span className="text-[#b22222]">*</span></label>
-            <textarea
-              rows={4}
-              value={form.message}
-              onChange={set('message')}
-              placeholder="Write your message…"
-              required
-              className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 border border-gray-300 placeholder:text-gray-500 focus:border-[#b22222] focus:ring-2 focus:ring-[#b22222]/40"
-            />
+            <label className="mb-1.5 block text-sm font-medium text-ink-soft">Message *</label>
+            <textarea rows={5} value={form.message} onChange={set('message')} placeholder="Write your message…" required className={field} />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="block w-full rounded-md bg-[#b22222] px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-md hover:bg-[#8b1717] disabled:opacity-60 transition-colors"
+            className="w-full rounded-lg bg-brand py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:opacity-90 disabled:opacity-60"
           >
-            {submitting ? 'Sending…' : "Let's Talk"}
+            {submitting ? 'Sending…' : "Send message"}
           </button>
         </form>
       </div>

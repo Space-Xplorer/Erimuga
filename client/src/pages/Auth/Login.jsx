@@ -1,21 +1,33 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import LoginForm from '../../components/Auth/LoginForm';
+import GoogleButton from '../../components/Auth/GoogleButton';
 
 const Login = () => {
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center px-4'>
-      <div className='bg-white p-6 sm:p-8 rounded shadow-md w-full max-w-sm'>
-        <h2 className='text-2xl font-bold mb-6 text-center'>Login</h2>
-        <LoginForm />
-        {/* <button type="submit" className="w-full bg-black text-[#FFD700] py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition">Login</button> */}
-            <a href={`${import.meta.env.VITE_BASE_URL}/user/auth/google`} className="w-full flex items-center justify-center gap-2 mt-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg font-bold hover:bg-[#F26A1B] hover:text-white transition shadow">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png" alt="Google" className="h-5 w-5" loading="lazy" />
-              log in with Google
-            </a>
-        <div className='mt-4 text-center'>
-          <span className='text-sm text-gray-600'>Don't have an account? </span>
-          <a href='/signup' className='text-[#B22222] font-semibold hover:underline'>Sign Up</a>
+    <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-paper px-4 py-12">
+      <div className="w-full max-w-sm">
+        <div className="text-center">
+          <p className="eyebrow">Welcome back</p>
+          <h1 className="mt-2 font-display text-4xl text-ink">Sign in</h1>
         </div>
+
+        <div className="mt-8">
+          <GoogleButton label="Continue with Google" />
+
+          <div className="my-6 flex items-center gap-4">
+            <span className="h-px flex-1 bg-paper-deep" />
+            <span className="text-xs uppercase tracking-wide text-ink-muted">or</span>
+            <span className="h-px flex-1 bg-paper-deep" />
+          </div>
+
+          <LoginForm />
+        </div>
+
+        <p className="mt-6 text-center text-sm text-ink-soft">
+          Don&apos;t have an account?{' '}
+          <Link to="/signup" className="text-brand underline-offset-4 hover:underline">Create one</Link>
+        </p>
       </div>
     </div>
   );

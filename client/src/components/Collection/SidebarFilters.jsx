@@ -9,36 +9,61 @@ const FilterSection = ({ title, children }) => (
   </div>
 );
 
-const SidebarFilters = ({ filters, metadata, uniqueColors, allSizes, onFilterChange, onSizeClick, onColorClick, onReset }) => {
+const SidebarFilters = ({
+  filters,
+  categories = [],
+  tags = [],
+  uniqueColors,
+  allSizes,
+  onFilterChange,
+  onSizeClick,
+  onColorClick,
+  onReset,
+}) => {
+  // Subcategories belong to a single category, so the list is derived from the
+  // selected one rather than being a flat global vocabulary.
+  const selected = categories.find((c) => c.slug === filters.mainCategory);
+  const subcategories = selected?.subcategories || [];
+
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm sticky top-6 max-h-[90vh] overflow-y-auto">
       <div className="flex justify-between items-center pb-4 border-b border-gray-200">
         <h2 className="text-xl font-bold">Filters</h2>
-        <button onClick={onReset} className="text-sm font-medium text-blue-600 hover:text-blue-800 transition">
+        <button onClick={onReset} className="text-sm font-medium text-brand hover:opacity-80 transition">
           Reset All
         </button>
       </div>
 
       <FilterSection title="Category">
-        <select name="mainCategory" value={filters.mainCategory} onChange={onFilterChange} className="w-full border p-2 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500">
+        <select name="mainCategory" value={filters.mainCategory} onChange={onFilterChange} className="w-full border p-2 rounded-md bg-gray-50 focus:ring-2 focus:ring-brand focus:outline-none">
           <option value="">All</option>
-          {metadata.categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-        </select>
-      </FilterSection>
-
-      <FilterSection title="Apparel Type">
-        <select name="apparelType" value={filters.apparelType} onChange={onFilterChange} className="w-full border p-2 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500">
-          <option value="">All</option>
-          {metadata.apparelTypes.map(type => <option key={type} value={type}>{type}</option>)}
+          {categories.map(cat => <option key={cat.slug} value={cat.slug}>{cat.name}</option>)}
         </select>
       </FilterSection>
 
       <FilterSection title="Subcategory">
-        <select name="subcategory" value={filters.subcategory} onChange={onFilterChange} className="w-full border p-2 rounded-md bg-gray-50 focus:ring-2 focus:ring-blue-500">
-          <option value="">All</option>
-          {metadata.subcategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+        <select
+          name="subcategory"
+          value={filters.subcategory}
+          onChange={onFilterChange}
+          disabled={!filters.mainCategory || subcategories.length === 0}
+          className="w-full border p-2 rounded-md bg-gray-50 focus:ring-2 focus:ring-brand focus:outline-none disabled:text-gray-400"
+        >
+          <option value="">
+            {!filters.mainCategory ? 'Choose a category first' : 'All'}
+          </option>
+          {subcategories.map(sub => <option key={sub.slug} value={sub.slug}>{sub.name}</option>)}
         </select>
       </FilterSection>
+
+      {tags.length > 0 && (
+        <FilterSection title="Tags">
+          <select name="tag" value={filters.tag} onChange={onFilterChange} className="w-full border p-2 rounded-md bg-gray-50 focus:ring-2 focus:ring-brand focus:outline-none">
+            <option value="">All</option>
+            {tags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
+          </select>
+        </FilterSection>
+      )}
 
       <FilterSection title="Size">
         <div className="flex flex-wrap gap-2">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from '../config/axios';
 import OrderCard from '../components/User/OrderCard';
 import AddressManager from '../components/User/AddressManager';
+import PrivacyControls from '../components/User/PrivacyControls';
 import { useAuth } from '../components/Auth/AuthContext';
 import { User, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -53,15 +54,16 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-paper py-10">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-[#b22222] mb-8">My Account</h1>
+        <p className="eyebrow">Your account</p>
+        <h1 className="mt-2 mb-8 font-display text-4xl text-ink sm:text-5xl">My Account</h1>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Profile */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
-              <User className="w-5 h-5 text-[#b22222]" /> Profile
+            <h2 className="flex items-center gap-2 font-display text-2xl mb-6 text-ink">
+              <User className="w-5 h-5 text-brand" /> Profile
             </h2>
 
             {editMode ? (
@@ -72,7 +74,7 @@ const UserDashboard = () => {
                     type="text"
                     value={profileData.name}
                     onChange={e => setProfileData({ ...profileData, name: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                   />
                 </div>
                 <div>
@@ -85,14 +87,14 @@ const UserDashboard = () => {
                     type="tel"
                     value={profileData.phonenumber}
                     onChange={e => setProfileData({ ...profileData, phonenumber: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                   />
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={handleProfileUpdate}
                     disabled={isUpdating}
-                    className="px-5 py-2 bg-[#b22222] text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    className="px-5 py-2 bg-brand text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-colors"
                   >
                     {isUpdating ? 'Saving…' : 'Save Changes'}
                   </button>
@@ -109,7 +111,7 @@ const UserDashboard = () => {
                     <span className="text-gray-800 font-medium">{val}</span>
                   </div>
                 ))}
-                <button onClick={() => setEditMode(true)} className="mt-2 px-5 py-2 bg-[#b22222] text-white rounded-lg hover:bg-red-700 transition-colors">
+                <button onClick={() => setEditMode(true)} className="mt-2 px-5 py-2 bg-brand text-white rounded-lg hover:opacity-90 transition-colors">
                   Edit Profile
                 </button>
               </div>
@@ -121,13 +123,13 @@ const UserDashboard = () => {
 
           {/* Orders */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="flex items-center gap-2 text-xl font-semibold mb-6 text-gray-800">
-              <Package className="w-5 h-5 text-[#b22222]" /> Recent Orders
+            <h2 className="flex items-center gap-2 font-display text-2xl mb-6 text-ink">
+              <Package className="w-5 h-5 text-brand" /> Recent Orders
             </h2>
 
             {loadingOrders ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#b22222] mx-auto" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto" />
                 <p className="mt-2 text-gray-500 text-sm">Loading orders…</p>
               </div>
             ) : orders.length > 0 ? (
@@ -137,7 +139,7 @@ const UserDashboard = () => {
                 ))}
                 {orders.length > 5 && (
                   <div className="text-center pt-2">
-                    <a href="/orders" className="text-[#b22222] text-sm font-medium hover:underline">
+                    <a href="/orders" className="text-brand text-sm font-medium hover:underline">
                       View all {orders.length} orders →
                     </a>
                   </div>
@@ -147,12 +149,15 @@ const UserDashboard = () => {
               <div className="text-center py-8">
                 <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">No orders yet</p>
-                <a href="/collection" className="mt-3 inline-block text-[#b22222] text-sm font-medium hover:underline">
+                <a href="/collection" className="mt-3 inline-block text-brand text-sm font-medium hover:underline">
                   Start shopping →
                 </a>
               </div>
             )}
           </div>
+
+          {/* Privacy & data rights */}
+          <PrivacyControls />
         </div>
       </div>
     </div>

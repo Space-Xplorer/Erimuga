@@ -2,6 +2,7 @@ import Order from '../models/orderModel.js';
 import Product from '../models/productModel.js';
 import User from '../models/userModel.js';
 import ContactMessage from '../models/contactMessageModel.js';
+import MainCategory from '../models/mainCategoryModel.js';
 import cloudinary, { uploadToCloudinary } from '../config/cloudinary.js';
 import fs from 'fs';
 import { generateBaseProductCode } from '../utils/generatebasecode.js';
@@ -75,6 +76,18 @@ export const getOrderStats = async (req, res) => {
 };
 
 
+// The admin form sends tags as a JSON array; tolerate a comma-separated string
+// so the endpoint stays usable from curl and older clients.
+const parseTags = (tagsInput) => {
+  if (!tagsInput) return [];
+  if (Array.isArray(tagsInput)) return tagsInput.map(t => String(t).trim()).filter(Boolean);
+  try {
+    const parsed = JSON.parse(tagsInput);
+    if (Array.isArray(parsed)) return parsed.map(t => String(t).trim()).filter(Boolean);
+  } catch { /* not JSON — treat as CSV below */ }
+  return String(tagsInput).split(',').map(t => t.trim()).filter(Boolean);
+};
+
 const parseVariants = (sizes, colors, variantsJson) => {
   if (variantsJson) {
     try { return JSON.parse(variantsJson); } catch { /* fall through */ }
@@ -115,22 +128,23 @@ export const addProduct = async (req, res) => {
   try {
     const {
       name,
-      mainCategory,
-      apparelType,
-      subcategory,
       description,
       price,
       availableSizes,
       availableColors,
       isBestSeller,
+      tags: tagsJson,
       variants: variantsJson,
       colorsMeta: colorsMetaJson,
     } = req.body;
 
-    const productCode = await generateBaseProductCode(mainCategory, subcategory, apparelType);
+    // Guaranteed present and consistent by validateProduct.
+    const { main, sub } = req.resolvedCategory;
+
+    const productCode = await generateBaseProductCode(main.name, sub.name);
 
     const colorsMeta = colorsMetaJson ? JSON.parse(colorsMetaJson) : [];
-    const colors = await buildColorsFromUpload(req, mainCategory, colorsMeta);
+    const colors = await buildColorsFromUpload(req, main.slug, colorsMeta);
 
     const sizes = availableSizes?.split(',').map(s => s.trim()).filter(Boolean) || [];
     const colorNames = availableColors?.split(',').map(c => c.trim()).filter(Boolean) || [];
@@ -139,9 +153,11 @@ export const addProduct = async (req, res) => {
     const newProduct = new Product({
       productCode,
       name,
-      mainCategory,
-      apparelType,
-      subcategory,
+      mainCategory: main.slug,
+      subcategory: sub.slug,
+      mainCategoryId: main._id,
+      subcategoryId: sub._id,
+      tags: parseTags(tagsJson),
       description,
       price,
       colors,
@@ -172,14 +188,12 @@ export const editProduct = async (req, res) => {
     const { id } = req.params;
     const {
       name,
-      mainCategory,
-      apparelType,
-      subcategory,
       description,
       price,
       availableSizes,
       availableColors,
       isBestSeller,
+      tags: tagsJson,
       variants: variantsJson,
       colorsMeta: colorsMetaJson,
     } = req.body;
@@ -187,9 +201,12 @@ export const editProduct = async (req, res) => {
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
+    // validateProduct resolved and cross-checked the category pair for us.
+    const { main, sub } = req.resolvedCategory;
+
     if (colorsMetaJson) {
       const colorsMeta = JSON.parse(colorsMetaJson);
-      const newColors = await buildColorsFromUpload(req, mainCategory || product.mainCategory, colorsMeta);
+      const newColors = await buildColorsFromUpload(req, main.slug, colorsMeta);
 
       // Clean up any Cloudinary images the admin removed in this edit
       const keptPublicIds = new Set(
@@ -205,12 +222,14 @@ export const editProduct = async (req, res) => {
     }
 
     product.name = name || product.name;
-    product.mainCategory = mainCategory || product.mainCategory;
-    product.apparelType = apparelType || product.apparelType;
-    product.subcategory = subcategory || product.subcategory;
+    product.mainCategory = main.slug;
+    product.subcategory = sub.slug;
+    product.mainCategoryId = main._id;
+    product.subcategoryId = sub._id;
     product.description = description || product.description;
     product.price = price || product.price;
     product.isBestSeller = isBestSeller || product.isBestSeller;
+    if (tagsJson !== undefined) product.tags = parseTags(tagsJson);
 
     if (availableSizes !== undefined) {
       product.availableSizes = availableSizes.split(',').map(s => s.trim()).filter(Boolean);
@@ -264,6 +283,13 @@ export const deleteProduct = async (req, res) => {
     // ✅ Delete product document
     await Product.findByIdAndDelete(id);
     console.log("✅ Product deleted successfully:", id);
+
+    // Drop it from any homepage rail that hand-picked it, otherwise the band
+    // would render a hole where the deleted product used to be.
+    await MainCategory.updateMany(
+      { featuredProducts: id },
+      { $pull: { featuredProducts: id } }
+    );
 
     // ✅ Clean success response
     return res.status(200).json({

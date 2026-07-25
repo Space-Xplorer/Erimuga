@@ -6,15 +6,17 @@ import ProductCard from '../ProductCard';
 const ProductGrid = ({ products, view }) => {
   if (products.length === 0) {
     return (
-      <div className="text-center py-20 bg-gray-50 rounded-lg">
-        <h3 className="text-2xl font-semibold text-gray-800">😕 No Products Found</h3>
-        <p className="text-gray-500 mt-2">Try adjusting your filters to find what you're looking for.</p>
+      <div className="py-24 text-center">
+        <h3 className="font-display text-3xl text-ink">Nothing here yet</h3>
+        <p className="mt-3 text-sm text-ink-muted">
+          Try widening your filters, or browse another collection.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={`${view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'flex flex-col gap-4'}`}>
+    <div className={`${view === 'grid' ? 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-3' : 'flex flex-col gap-6'}`}>
       {products.map((product) => (
         <ProductCard key={product._id} product={product} view={view} />
       ))}

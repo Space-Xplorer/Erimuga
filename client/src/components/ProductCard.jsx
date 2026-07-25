@@ -1,87 +1,100 @@
 import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { ShopContext } from '../context/ShopContext';
-import { useAuth } from '../components/Auth/AuthContext';
 import { getProductThumbnail } from '../utils/productImage';
 
 const MiniStars = ({ rating, count }) => {
   if (!rating || !count) return null;
   return (
-    <div className="flex items-center gap-1 mb-2">
-      {[1,2,3,4,5].map(n => (
-        <Star key={n} className={`w-3.5 h-3.5 ${n <= Math.round(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+    <div className="mt-1.5 flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`h-3 w-3 ${n <= Math.round(rating) ? 'fill-accent text-accent' : 'text-paper-deep'}`}
+        />
       ))}
-      <span className="text-xs text-gray-400 ml-0.5">({count})</span>
+      <span className="ml-0.5 text-xs text-ink-muted">({count})</span>
     </div>
   );
 };
 
-const ProductCard = ({ product }) => {
+// The whole card is one link now — the old layout had a separate "View the
+// Product" button doing what clicking the card already did.
+const ProductCard = ({ product, view = 'grid' }) => {
   const { cartItems } = useContext(ShopContext);
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-
-  const getItemQuantity = (productId) => {
-    if (!Array.isArray(cartItems)) return 0;
-    return cartItems
-      .filter((item) => (item.productId?._id || item.productId) === productId)
-      .reduce((sum, item) => sum + item.quantity, 0);
-  };
-
-  const handleViewProduct = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(`/product/${product._id}`);
-  };
-
-  const isNewProduct = (date) => {
-    if (!date) return false;
-    const productDate = new Date(date);
-    const currentDate = new Date();
-    const daysDifference = Math.floor((currentDate - productDate) / (1000 * 60 * 60 * 24));
-    return daysDifference <= 7;
-  };
 
   if (!product) return null;
 
-  return (
-    <div className='bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105'>
-      <div className='relative group'>
-        {isNewProduct(product.date) && (
-          <div className="absolute top-2 right-2 bg-[#FFD700]/80 text-black text-xs px-2 py-1 rounded shadow">
-            New
-          </div>
-        )}
-        <img 
-          src={getProductThumbnail(product)}
-          alt={product.name || 'Product image'} 
-          className='w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110' 
-        />
-        <div className='absolute inset-0 group-hover:bg-opacity-20 transition-all duration-300'></div>
-      </div>
-      <div className='p-4'>
-        <Link to={`/product/${product._id}`}>
-          <h2 className='text-lg font-semibold mb-1'>{product.name}</h2>
-          <MiniStars rating={product.avgRating} count={product.reviewCount} />
-          <p className='text-gray-600 mb-4'>₹{product.price}</p>
-        </Link>
-        <div className="flex items-center gap-2">
-          <button 
-              onClick={handleViewProduct}
-              className='flex-1 py-2 px-4 rounded bg-[#B22222] text-white hover:bg-red-700 transition-all duration-300'
-            >
-              View the Product
-            </button>
+  const inCart = Array.isArray(cartItems)
+    ? cartItems
+        .filter((item) => (item.productId?._id || item.productId) === product._id)
+        .reduce((sum, item) => sum + item.quantity, 0)
+    : 0;
 
-          {getItemQuantity(product._id) > 0 && (
-            <div className="bg-[#B22222] text-white px-3 py-2 rounded-full min-w-[32px] text-center">
-              {getItemQuantity(product._id)}
-            </div>
+  const isNew = (() => {
+    if (!product.date) return false;
+    const days = Math.floor((Date.now() - new Date(product.date)) / 86400000);
+    return days <= 7;
+  })();
+
+  const price = `₹${Number(product.price).toLocaleString('en-IN')}`;
+
+  if (view === 'list') {
+    return (
+      <Link
+        to={`/product/${product._id}`}
+        className="group flex gap-5 border-b border-paper-deep pb-5"
+      >
+        <div className="w-28 shrink-0 overflow-hidden bg-paper-dim sm:w-36">
+          <img
+            src={getProductThumbnail(product)}
+            alt={product.name || 'Product image'}
+            loading="lazy"
+            className="aspect-3/4 w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+        </div>
+        <div className="min-w-0 flex-1 self-center">
+          <h2 className="font-display text-xl text-ink transition-colors group-hover:text-brand">
+            {product.name}
+          </h2>
+          <MiniStars rating={product.avgRating} count={product.reviewCount} />
+          <p className="mt-1.5 text-sm text-ink-muted">{price}</p>
+          {inCart > 0 && (
+            <p className="mt-1 text-xs text-brand">{inCart} in your bag</p>
           )}
         </div>
+      </Link>
+    );
+  }
+
+  return (
+    <Link to={`/product/${product._id}`} className="group block">
+      <div className="relative overflow-hidden bg-paper-dim">
+        <img
+          src={getProductThumbnail(product)}
+          alt={product.name || 'Product image'}
+          loading="lazy"
+          className="aspect-3/4 w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+        {isNew && (
+          <span className="absolute left-3 top-3 bg-paper/90 px-2 py-1 text-[10px] uppercase tracking-editorial text-ink-soft backdrop-blur">
+            New
+          </span>
+        )}
+        {inCart > 0 && (
+          <span className="absolute right-3 top-3 flex h-6 min-w-6 items-center justify-center rounded-full bg-brand px-1.5 text-xs text-white">
+            {inCart}
+          </span>
+        )}
       </div>
-    </div>
+
+      <h2 className="mt-3 font-display text-xl leading-snug text-ink transition-colors group-hover:text-brand">
+        {product.name}
+      </h2>
+      <MiniStars rating={product.avgRating} count={product.reviewCount} />
+      <p className="mt-1 text-sm text-ink-muted">{price}</p>
+    </Link>
   );
 };
 

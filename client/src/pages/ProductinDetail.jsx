@@ -142,35 +142,37 @@ const ProductinDetail = () => {
     }, 2000);
   };
 
-  if (!product) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+  if (!product) return <div className="bg-paper py-32 text-center text-sm text-ink-muted">Loading…</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <div className="grid md:grid-cols-2 gap-10">
+    <div className="bg-paper">
+    <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div className="grid gap-12 md:grid-cols-2">
         {/* Product Images Section */}
-        <div className="flex flex-col items-center">
-          <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center w-full">
+        <div className="flex flex-col gap-4">
+          <div className="flex w-full items-center justify-center overflow-hidden bg-paper-dim">
             {mainImage ? (
               <img
                 src={mainImage}
                 alt={product.name}
-                className="w-full max-h-[500px] object-contain rounded-lg"
+                className="max-h-140 w-full object-cover"
               />
             ) : (
-              <div className="text-center text-gray-400 text-sm">No image available</div>
+              <div className="py-32 text-center text-sm text-ink-muted">No image available</div>
             )}
           </div>
 
           {/* Thumbnails (for the currently selected colour) */}
           {currentGallery.length > 1 && (
-            <div className="flex gap-3 mt-4 flex-wrap justify-center">
+            <div className="flex flex-wrap gap-3">
               {currentGallery.map((img, idx) => (
                 <img
                   key={idx}
                   src={img}
                   alt={`Thumbnail ${idx + 1}`}
-                  className={`w-20 h-20 object-cover rounded-lg border cursor-pointer transition
-                    ${mainImage === img ? "border-[#B22222] border-2" : "border-gray-300"}`}
+                  className={`h-20 w-16 cursor-pointer object-cover transition ${
+                    mainImage === img ? 'ring-2 ring-brand' : 'opacity-80 hover:opacity-100'
+                  }`}
                   onClick={() => setMainImage(img)}
                 />
               ))}
@@ -179,39 +181,38 @@ const ProductinDetail = () => {
         </div>
 
         {/* Product Details */}
-        <div className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
+        <div className="flex flex-col">
+          <h1 className="font-display text-4xl leading-tight text-ink sm:text-5xl">{product.name}</h1>
+          <p className="mt-4 font-display text-3xl text-brand">
+            ₹{Number(product.price).toLocaleString('en-IN')}
+          </p>
 
-          {/* Product Description */}
-          <div className="mt-2">
-            <h2 className="text-lg font-semibold text-gray-700">Description:</h2>
-            <p className="text-gray-600 mt-1 whitespace-pre-line">{product.description}</p>
-          </div>
-
-          <p className="text-2xl font-semibold text-[#B22222]">₹{product.price}</p>
+          <p className="mt-6 whitespace-pre-line text-[0.95rem] leading-[1.9] text-ink-soft">
+            {product.description}
+          </p>
 
           {/* Color Selector */}
           {product.availableColors?.length > 0 && (
-            <div className="mt-2">
-              <label className="block mb-1 font-medium text-gray-700">COLOUR</label>
-              <div className="flex items-start gap-4 mt-2 flex-wrap">
+            <div className="mt-8">
+              <label className="eyebrow">Colour</label>
+              <div className="mt-3 flex flex-wrap items-start gap-4">
                 {product.availableColors.map((color) => {
                   const available = isColorAvailable(color);
                   const swatchHex = product.colors?.find(c => c.name === color)?.swatchHex;
                   const hasValidHex = swatchHex && /^#[0-9a-fA-F]{6}$/.test(swatchHex);
                   return (
-                    <div key={color} className="flex flex-col items-center gap-1">
+                    <div key={color} className="flex flex-col items-center gap-1.5">
                       <button
                         onClick={() => available && handleSelectColor(color)}
                         disabled={!available}
-                        className={`w-10 h-10 rounded-full shadow border-2 transition duration-200
-                          ${selectedColor === color ? 'border-[#B22222]' : 'border-transparent'}
+                        className={`h-10 w-10 rounded-full border-2 transition duration-200
+                          ${selectedColor === color ? 'border-brand ring-2 ring-brand/30 ring-offset-2 ring-offset-paper' : 'border-paper-deep'}
                           ${!available ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
-                          ${!hasValidHex ? 'bg-gray-200' : ''}`}
+                          ${!hasValidHex ? 'bg-paper-deep' : ''}`}
                         style={hasValidHex ? { backgroundColor: swatchHex } : {}}
                         title={available ? color : `${color} — out of stock`}
                       />
-                      <span className="text-xs text-gray-500">{color}</span>
+                      <span className="text-xs text-ink-muted">{color}</span>
                     </div>
                   );
                 })}
@@ -221,9 +222,9 @@ const ProductinDetail = () => {
 
           {/* Size Selector */}
           {product.availableSizes?.length > 0 && (
-            <div className="mt-4">
-              <label className="block mb-1 font-medium text-gray-700">SELECT SIZE</label>
-              <div className="flex flex-wrap gap-3 mt-2">
+            <div className="mt-7">
+              <label className="eyebrow">Select size</label>
+              <div className="mt-3 flex flex-wrap gap-2.5">
                 {product.availableSizes.map((size) => {
                   const available = isSizeAvailable(size);
                   return (
@@ -231,12 +232,12 @@ const ProductinDetail = () => {
                       key={size}
                       onClick={() => available && setSelectedSize(size)}
                       disabled={!available}
-                      className={`px-4 py-2 border rounded-full transition
+                      className={`rounded-full border px-4 py-2 text-sm transition
                         ${selectedSize === size
-                          ? 'bg-[#B22222] text-white border-[#B22222]'
+                          ? 'border-ink bg-ink text-paper'
                           : available
-                          ? 'bg-white text-gray-800 border-gray-300 hover:border-[#B22222]'
-                          : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'}`}
+                          ? 'border-paper-deep text-ink-soft hover:border-ink-muted'
+                          : 'cursor-not-allowed border-paper-deep text-ink-muted line-through'}`}
                     >
                       {size}
                     </button>
@@ -248,8 +249,8 @@ const ProductinDetail = () => {
 
           {/* Low stock badge */}
           {selectedStock !== null && selectedStock > 0 && selectedStock <= 5 && (
-            <p className="text-sm font-medium text-orange-600">
-              Only {selectedStock} left — order soon!
+            <p className="mt-5 text-sm font-medium text-brand">
+              Only {selectedStock} left — order soon.
             </p>
           )}
 
@@ -257,23 +258,21 @@ const ProductinDetail = () => {
           <button
             onClick={handleAddToCart}
             disabled={isAdding || selectedStock === 0}
-            className={`
-              mt-6 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-white font-medium transition-all duration-200
+            className={`mt-8 w-full py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition sm:w-auto sm:px-12
               ${selectedStock === 0
-                ? 'bg-gray-400 cursor-not-allowed'
+                ? 'cursor-not-allowed bg-ink-muted'
                 : isAdding
-                ? 'bg-green-600 cursor-not-allowed'
-                : 'bg-[#B22222] hover:bg-red-700 scale-105'}
-            `}
+                ? 'cursor-not-allowed bg-green-600'
+                : 'bg-brand hover:opacity-90'}`}
           >
-            🛒 {selectedStock === 0 ? "Out of Stock" : addedMessage ? "Added!" : "Add to Cart"}
+            {selectedStock === 0 ? 'Out of stock' : addedMessage ? 'Added to cart' : 'Add to cart'}
           </button>
         </div>
       </div>
 
       {/* Reviews section */}
-      <div className="mt-16 border-t pt-10">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Customer Reviews</h2>
+      <div className="mt-20 border-t border-paper-deep pt-12">
+        <h2 className="mb-4 font-display text-3xl text-ink">Customer Reviews</h2>
 
         {reviews.length > 0 && (
           <div className="flex items-center gap-3 mb-6">
@@ -286,38 +285,38 @@ const ProductinDetail = () => {
 
         {/* Write a review */}
         {isAuthenticated && (
-          <form onSubmit={handleSubmitReview} className="bg-gray-50 rounded-2xl p-5 mb-8 space-y-3 max-w-xl">
-            <h3 className="font-semibold text-gray-700">Write a Review</h3>
+          <form onSubmit={handleSubmitReview} className="mb-8 max-w-xl space-y-3 border border-paper-deep bg-paper-dim p-6">
+            <h3 className="font-display text-xl text-ink">Write a review</h3>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Your Rating *</label>
+              <label className="mb-1 block text-sm text-ink-soft">Your Rating *</label>
               <StarRating value={reviewRating} onChange={setReviewRating} />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Comment (optional)</label>
+              <label className="mb-1 block text-sm text-ink-soft">Comment (optional)</label>
               <textarea
                 value={reviewComment}
                 onChange={e => setReviewComment(e.target.value)}
                 rows={3}
                 placeholder="Tell others what you think about this product…"
-                className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#B22222] focus:border-[#B22222]"
+                className="w-full rounded-lg border border-paper-deep bg-paper p-3 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
               />
             </div>
             <button
               type="submit"
               disabled={submittingReview}
-              className="bg-[#B22222] text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
+              className="bg-brand px-6 py-2.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:opacity-90 disabled:opacity-60"
             >
-              {submittingReview ? 'Submitting…' : 'Submit Review'}
+              {submittingReview ? 'Submitting…' : 'Submit review'}
             </button>
           </form>
         )}
 
         {reviews.length === 0 ? (
-          <p className="text-gray-400 text-sm">No reviews yet. Be the first to review this product!</p>
+          <p className="text-sm text-ink-muted">No reviews yet. Be the first to review this product.</p>
         ) : (
-          <div className="space-y-4 max-w-2xl">
+          <div className="max-w-2xl space-y-4">
             {reviews.map(review => (
-              <div key={review._id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+              <div key={review._id} className="border border-paper-deep bg-white p-5">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-800 text-sm">{review.userName}</span>
@@ -334,6 +333,7 @@ const ProductinDetail = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

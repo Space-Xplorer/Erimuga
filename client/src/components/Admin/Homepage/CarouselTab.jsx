@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import axios from '../../config/axios';
+import axios from '../../../config/axios';
 import toast from 'react-hot-toast';
 import { ToggleLeft, ToggleRight, Trash2, ImagePlus } from 'lucide-react';
-import { useConfirmDialog } from '../../components/ConfirmDialog';
+import { useConfirmDialog } from '../../ConfirmDialog';
 
 const EMPTY_FORM = { heading: '', subtext: '', ctaLabel: '', ctaLink: '', order: 0 };
 
-export default function Banners() {
+// Carried over from the standalone Banners page, unchanged in behaviour.
+export default function CarouselTab() {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -20,7 +21,7 @@ export default function Banners() {
       const res = await axios.get('/banners/admin/all');
       setBanners(res.data);
     } catch {
-      toast.error('Failed to load banners');
+      toast.error('Failed to load slides');
     } finally {
       setLoading(false);
     }
@@ -94,19 +95,13 @@ export default function Banners() {
         value={form[key]}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand focus:border-brand focus:outline-none"
       />
     </div>
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2 text-gray-800">Homepage Carousel</h1>
-      <p className="text-sm text-gray-500 mb-8">
-        Manage the slides shown at the top of the homepage — great for seasonal sales or new collection launches.
-      </p>
-
-      {/* Create form */}
+    <div>
       <form onSubmit={handleCreate} className="bg-white rounded-2xl shadow-sm p-6 mb-8 space-y-4">
         <h2 className="text-lg font-semibold text-gray-700">Add New Slide</h2>
 
@@ -124,22 +119,21 @@ export default function Banners() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {field('heading', 'Heading', 'e.g. Festive Sale — Up to 30% Off')}
+          {field('heading', 'Heading', 'e.g. Woven by hand, in Assam')}
           {field('subtext', 'Subtext', 'Short supporting line')}
-          {field('ctaLabel', 'Button Label', 'e.g. Shop Now')}
-          {field('ctaLink', 'Button Link', 'e.g. /collection')}
+          {field('ctaLabel', 'Button Label', 'e.g. Explore')}
+          {field('ctaLink', 'Button Link', 'e.g. /collection/sarees')}
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-[#b22222] text-white rounded-xl py-2.5 font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
+          className="w-full bg-brand text-white rounded-xl py-2.5 font-semibold hover:opacity-90 disabled:opacity-60 transition"
         >
           {saving ? 'Adding…' : 'Add Slide'}
         </button>
       </form>
 
-      {/* Slide list */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <h2 className="text-lg font-semibold text-gray-700 p-6 border-b border-gray-100">All Slides</h2>
         {loading ? (
@@ -163,7 +157,7 @@ export default function Banners() {
                 <div className="flex items-center gap-3 shrink-0">
                   <button
                     onClick={() => toggleActive(banner)}
-                    className="text-gray-400 hover:text-[#b22222] transition-colors"
+                    className="text-gray-400 hover:text-brand transition-colors"
                     title={banner.isActive ? 'Hide from homepage' : 'Show on homepage'}
                   >
                     {banner.isActive ? <ToggleRight className="w-6 h-6 text-green-500" /> : <ToggleLeft className="w-6 h-6" />}

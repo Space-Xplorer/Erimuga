@@ -79,7 +79,7 @@ export default function Coupons() {
         value={form[key]}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+        className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand focus:border-brand"
       />
     </div>
   );
@@ -99,8 +99,8 @@ export default function Coupons() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
             <div className="flex gap-3 mt-1">
               {[{ v: 'percent', label: '% Percentage off' }, { v: 'flat', label: '₹ Flat amount off' }].map(opt => (
-                <label key={opt.v} className={`flex-1 flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${form.type === opt.v ? 'border-[#b22222] bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}>
-                  <input type="radio" name="type" value={opt.v} checked={form.type === opt.v} onChange={() => setForm(f => ({ ...f, type: opt.v }))} className="accent-[#b22222]" />
+                <label key={opt.v} className={`flex-1 flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${form.type === opt.v ? 'border-brand bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <input type="radio" name="type" value={opt.v} checked={form.type === opt.v} onChange={() => setForm(f => ({ ...f, type: opt.v }))} className="accent-brand" />
                   <span className="text-sm font-medium">{opt.label}</span>
                 </label>
               ))}
@@ -118,7 +118,7 @@ export default function Coupons() {
               value={form.value}
               onChange={e => setForm(f => ({ ...f, value: e.target.value }))}
               placeholder={form.type === 'percent' ? 'e.g. 20' : 'e.g. 200'}
-              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#b22222]"
+              className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand"
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ export default function Coupons() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-[#b22222] text-white rounded-xl py-2.5 font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
+          className="w-full bg-brand text-white rounded-xl py-2.5 font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
         >
           {saving ? 'Creating…' : 'Create Coupon'}
         </button>
@@ -178,7 +178,7 @@ export default function Coupons() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleActive(coupon)}
-                    className="text-gray-400 hover:text-[#b22222] transition-colors"
+                    className="text-gray-400 hover:text-brand transition-colors"
                     title={coupon.active ? 'Deactivate' : 'Activate'}
                   >
                     {coupon.active ? <ToggleRight className="w-6 h-6 text-green-500" /> : <ToggleLeft className="w-6 h-6" />}

@@ -146,7 +146,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="ml-2 border px-2 py-1 rounded focus:ring-2 focus:ring-[#b22222]"
+            className="ml-2 border px-2 py-1 rounded focus:ring-2 focus:ring-brand"
           >
             <option>All</option>
             {Object.values(ORDER_STATUSES).map(status => <option key={status}>{status}</option>)}
@@ -158,7 +158,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="ml-2 border px-2 py-1 rounded focus:ring-2 focus:ring-[#b22222]"
+            className="ml-2 border px-2 py-1 rounded focus:ring-2 focus:ring-brand"
           >
             <option value="date">Date</option>
             <option value="amount">Amount</option>
@@ -169,7 +169,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="ml-2 border px-2 py-1 rounded focus:ring-2 focus:ring-[#b22222]"
+            className="ml-2 border px-2 py-1 rounded focus:ring-2 focus:ring-brand"
           >
             <option value="desc">Descending</option>
             <option value="asc">Ascending</option>
@@ -178,9 +178,9 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
       </div>
 
       {/* Orders Table */}
-      <div className="overflow-x-auto rounded-xl shadow-lg border border-[#b22222]/30">
+      <div className="overflow-x-auto rounded-xl shadow-lg border border-brand/30">
         <table className="min-w-full bg-white">
-          <thead style={{ backgroundColor: '#b22222' }}>
+          <thead style={{ backgroundColor: 'var(--color-brand)' }}>
             <tr>
               {['Order #', 'Customer', 'Amount', 'Status', 'Payment Status', 'Date', 'Actions'].map((heading) => (
                 <th key={heading} className="p-3 text-left text-white text-sm font-semibold">
@@ -244,7 +244,7 @@ const OrdersTable = ({ orders: initialOrders, onView }) => {
                 <td className="p-3">
                   <button
                     onClick={() => onView(order)}
-                    className="text-[#b22222] font-medium underline hover:text-red-800 text-sm"
+                    className="text-brand font-medium underline hover:text-red-800 text-sm"
                   >
                     View
                   </button>

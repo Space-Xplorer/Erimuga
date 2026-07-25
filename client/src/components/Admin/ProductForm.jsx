@@ -12,58 +12,105 @@ const Tip = ({ text }) => (
   </span>
 );
 
-const MetaSelect = ({ label, fieldKey, value, options, onChange, onAddNew, tip }) => {
-  const [showInput, setShowInput] = useState(false);
-  const [newVal, setNewVal] = useState('');
-  const [saving, setSaving] = useState(false);
+/**
+ * Category picker. `options` are `{ value, label }` pairs so the form can send
+ * slugs while showing display names. Creating new categories now happens in the
+ * Category Manager, which is the only place that knows the parent relationship.
+ */
+const CategorySelect = ({ label, value, options, onChange, tip, disabled, disabledHint, required = true }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label}{required && ' *'} {tip && <Tip text={tip} />}
+    </label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand focus:border-brand disabled:bg-gray-100 disabled:text-gray-400"
+    >
+      <option value="">{disabled && disabledHint ? disabledHint : `Select ${label}`}</option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  </div>
+);
 
-  const save = async () => {
-    if (!newVal.trim()) { toast.error(`Please enter a ${label.toLowerCase()}`); return; }
-    setSaving(true);
-    try {
-      await onAddNew(newVal.trim());
-      setShowInput(false);
-      setNewVal('');
-      onChange(newVal.trim());
-    } catch { toast.error(`Failed to add ${label.toLowerCase()}`); }
-    finally { setSaving(false); }
+/** Multi-select tag input with create-on-type. Tags are optional. */
+const TagInput = ({ selected, options, onChange, onCreate }) => {
+  const [draft, setDraft] = useState('');
+
+  const add = async (name) => {
+    const clean = name.trim();
+    if (!clean) return;
+    if (!selected.some((t) => t.toLowerCase() === clean.toLowerCase())) {
+      onChange([...selected, clean]);
+      // Register unknown tags in the shared vocabulary so they're offered next time.
+      if (!options.some((o) => o.toLowerCase() === clean.toLowerCase())) {
+        await onCreate(clean).catch(() => {});
+      }
+    }
+    setDraft('');
   };
+
+  const unused = options.filter((o) => !selected.some((s) => s.toLowerCase() === o.toLowerCase()));
 
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} * {tip && <Tip text={tip} />}
+        Tags <Tip text="Optional cross-cutting labels like Eri Silk or Organic Dye. Unrelated to the category tree." />
       </label>
-      {showInput ? (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newVal}
-            onChange={e => setNewVal(e.target.value)}
-            placeholder={`New ${label.toLowerCase()}`}
-            className="flex-1 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
-            autoFocus
-          />
-          <button type="button" onClick={save} disabled={saving} className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-50">
-            {saving ? '…' : 'Save'}
-          </button>
-          <button type="button" onClick={() => { setShowInput(false); setNewVal(''); }} className="text-sm border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50">
-            Cancel
-          </button>
+
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {selected.map((tag) => (
+            <span key={tag} className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-sm text-gray-700">
+              {tag}
+              <button
+                type="button"
+                onClick={() => onChange(selected.filter((t) => t !== tag))}
+                className="text-gray-400 hover:text-red-600"
+                aria-label={`Remove ${tag}`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
         </div>
-      ) : (
-        <div className="flex gap-2">
-          <select
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
-          >
-            <option value="">Select {label}</option>
-            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-          <button type="button" onClick={() => setShowInput(true)} className="text-sm text-[#b22222] border border-[#b22222] px-3 py-1.5 rounded-lg hover:bg-red-50 whitespace-nowrap">
-            + New
-          </button>
+      )}
+
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); add(draft); }
+          }}
+          placeholder="Type a tag and press Enter"
+          className="flex-1 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand focus:border-brand"
+        />
+        <button
+          type="button"
+          onClick={() => add(draft)}
+          className="text-sm text-brand border border-brand px-3 py-1.5 rounded-lg hover:bg-red-50 whitespace-nowrap"
+        >
+          Add
+        </button>
+      </div>
+
+      {unused.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {unused.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => add(tag)}
+              className="rounded-full border border-gray-300 px-2.5 py-0.5 text-xs text-gray-500 hover:border-gray-500 hover:text-gray-700"
+            >
+              + {tag}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -97,12 +144,14 @@ const emptyColorBlock = () => ({
 export default function ProductForm({ initialData = null, onSuccess, submitLabel = 'Save Product' }) {
   const isEdit = !!initialData;
 
-  const [meta, setMeta] = useState({ categories: [], apparelTypes: [], subcategories: [] });
+  // Categories arrive as a tree; subcategories are read off the selected parent.
+  const [categories, setCategories] = useState([]);
+  const [tagOptions, setTagOptions] = useState([]);
+  const [tags, setTags] = useState([]);
   const [form, setForm] = useState({
     name: '',
-    category: '',
-    apparelType: '',
-    subcategory: '',
+    category: '',      // main category slug
+    subcategory: '',   // subcategory slug, scoped to the selected main category
     price: '',
     availableSizes: '',
     description: '',
@@ -115,18 +164,20 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
 
   const fetchMeta = async () => {
     try {
-      const res = await axios.get('/metadata');
-      if (res.data) {
-        setMeta({
-          categories: res.data.categories || [],
-          apparelTypes: res.data.apparelTypes || [],
-          subcategories: res.data.subcategories || [],
-        });
-      }
+      const [catRes, tagRes] = await Promise.all([
+        axios.get('/categories'),
+        axios.get('/categories/tags'),
+      ]);
+      setCategories(catRes.data || []);
+      setTagOptions((tagRes.data || []).map((t) => t.name));
     } catch { /* silently fail */ }
   };
 
   useEffect(() => { fetchMeta(); }, []);
+
+  const selectedCategory = categories.find((c) => c.slug === form.category);
+  const subcategoryOptions = (selectedCategory?.subcategories || [])
+    .map((s) => ({ value: s.slug, label: s.name }));
 
   useEffect(() => {
     if (!initialData) return;
@@ -135,13 +186,13 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
     setForm({
       name: initialData.name || '',
       category: initialData.mainCategory || '',
-      apparelType: initialData.apparelType || '',
       subcategory: initialData.subcategory || '',
       price: initialData.price?.toString() || '',
       availableSizes: sizesStr,
       description: initialData.description || '',
       isBestSeller: initialData.isBestSeller === 'yes',
     });
+    setTags(initialData.tags || []);
 
     let blocks;
     if (initialData.colors && initialData.colors.length > 0) {
@@ -175,8 +226,8 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.availableSizes, colorBlocks.map((b) => b.name).join('|')]);
 
-  const addMeta = async (field, endpoint, name) => {
-    await axios.post(`/metadata/${endpoint}`, { name });
+  const createTag = async (name) => {
+    await axios.post('/categories/tags', { name });
     await fetchMeta();
   };
 
@@ -221,7 +272,6 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
     if (!form.name.trim()) e.name = 'Product name is required';
     if (!form.price || isNaN(form.price) || Number(form.price) <= 0) e.price = 'Price must be a positive number';
     if (!form.category) e.category = 'Category is required';
-    if (!form.apparelType) e.apparelType = 'Apparel type is required';
     if (!form.subcategory) e.subcategory = 'Subcategory is required';
 
     const namedBlocks = colorBlocks.filter((b) => b.name.trim());
@@ -250,8 +300,8 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
       const data = new FormData();
       data.append('name', form.name);
       data.append('mainCategory', form.category);
-      data.append('apparelType', form.apparelType);
       data.append('subcategory', form.subcategory);
+      data.append('tags', JSON.stringify(tags));
       data.append('price', form.price);
       data.append('availableSizes', form.availableSizes);
       data.append('availableColors', namedBlocks.map((b) => b.name.trim()).join(','));
@@ -286,7 +336,8 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
       onSuccess?.();
 
       if (!isEdit) {
-        setForm({ name: '', category: '', apparelType: '', subcategory: '', price: '', availableSizes: '', description: '', isBestSeller: false });
+        setForm({ name: '', category: '', subcategory: '', price: '', availableSizes: '', description: '', isBestSeller: false });
+        setTags([]);
         setColorBlocks([emptyColorBlock()]);
       }
     } catch (err) {
@@ -309,41 +360,44 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
           value={form.name}
           onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
           placeholder="e.g. Red Raw Silk Saree"
-          className={`w-full border rounded-xl p-3 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222] ${errors.name ? 'border-red-400' : 'border-gray-300'}`}
+          className={`w-full border rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand ${errors.name ? 'border-red-400' : 'border-gray-300'}`}
         />
       </div>
 
       {/* Category */}
       {errors.category && <p className="text-red-500 text-xs -mt-3">{errors.category}</p>}
-      <MetaSelect
+      <CategorySelect
         label="Category"
         value={form.category}
-        options={meta.categories}
-        onChange={v => setForm(f => ({ ...f, category: v }))}
-        onAddNew={v => addMeta('category', 'category', v)}
-        tip="The main product category, e.g. Fabrics, Sarees"
+        options={categories.map((c) => ({ value: c.slug, label: c.name }))}
+        // Changing the parent invalidates the current subcategory, so clear it
+        // rather than let a mismatched pair reach the server.
+        onChange={(v) => setForm((f) => ({ ...f, category: v, subcategory: '' }))}
+        tip="The main collection, e.g. Sarees, Shawls. Managed in Categories."
       />
 
-      {/* Apparel Type */}
-      {errors.apparelType && <p className="text-red-500 text-xs">{errors.apparelType}</p>}
-      <MetaSelect
-        label="Apparel Type"
-        value={form.apparelType}
-        options={meta.apparelTypes}
-        onChange={v => setForm(f => ({ ...f, apparelType: v }))}
-        onAddNew={v => addMeta('apparelType', 'apparelType', v)}
-        tip="The type of garment, e.g. Stole, Shawl, Saree"
-      />
-
-      {/* Subcategory */}
+      {/* Subcategory — scoped to the selected category */}
       {errors.subcategory && <p className="text-red-500 text-xs">{errors.subcategory}</p>}
-      <MetaSelect
+      <CategorySelect
         label="Subcategory"
         value={form.subcategory}
-        options={meta.subcategories}
-        onChange={v => setForm(f => ({ ...f, subcategory: v }))}
-        onAddNew={v => addMeta('subcategory', 'subcategory', v)}
-        tip="More specific type, e.g. Raw Silk, Eri Cotton"
+        options={subcategoryOptions}
+        onChange={(v) => setForm((f) => ({ ...f, subcategory: v }))}
+        disabled={!form.category || subcategoryOptions.length === 0}
+        disabledHint={
+          !form.category
+            ? 'Choose a category first'
+            : `${selectedCategory?.name} has no subcategories yet`
+        }
+        tip="Belongs to the category above. Add more in Categories."
+      />
+
+      {/* Tags — optional, independent of the category tree */}
+      <TagInput
+        selected={tags}
+        options={tagOptions}
+        onChange={setTags}
+        onCreate={createTag}
       />
 
       {/* Price */}
@@ -358,7 +412,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
           value={form.price}
           onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
           placeholder="e.g. 2500"
-          className={`w-full border rounded-xl p-3 focus:ring-2 focus:ring-[#b22222] ${errors.price ? 'border-red-400' : 'border-gray-300'}`}
+          className={`w-full border rounded-xl p-3 focus:ring-2 focus:ring-brand ${errors.price ? 'border-red-400' : 'border-gray-300'}`}
         />
       </div>
 
@@ -372,7 +426,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
           value={form.availableSizes}
           onChange={e => setForm(f => ({ ...f, availableSizes: e.target.value }))}
           placeholder="e.g. S,M,L,XL  or  1m,2m,5m"
-          className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#b22222]"
+          className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-brand"
         />
         <p className="text-xs text-gray-400 mt-1">Separate each size with a comma</p>
       </div>
@@ -383,7 +437,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
           <label className="block text-sm font-medium text-gray-700">
             Colours &amp; Images * <Tip text="Add each colour the product comes in, with its own photos. Shoppers will see the matching photos when they pick a colour." />
           </label>
-          <button type="button" onClick={addColorBlock} className="text-sm text-[#b22222] border border-[#b22222] px-3 py-1 rounded-lg hover:bg-red-50">
+          <button type="button" onClick={addColorBlock} className="text-sm text-brand border border-brand px-3 py-1 rounded-lg hover:bg-red-50">
             + Add Colour
           </button>
         </div>
@@ -406,7 +460,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
                   value={block.name}
                   onChange={(e) => updateBlock(block.key, { name: e.target.value })}
                   placeholder="Colour name, e.g. Rust"
-                  className="flex-1 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                  className="flex-1 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-brand focus:border-brand"
                 />
                 {colorBlocks.length > 1 && (
                   <button
@@ -502,7 +556,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
                           const val = Math.max(0, Number(e.target.value));
                           setVariants(prev => prev.map((row, ri) => ri === i ? { ...row, stock: val } : row));
                         }}
-                        className="w-24 border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                        className="w-24 border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-brand focus:border-brand"
                       />
                     </td>
                   </tr>
@@ -521,7 +575,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
           placeholder="Describe this product — material, weave, use, etc."
           rows={4}
-          className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#b22222]"
+          className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-brand"
         />
       </div>
 
@@ -531,7 +585,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
           type="checkbox"
           checked={form.isBestSeller}
           onChange={e => setForm(f => ({ ...f, isBestSeller: e.target.checked }))}
-          className="accent-[#b22222] w-4 h-4"
+          className="accent-brand w-4 h-4"
         />
         <span className="text-sm text-gray-700 font-medium">
           Mark as Best Seller <Tip text="Best Sellers are highlighted on the home page" />
@@ -541,7 +595,7 @@ export default function ProductForm({ initialData = null, onSuccess, submitLabel
       <button
         type="submit"
         disabled={submitting}
-        className="w-full bg-[#b22222] text-white rounded-xl py-3 font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
+        className="w-full bg-brand text-white rounded-xl py-3 font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors"
       >
         {submitting ? 'Saving…' : submitLabel}
       </button>

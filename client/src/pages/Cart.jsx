@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { ShopContext } from '../context/ShopContext'; // Adjust the path if needed
-import { useNavigate } from 'react-router-dom';
+import { ShopContext } from '../context/ShopContext';
+import { Link, useNavigate } from 'react-router-dom';
 import { getProductThumbnail } from '../utils/productImage';
 
 const Cart = () => {
@@ -14,94 +14,121 @@ const Cart = () => {
 
   const navigate = useNavigate();
   const totalAmount = getTotalAmount();
+  const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
+
+  const isEmpty = !Array.isArray(cartItems) || cartItems.length === 0;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold text-center mb-6">Shopping Cart</h2>
+    <div className="min-h-[60vh] bg-paper">
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
+        <p className="eyebrow">Your selection</p>
+        <h1 className="mt-2 font-display text-4xl text-ink sm:text-5xl">Cart</h1>
 
-      {Array.isArray(cartItems) && cartItems.length > 0 ? (
-        <div className="space-y-6">
-          {cartItems.map((item) => {
-            const product = products.find((p) => p._id === item.productId);
-            if (!product) return null;
-
-            return (
-              <div
-                key={item._id || item.productId}
-                className="flex flex-col sm:flex-row sm:items-center bg-white p-4 md:p-6 rounded-xl shadow gap-4"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={getProductThumbnail(product)}
-                    alt={product.name}
-                    className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg shrink-0"
-                  />
-
-                  <div className="flex-grow sm:hidden">
-                    <p className="font-semibold text-lg text-gray-800">{product.name}</p>
-                    <p className="text-sm text-gray-500">Size: {item.size || 'N/A'}</p>
-                    <p className="text-sm text-gray-500 mb-1">Color: {item.color || 'N/A'}</p>
-                    <p className="text-sm text-gray-500">₹{item.priceAtPurchase || product.price} per item</p>
-                  </div>
-                </div>
-
-                <div className="hidden sm:block flex-grow">
-                  <p className="font-semibold text-lg text-gray-800">{product.name}</p>
-                  <p className="text-sm text-gray-500">Size: {item.size || 'N/A'}</p>
-                  <p className="text-sm text-gray-500 mb-1">Color: {item.color || 'N/A'}</p>
-                  <p className="text-sm text-gray-500 mb-1">
-                    ₹{item.priceAtPurchase || product.price} per item
-                  </p>
-                  <button
-                    onClick={() => removeFromCart(item.productCode)}
-                    className="text-sm text-red-500 hover:underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-4">
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    min="1"
-                    onChange={(e) =>
-                      updateQuantity(item.productId, Number(e.target.value))
-                    }
-                    className="w-16 text-center border border-gray-300 rounded-md py-1 px-2"
-                  />
-                  <p className="w-24 text-right font-bold text-gray-800">
-                    ₹{((item.priceAtPurchase || product.price) * item.quantity).toFixed(2)}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => removeFromCart(item.productCode)}
-                  className="sm:hidden text-sm text-red-500 hover:underline text-left"
-                >
-                  Remove
-                </button>
-              </div>
-            );
-          })}
-
-          <div className="text-right mt-8">
-            <h3 className="text-xl font-bold mb-4">
-              Total Amount: ₹{totalAmount.toFixed(2)}
-            </h3>
-
-            <button
-              onClick={() => navigate('/checkout')}
-              style={{ backgroundColor: '#b22222' }}
-              className="text-white px-6 py-2 rounded-lg hover:opacity-90 transition"
+        {isEmpty ? (
+          <div className="py-24 text-center">
+            <p className="font-display text-2xl text-ink">Your cart is empty.</p>
+            <Link
+              to="/collection"
+              className="mt-6 inline-flex items-center gap-2 border-b border-ink/25 pb-1 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
             >
-              Proceed to Checkout
-            </button>
+              Browse the collections
+              <span aria-hidden="true">&rarr;</span>
+            </Link>
           </div>
-        </div>
-      ) : (
-        <p className="text-center text-gray-600">Your cart is empty.</p>
-      )}
+        ) : (
+          <div className="mt-10 flex flex-col gap-10 lg:flex-row">
+            {/* Line items */}
+            <div className="flex-1 divide-y divide-paper-deep border-t border-paper-deep">
+              {cartItems.map((item) => {
+                const product = products.find((p) => p._id === item.productId);
+                if (!product) return null;
+                const unit = item.priceAtPurchase || product.price;
+
+                return (
+                  <div key={item._id || item.productId} className="flex gap-5 py-6">
+                    <Link to={`/product/${product._id}`} className="shrink-0">
+                      <img
+                        src={getProductThumbnail(product)}
+                        alt={product.name}
+                        className="aspect-3/4 w-24 object-cover bg-paper-dim sm:w-28"
+                      />
+                    </Link>
+
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <Link
+                        to={`/product/${product._id}`}
+                        className="font-display text-xl text-ink transition-colors hover:text-brand"
+                      >
+                        {product.name}
+                      </Link>
+                      <p className="mt-1 text-sm text-ink-muted">
+                        {[item.size && `Size ${item.size}`, item.color].filter(Boolean).join(' · ') || '—'}
+                      </p>
+                      <p className="mt-0.5 text-sm text-ink-muted">{inr(unit)} each</p>
+
+                      <div className="mt-auto flex items-center gap-4 pt-4">
+                        <div className="inline-flex items-center border border-paper-deep">
+                          <button
+                            onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))}
+                            className="px-3 py-1.5 text-ink-soft hover:text-brand"
+                            aria-label="Decrease quantity"
+                          >
+                            −
+                          </button>
+                          <span className="w-8 text-center text-sm text-ink">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            className="px-3 py-1.5 text-ink-soft hover:text-brand"
+                            aria-label="Increase quantity"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.productCode)}
+                          className="text-sm text-ink-muted underline-offset-4 hover:text-brand hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="font-display text-lg text-ink">{inr(unit * item.quantity)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary */}
+            <aside className="lg:w-80 lg:shrink-0">
+              <div className="border border-paper-deep bg-paper-dim p-6 lg:sticky lg:top-28">
+                <h2 className="eyebrow">Summary</h2>
+                <div className="mt-4 flex items-baseline justify-between">
+                  <span className="text-sm text-ink-soft">Subtotal</span>
+                  <span className="font-display text-2xl text-ink">{inr(totalAmount)}</span>
+                </div>
+                <p className="mt-2 text-xs text-ink-muted">
+                  Shipping and any taxes are calculated at checkout.
+                </p>
+                <button
+                  onClick={() => navigate('/checkout')}
+                  className="mt-6 w-full bg-brand py-3 text-sm font-semibold uppercase tracking-wide text-white transition hover:opacity-90"
+                >
+                  Proceed to Checkout
+                </button>
+                <Link
+                  to="/collection"
+                  className="mt-4 block text-center text-sm text-ink-soft underline-offset-4 hover:text-brand hover:underline"
+                >
+                  Continue browsing
+                </Link>
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

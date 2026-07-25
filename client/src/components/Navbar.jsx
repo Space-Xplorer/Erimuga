@@ -1,22 +1,52 @@
-import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaShoppingCart, FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from './Auth/AuthContext';
-import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
+import axios from '../config/axios';
 import SearchBar from './SearchBar';
+
+const ADMIN_LINKS = [
+  { to: '/admin', label: 'Admin Dashboard' },
+  { to: '/admin/add-product', label: 'Add Products' },
+  { to: '/admin/products', label: 'Products' },
+  { to: '/admin/categories', label: 'Categories' },
+  { to: '/admin/homepage', label: 'Homepage' },
+  { to: '/admin/customers', label: 'Customers' },
+  { to: '/admin/coupons', label: 'Coupons' },
+  { to: '/admin/messages', label: 'Messages' },
+];
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [scrolled, setScrolled] = useState(false);
   const timerRef = useRef();
   const profileRef = useRef();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const { isAuthenticated, user, logout: authLogout } = useAuth();
   const { getTotalItems } = useContext(ShopContext);
 
-  // Profile dropdown handlers
+  // The homepage opens on a full-bleed hero, so the bar floats over it until
+  // the user scrolls. Every other route gets a solid bar from the start.
+  const overHero = pathname === '/' && !scrolled && !isMenuOpen;
+
+  useEffect(() => {
+    axios.get('/categories')
+      .then((res) => setCategories(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleProfileEnter = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setIsProfileOpen(true);
@@ -26,39 +56,51 @@ const Navbar = () => {
     timerRef.current = setTimeout(() => setIsProfileOpen(false), 150);
   };
 
-  // Single source of truth: live cartItems from ShopContext
   const cartCount = getTotalItems();
 
-  return (
-    <nav className="bg-[#B22222] text-white px-6 py-4">
-      <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <div className="text-2xl font-bold">
-          <Link to="/" onClick={() => setIsMenuOpen(false)}>
-            <img src="/Logos/Logo.jpg" alt="Logo" className="h-8" />
-          </Link>
-        </div>
+  const linkClass = overHero
+    ? 'text-paper/90 hover:text-paper'
+    : 'text-ink-soft hover:text-brand';
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          <Link to="/" className="hover:text-yellow-300">Home</Link>
-          <Link to="/collection" className="hover:text-yellow-300">Collection</Link>
-          <Link to="/about" className="hover:text-yellow-300">About</Link>
-          <Link to="/contact" className="hover:text-yellow-300">Contact</Link>
+  return (
+    <nav
+      className={`sticky top-0 z-50 transition-colors duration-300 ${
+        overHero ? 'bg-transparent' : 'bg-paper/95 backdrop-blur border-b border-paper-deep'
+      }`}
+    >
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Wordmark */}
+        <Link to="/" onClick={() => setIsMenuOpen(false)} className="shrink-0">
+          <span
+            className={`font-display text-3xl tracking-wide transition-colors ${
+              overHero ? 'text-paper' : 'text-ink'
+            }`}
+          >
+            Erimuga
+          </span>
+        </Link>
+
+        {/* Desktop nav */}
+        <div className="hidden items-center gap-7 text-sm md:flex">
+          {categories.map((cat) => (
+            <Link key={cat._id} to={`/collection/${cat.slug}`} className={`transition-colors ${linkClass}`}>
+              {cat.name}
+            </Link>
+          ))}
+          <Link to="/about" className={`transition-colors ${linkClass}`}>About</Link>
+          <Link to="/contact" className={`transition-colors ${linkClass}`}>Contact</Link>
 
           <SearchBar />
 
-          {/* Cart Icon */}
-          <Link to="/cart" className="relative hover:text-yellow-300 transition">
+          <Link to="/cart" className={`relative transition-colors ${linkClass}`} aria-label="Cart">
             <FaShoppingCart className="text-lg" />
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full px-1 text-xs min-w-[18px] text-center">
+              <span className="absolute -right-2 -top-2 min-w-4.5 rounded-full bg-brand px-1 text-center text-xs text-white">
                 {cartCount}
               </span>
             )}
           </Link>
 
-          {/* Profile */}
           {isAuthenticated ? (
             <div
               className="relative flex items-center"
@@ -66,30 +108,26 @@ const Navbar = () => {
               onMouseEnter={handleProfileEnter}
               onMouseLeave={handleProfileLeave}
             >
-              <div className="flex items-center gap-1 cursor-pointer hover:text-yellow-300">
+              <div className={`flex cursor-pointer items-center gap-1.5 transition-colors ${linkClass}`}>
                 <FaUserCircle className="text-lg" />
                 <span>{user?.name || 'Profile'}</span>
               </div>
               {isProfileOpen && (
-                <div className="absolute top-full right-0 mt-2 z-50 w-48 bg-white text-black rounded-md shadow-lg py-2 space-y-1">
+                <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-md bg-white py-2 text-ink shadow-lg">
                   {user?.userType === 'admin' ? (
-                    <>
-                      <Link to="/admin" className="block px-4 py-2 hover:bg-gray-100">Admin Dashboard</Link>
-                      <Link to="/admin/add-product" className="block px-4 py-2 hover:bg-gray-100">Add Products</Link>
-                      <Link to="/admin/products" className="block px-4 py-2 hover:bg-gray-100">Products</Link>
-                      <Link to="/admin/customers" className="block px-4 py-2 hover:bg-gray-100">Customers</Link>
-                      <Link to="/admin/coupons" className="block px-4 py-2 hover:bg-gray-100">Coupons</Link>
-                      <Link to="/admin/messages" className="block px-4 py-2 hover:bg-gray-100">Messages</Link>
-                      <Link to="/admin/banners" className="block px-4 py-2 hover:bg-gray-100">Homepage Carousel</Link>
-                    </>
+                    ADMIN_LINKS.map((l) => (
+                      <Link key={l.to} to={l.to} className="block px-4 py-2 text-sm hover:bg-paper-dim">
+                        {l.label}
+                      </Link>
+                    ))
                   ) : (
                     <>
-                      <Link to="/dashboard" className="block px-4 py-2 hover:bg-gray-100">Dashboard</Link>
-                      <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100">Orders</Link>
+                      <Link to="/dashboard" className="block px-4 py-2 text-sm hover:bg-paper-dim">Dashboard</Link>
+                      <Link to="/orders" className="block px-4 py-2 text-sm hover:bg-paper-dim">Orders</Link>
                     </>
                   )}
                   <button
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded text-red-600"
+                    className="w-full px-4 py-2 text-left text-sm text-brand hover:bg-paper-dim"
                     onClick={() => {
                       setIsProfileOpen(false);
                       authLogout();
@@ -104,71 +142,94 @@ const Navbar = () => {
           ) : (
             <Link
               to="/login"
-              className="bg-yellow-300 text-[#B22222] font-semibold px-4 py-2 rounded hover:bg-yellow-400 transition-colors duration-200"
+              className={`border-b pb-0.5 transition-colors ${
+                overHero
+                  ? 'border-paper/40 text-paper hover:border-paper'
+                  : 'border-ink/25 text-ink hover:border-brand hover:text-brand'
+              }`}
             >
               Sign In
             </Link>
           )}
         </div>
 
-        {/* Mobile Hamburger */}
-        <div className="md:hidden text-2xl cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        {/* Mobile hamburger */}
+        <button
+          className={`cursor-pointer text-xl md:hidden ${overHero ? 'text-paper' : 'text-ink'}`}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+        >
           {isMenuOpen ? <FaTimes /> : <FaBars />}
-        </div>
+        </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden mt-4 space-y-4 text-sm font-medium">
-          <Link to="/" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Home</Link>
-          <Link to="/collection" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Collection</Link>
-          <Link to="/about" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">About</Link>
-          <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Contact</Link>
-          <div className="pt-2">
+        <div className="space-y-4 border-t border-paper-deep bg-paper px-4 pb-6 pt-4 text-sm md:hidden">
+          {categories.map((cat) => (
+            <Link
+              key={cat._id}
+              to={`/collection/${cat.slug}`}
+              onClick={() => setIsMenuOpen(false)}
+              className="block font-display text-xl text-ink hover:text-brand"
+            >
+              {cat.name}
+            </Link>
+          ))}
+
+          <div className="border-t border-paper-deep pt-4 space-y-3">
+            <Link to="/about" onClick={() => setIsMenuOpen(false)} className="block text-ink-soft hover:text-brand">About</Link>
+            <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="block text-ink-soft hover:text-brand">Contact</Link>
+            <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="block text-ink-soft hover:text-brand">
+              Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+            </Link>
+          </div>
+
+          <div className="pt-1">
             <SearchBar mobile />
           </div>
-          <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="relative hover:text-yellow-300 transition">
-            <FaShoppingCart className="text-lg" />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full px-1 text-xs min-w-[18px] text-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-          {isAuthenticated ? (
-            <>
-              {user?.userType === 'admin' ? (
-                <>
-                  <Link to="/admin" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Admin Dashboard</Link>
-                  <Link to="/admin/add-product" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Add Products</Link>
-                  <Link to="/admin/products" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Products</Link>
-                  <Link to="/admin/customers" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Customers</Link>
-                  <Link to="/admin/coupons" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Coupons</Link>
-                  <Link to="/admin/messages" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Messages</Link>
-                  <Link to="/admin/banners" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Homepage Carousel</Link>
-                </>
-              ) : (
-                <>
-                  <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Dashboard</Link>
-                  <Link to="/orders" onClick={() => setIsMenuOpen(false)} className="block hover:text-yellow-300">Orders</Link>
-                </>
-              )}
-              <button
-                className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 rounded"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  authLogout();
-                  navigate('/login');
-                }}
+
+          <div className="border-t border-paper-deep pt-4 space-y-3">
+            {isAuthenticated ? (
+              <>
+                {user?.userType === 'admin' ? (
+                  ADMIN_LINKS.map((l) => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block text-ink-soft hover:text-brand"
+                    >
+                      {l.label}
+                    </Link>
+                  ))
+                ) : (
+                  <>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block text-ink-soft hover:text-brand">Dashboard</Link>
+                    <Link to="/orders" onClick={() => setIsMenuOpen(false)} className="block text-ink-soft hover:text-brand">Orders</Link>
+                  </>
+                )}
+                <button
+                  className="block w-full text-left text-brand"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    authLogout();
+                    navigate('/login');
+                  }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="block text-ink hover:text-brand"
               >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="bg-yellow-300 text-[#B22222] font-semibold px-4 py-2 rounded hover:bg-yellow-400 block text-center">
-              Sign In
-            </Link>
-          )}
+                Sign In
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </nav>

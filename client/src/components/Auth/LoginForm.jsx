@@ -36,36 +36,36 @@ const LoginForm = ({ onLogin }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className='mb-4'>
-        <label className='block text-sm font-medium mb-2' htmlFor='email'>Email</label>
-        <input 
-          className='border border-gray-300 p-2 w-full rounded' 
-          type='email' 
-          id='email' 
-          required 
-          value={email} 
-          onChange={e => setEmail(e.target.value)} 
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink-soft" htmlFor="email">Email</label>
+        <input
+          className="w-full rounded-lg border border-paper-deep bg-paper p-2.5 text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+          type="email"
+          id="email"
+          required
+          value={email}
+          onChange={e => setEmail(e.target.value)}
         />
       </div>
-      <div className='mb-6'>
-        <label className='block text-sm font-medium mb-2' htmlFor='password'>Password</label>
-        <input 
-          className='border border-gray-300 p-2 w-full rounded' 
-          type='password' 
-          id='password' 
-          required 
-          value={password} 
-          onChange={e => setPassword(e.target.value)} 
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink-soft" htmlFor="password">Password</label>
+        <input
+          className="w-full rounded-lg border border-paper-deep bg-paper p-2.5 text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+          type="password"
+          id="password"
+          required
+          value={password}
+          onChange={e => setPassword(e.target.value)}
         />
       </div>
-      {error && <div className='text-red-600 mb-2 text-sm'>{error}</div>}
-      <button 
-        className='bg-[#B22222] text-white font-semibold py-2 rounded w-full hover:bg-red-600 transition-colors duration-200' 
-        type='submit' 
+      {error && <div className="text-sm text-red-600">{error}</div>}
+      <button
+        className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:opacity-90 disabled:opacity-60"
+        type="submit"
         disabled={loading}
       >
-        {loading ? 'Logging in...' : 'Login'}
+        {loading ? 'Signing in…' : 'Sign in'}
       </button>
     </form>
   );

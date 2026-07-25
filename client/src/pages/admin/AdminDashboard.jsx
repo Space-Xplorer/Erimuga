@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../config/axios';
 import { Link } from 'react-router-dom';
-import { Package, Users, Tag, BarChart2, ClipboardList, Mail, GalleryHorizontal } from 'lucide-react';
+import { Package, Users, Tag, BarChart2, ClipboardList, Mail, Home, FolderTree } from 'lucide-react';
 
 import AdminSummary from '../../components/Admin/AdminSummary';
 import OrdersTable from '../../components/Admin/OrdersTable';
 import OrderModal from '../../components/Admin/OrderModal';
-import MetadataModal from '../../components/Admin/MetadataModal';
 import OrderAnalytics from '../../components/Admin/OrderAnalytics';
 
 const TABS = ['Orders', 'Analytics'];
@@ -15,7 +14,7 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [metaModalOpen, setMetaModalOpen] = useState(false);
+  
   const [activeTab, setActiveTab] = useState('Orders');
 
   const fetchOrders = async () => {
@@ -38,10 +37,11 @@ const AdminDashboard = () => {
         {[
           { to: '/admin/add-product', icon: <Package className="w-5 h-5" />, label: 'Add Product', color: 'bg-green-600 hover:bg-green-700' },
           { to: '/admin/products', icon: <ClipboardList className="w-5 h-5" />, label: 'Products', color: 'bg-blue-600 hover:bg-blue-700' },
+          { to: '/admin/categories', icon: <FolderTree className="w-5 h-5" />, label: 'Categories', color: 'bg-indigo-600 hover:bg-indigo-700' },
+          { to: '/admin/homepage', icon: <Home className="w-5 h-5" />, label: 'Homepage', color: 'bg-pink-600 hover:bg-pink-700' },
           { to: '/admin/customers', icon: <Users className="w-5 h-5" />, label: 'Customers', color: 'bg-purple-600 hover:bg-purple-700' },
           { to: '/admin/coupons', icon: <Tag className="w-5 h-5" />, label: 'Coupons', color: 'bg-orange-500 hover:bg-orange-600' },
           { to: '/admin/messages', icon: <Mail className="w-5 h-5" />, label: 'Messages', color: 'bg-teal-600 hover:bg-teal-700' },
-          { to: '/admin/banners', icon: <GalleryHorizontal className="w-5 h-5" />, label: 'Carousel', color: 'bg-pink-600 hover:bg-pink-700' },
         ].map(item => (
           <Link
             key={item.to}
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab ? 'bg-[#b22222] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab ? 'bg-brand text-white' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             {tab === 'Analytics' && <BarChart2 className="w-4 h-4" />}
             {tab}
@@ -73,15 +73,7 @@ const AdminDashboard = () => {
       {/* Tab content */}
       {activeTab === 'Orders' && (
         <div className="bg-white rounded-2xl shadow p-4 mt-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-gray-700">Orders</h3>
-            <button
-              onClick={() => setMetaModalOpen(true)}
-              className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition"
-            >
-              + Metadata
-            </button>
-          </div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">Orders</h3>
           <OrdersTable
             orders={orders}
             onView={(order) => { setSelectedOrder(order); setShowModal(true); }}
@@ -96,7 +88,6 @@ const AdminDashboard = () => {
       )}
 
       <OrderModal order={selectedOrder} isOpen={showModal} onClose={() => setShowModal(false)} />
-      <MetadataModal isOpen={metaModalOpen} onClose={() => setMetaModalOpen(false)} />
     </div>
   );
 };

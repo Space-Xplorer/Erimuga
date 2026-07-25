@@ -11,6 +11,7 @@ passport.use(new LocalStrategy({
   try {
     const user = await userModel.findOne({ email });
     if (!user) return done(null, false, { message: "User not found" });
+    if (user.isDeleted) return done(null, false, { message: "This account has been deleted" });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return done(null, false, { message: "Incorrect password" });
@@ -32,6 +33,11 @@ passport.use(new GoogleStrategy({
     const email = profile.emails[0].value;
 
     let user = await userModel.findOne({ email });
+
+    // A deleted account must not silently spring back to life on Google sign-in.
+    if (user && user.isDeleted) {
+      return done(null, false, { message: "This account has been deleted" });
+    }
 
     if (!user) {
       user = await userModel.create({

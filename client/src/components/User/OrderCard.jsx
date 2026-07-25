@@ -65,7 +65,7 @@ const OrderCard = ({ order, onCancelled }) => {
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Items</p>
         {order.items.map((item, idx) => (
           <div key={idx} className="flex items-start gap-3 bg-gray-50 rounded-lg p-3">
-            <Package className="w-4 h-4 text-[#b22222] mt-0.5 shrink-0" />
+            <Package className="w-4 h-4 text-brand mt-0.5 shrink-0" />
             <div className="text-sm">
               <div className="font-medium text-gray-800">{item.productName || 'Product'}</div>
               <div className="text-gray-500">
@@ -86,7 +86,7 @@ const OrderCard = ({ order, onCancelled }) => {
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {order.statusHistory.map((entry, idx) => (
               <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#b22222] shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
                 <span className="font-medium text-gray-700">{entry.status}</span>
                 <span>— {new Date(entry.changedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
               </div>

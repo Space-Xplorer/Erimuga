@@ -54,7 +54,7 @@ export default function ContactMessages() {
                   {msg.read ? (
                     <MailOpen className="w-4 h-4 text-gray-400 shrink-0" />
                   ) : (
-                    <Mail className="w-4 h-4 text-[#b22222] shrink-0" />
+                    <Mail className="w-4 h-4 text-brand shrink-0" />
                   )}
                   <div>
                     <div className="font-semibold text-gray-800 text-sm">{msg.name}</div>
@@ -78,7 +78,7 @@ export default function ContactMessages() {
                 <div className="mt-3 ml-6">
                   <button
                     onClick={() => markRead(msg._id)}
-                    className="text-xs text-[#b22222] border border-[#b22222] px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                    className="text-xs text-brand border border-brand px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
                   >
                     Mark as read
                   </button>

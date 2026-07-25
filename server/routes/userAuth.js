@@ -3,6 +3,8 @@ import passport from "passport";
 import bcrypt from "bcrypt";
 import userModel from "../models/userModel.js";
 import { validateRegister, validateLogin, validateAddress } from '../middlewares/validate.js';
+import { isLoggedIn } from '../middlewares/auth.js';
+import { exportMyData, deleteMyAccount } from '../controllers/complianceController.js';
 import 'dotenv/config';
 
 const BASE_URL = process.env.BASE_URL;
@@ -23,7 +25,9 @@ router.get('/me', (req, res) => {
       userType: req.user.userType,
       phonenumber: req.user.phonenumber || '',
       addresses: req.user.addresses || [],
-      cartData: req.user.cartData || []
+      cartData: req.user.cartData || [],
+      // Lets the client show a password field vs "type DELETE" on account deletion.
+      isGoogle: Boolean(req.user.googleId),
     };
     console.log('✅ Returning user data:', userData.email);
     res.json(userData);
@@ -87,9 +91,10 @@ router.post('/login', validateLogin, (req, res, next) => {
         userType: user.userType,
         phonenumber: user.phonenumber || '',
         addresses: user.addresses || [],
-        cartData: user.cartData || []
+        cartData: user.cartData || [],
+        isGoogle: Boolean(user.googleId),
       };
-      
+
       return res.status(200).json({
         message: "Login successful",
         user: userData,
@@ -266,5 +271,11 @@ router.put("/update-address", async (req, res) => {
     res.status(500).json({ message: "Server error", details: err.message });
   }
 });
+
+// ── DPDP data rights ──────────────────────────────────────────────
+// Access: download everything we hold about you.
+router.get('/export-data', isLoggedIn, exportMyData);
+// Erasure: delete the account (anonymises, retaining legally-required orders).
+router.delete('/account', isLoggedIn, deleteMyAccount);
 
 export default router;

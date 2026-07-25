@@ -2,6 +2,8 @@
 
 This document consolidates the current research notes into a Markdown format suitable for the `docs/` folder. It focuses on the main backend, frontend, and cross-cutting architectural findings in the Erimuga application.
 
+> **Partially superseded — July 2026.** The homepage and category restructure changed several things described below. See [homepage-and-categories.md](homepage-and-categories.md) for the current design. Sections known to be out of date: 1.2 (product images are now `colors[].images[]`, not a flat `image: [String]`), 1.5 (the hero carousel is DB-backed and admin-editable), and everything describing categories as three flat, unrelated lists. The security and order-concurrency findings below are still accurate and still open.
+
 ## 1. Order IDs, Product Variants, Bestseller, Guest Cart, and Hero Carousel
 
 ### 1.1 Order ID / Tracking Number Generation

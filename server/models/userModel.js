@@ -38,7 +38,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  }
+  },
+
+  // DPDP right to erasure. On account deletion the personal fields above are
+  // scrubbed and this is set, so the row survives only as a non-identifying
+  // tombstone that keeps retained order records referentially intact. Login is
+  // blocked while true.
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date },
 }, { minimize: false, timestamps: true });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);

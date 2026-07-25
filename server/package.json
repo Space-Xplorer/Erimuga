@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed": "node scripts/seedProducts.js",
+    "reset:catalog": "node scripts/resetCatalog.js",
     "seed:demo-users": "node scripts/seedDemoUsers.js",
     "remove:demo-users": "node scripts/removeDemoUsers.js",
     "migrate:product-images": "node scripts/migrateProductImages.js",

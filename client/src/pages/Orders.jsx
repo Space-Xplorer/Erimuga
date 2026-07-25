@@ -29,26 +29,27 @@ const Orders = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#b22222]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-paper py-10">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-[#b22222] mb-8">My Orders</h1>
+        <p className="eyebrow">Your history</p>
+        <h1 className="mt-2 mb-8 font-display text-4xl text-ink sm:text-5xl">My Orders</h1>
 
         {orders.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No orders yet</p>
-            <p className="text-sm text-gray-400 mt-1">Your order history will appear here</p>
+          <div className="border border-paper-deep bg-paper-dim py-20 text-center">
+            <Package className="mx-auto mb-4 h-12 w-12 text-ink-muted" />
+            <p className="font-display text-2xl text-ink">No orders yet</p>
+            <p className="mt-1 text-sm text-ink-muted">Your order history will appear here</p>
             <a
               href="/collection"
-              className="mt-6 inline-block bg-[#b22222] text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              className="mt-6 inline-flex items-center gap-2 border-b border-ink/25 pb-1 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
             >
-              Start Shopping
+              Start browsing <span aria-hidden="true">&rarr;</span>
             </a>
           </div>
         ) : (

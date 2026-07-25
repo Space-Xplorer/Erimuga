@@ -38,7 +38,7 @@ const SearchBar = ({ mobile = false }) => {
 
   const iconButtonClassName = mobile
     ? 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25'
-    : 'flex h-11 w-11 shrink-0 items-center justify-center text-gray-400 transition-colors hover:text-[#b22222]';
+    : 'flex h-11 w-11 shrink-0 items-center justify-center text-gray-400 transition-colors hover:text-brand';
 
   const clearButtonClassName = mobile
     ? 'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white'

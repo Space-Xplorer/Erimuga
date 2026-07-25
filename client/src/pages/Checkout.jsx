@@ -152,7 +152,7 @@ const Checkout = () => {
           }
         },
         prefill: { name: user?.name || '', email: user?.email || '', contact: phone },
-        theme: { color: '#b22222' },
+        theme: { color: '#9c2a21' },
       };
       new window.Razorpay(options).open();
     } catch (err) {
@@ -165,26 +165,28 @@ const Checkout = () => {
 
   if (!cartItems.length) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <ShoppingBag className="w-16 h-16 text-gray-300" />
-        <p className="text-gray-500">Your cart is empty</p>
-        <a href="/collection" className="bg-[#b22222] text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
-          Continue Shopping
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-paper">
+        <ShoppingBag className="h-14 w-14 text-paper-deep" />
+        <p className="font-display text-2xl text-ink">Your cart is empty</p>
+        <a href="/collection" className="mt-2 inline-flex items-center gap-2 border-b border-ink/25 pb-1 text-sm text-ink transition-colors hover:border-brand hover:text-brand">
+          Continue browsing <span aria-hidden="true">&rarr;</span>
         </a>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-[#b22222]">Checkout</h1>
+    <div className="bg-paper">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <p className="eyebrow">Almost there</p>
+      <h1 className="mt-2 mb-8 font-display text-4xl text-ink sm:text-5xl">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Left: Shipping + Payment */}
         <div className="space-y-6">
           {/* Contact info */}
           <div className="bg-white shadow-sm rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Contact Information</h2>
+            <h2 className="font-display text-2xl mb-4 text-ink">Contact Information</h2>
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
@@ -201,7 +203,7 @@ const Checkout = () => {
                   value={phone}
                   onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder="10-digit mobile number"
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                 />
               </div>
             </div>
@@ -209,8 +211,8 @@ const Checkout = () => {
 
           {/* Delivery address */}
           <div className="bg-white shadow-sm rounded-xl p-6">
-            <h2 className="flex items-center gap-2 text-lg font-semibold mb-4 text-gray-800">
-              <MapPin className="w-5 h-5 text-[#b22222]" /> Delivery Address
+            <h2 className="flex items-center gap-2 font-display text-2xl mb-4 text-ink">
+              <MapPin className="w-5 h-5 text-brand" /> Delivery Address
             </h2>
 
             {addresses.length > 0 && (
@@ -218,20 +220,20 @@ const Checkout = () => {
                 {addresses.map(addr => (
                   <label
                     key={addr._id}
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedAddressId === addr._id ? 'border-[#b22222] bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedAddressId === addr._id ? 'border-brand bg-paper-dim' : 'border-gray-200 hover:bg-gray-50'}`}
                   >
                     <input
                       type="radio"
                       name="address"
                       checked={selectedAddressId === addr._id}
                       onChange={() => setSelectedAddressId(addr._id)}
-                      className="mt-1 accent-[#b22222]"
+                      className="mt-1 accent-brand"
                     />
                     <div className="text-sm text-gray-700">
                       <div className="font-medium flex items-center gap-2">
                         {addr.recipientName || addr.street}
                         <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{addr.addressType || 'Home'}</span>
-                        {addr.isDefault && <span className="text-xs text-[#b22222] font-semibold">Default</span>}
+                        {addr.isDefault && <span className="text-xs text-brand font-semibold">Default</span>}
                       </div>
                       {addr.recipientName && <div>{addr.street}</div>}
                       <div className="text-gray-500">{addr.city}, {addr.state} — {addr.postalCode}</div>
@@ -239,13 +241,13 @@ const Checkout = () => {
                     </div>
                   </label>
                 ))}
-                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${usingNewAddress ? 'border-[#b22222] bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${usingNewAddress ? 'border-brand bg-paper-dim' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <input
                     type="radio"
                     name="address"
                     checked={usingNewAddress}
                     onChange={() => setSelectedAddressId(null)}
-                    className="accent-[#b22222]"
+                    className="accent-brand"
                   />
                   <span className="text-sm font-medium text-gray-700">Use a different address</span>
                 </label>
@@ -267,7 +269,7 @@ const Checkout = () => {
                       value={newAddress[key]}
                       onChange={e => setNewAddress({ ...newAddress, [key]: e.target.value })}
                       placeholder={placeholder}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                     />
                   </div>
                 ))}
@@ -280,7 +282,7 @@ const Checkout = () => {
                         value={newAddress[key]}
                         onChange={e => setNewAddress({ ...newAddress, [key]: e.target.value })}
                         placeholder={label.replace(' *', '')}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                       />
                     </div>
                   ))}
@@ -291,7 +293,7 @@ const Checkout = () => {
                       value={newAddress.postalCode}
                       onChange={e => setNewAddress({ ...newAddress, postalCode: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                       placeholder="6-digit PIN"
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                     />
                   </div>
                   <div>
@@ -299,7 +301,7 @@ const Checkout = () => {
                     <select
                       value={newAddress.addressType}
                       onChange={e => setNewAddress({ ...newAddress, addressType: e.target.value })}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
                     >
                       {['Home', 'Work', 'Other'].map(t => <option key={t}>{t}</option>)}
                     </select>
@@ -312,7 +314,7 @@ const Checkout = () => {
                       type="checkbox"
                       checked={saveNewAddress}
                       onChange={e => setSaveNewAddress(e.target.checked)}
-                      className="accent-[#b22222]"
+                      className="accent-brand"
                     />
                     Save this address to my profile for future orders
                   </label>
@@ -323,8 +325,8 @@ const Checkout = () => {
 
           {/* Payment method */}
           <div className="bg-white shadow-sm rounded-xl p-6">
-            <h2 className="flex items-center gap-2 text-lg font-semibold mb-4 text-gray-800">
-              <CreditCard className="w-5 h-5 text-[#b22222]" /> Payment Method
+            <h2 className="flex items-center gap-2 font-display text-2xl mb-4 text-ink">
+              <CreditCard className="w-5 h-5 text-brand" /> Payment Method
             </h2>
             <div className="space-y-2">
               {[
@@ -333,9 +335,9 @@ const Checkout = () => {
               ].map(opt => (
                 <label
                   key={opt.value}
-                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${paymentMethod === opt.value ? 'border-[#b22222] bg-red-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${paymentMethod === opt.value ? 'border-brand bg-paper-dim' : 'border-gray-200 hover:bg-gray-50'}`}
                 >
-                  <input type="radio" name="payment" value={opt.value} checked={paymentMethod === opt.value} onChange={() => setPaymentMethod(opt.value)} className="accent-[#b22222]" />
+                  <input type="radio" name="payment" value={opt.value} checked={paymentMethod === opt.value} onChange={() => setPaymentMethod(opt.value)} className="accent-brand" />
                   <div>
                     <div className="font-medium text-sm text-gray-800">{opt.label}</div>
                     <div className="text-xs text-gray-400">{opt.desc}</div>
@@ -348,8 +350,8 @@ const Checkout = () => {
 
         {/* Right: Order summary */}
         <div className="space-y-6">
-          <div className="bg-white shadow-sm rounded-xl p-6 sticky top-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Order Summary</h2>
+          <div className="bg-white shadow-sm rounded-xl p-6 sticky top-28">
+            <h2 className="font-display text-2xl mb-4 text-ink">Order Summary</h2>
 
             <div className="space-y-3 mb-4">
               {cartItems.map((item, idx) => {
@@ -392,7 +394,7 @@ const Checkout = () => {
                     onChange={e => setCouponInput(e.target.value.toUpperCase())}
                     onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
                     placeholder="Coupon code"
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:border-brand"
                   />
                   <button
                     type="button"
@@ -438,13 +440,14 @@ const Checkout = () => {
             <button
               onClick={handlePlaceOrder}
               disabled={placing}
-              className="mt-5 w-full bg-[#b22222] text-white py-3 rounded-xl font-semibold hover:bg-red-700 disabled:opacity-60 transition-colors text-sm"
+              className="mt-5 w-full bg-brand text-white py-3 rounded-xl font-semibold hover:opacity-90 disabled:opacity-60 transition-colors text-sm"
             >
               {placing ? 'Placing Order…' : paymentMethod === 'cod' ? 'Place Order (COD)' : 'Pay & Place Order'}
             </button>
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

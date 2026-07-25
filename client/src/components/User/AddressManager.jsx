@@ -28,7 +28,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           value={value.recipientName}
           onChange={e => onChange({ ...value, recipientName: e.target.value })}
           placeholder="Name on the door"
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div className="col-span-2">
@@ -38,7 +38,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           value={value.street}
           onChange={e => onChange({ ...value, street: e.target.value })}
           placeholder="House / flat no., Building, Street"
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div className="col-span-2">
@@ -48,7 +48,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           value={value.landmark}
           onChange={e => onChange({ ...value, landmark: e.target.value })}
           placeholder="Near bus stand, landmark…"
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div>
@@ -58,7 +58,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           value={value.city}
           onChange={e => onChange({ ...value, city: e.target.value })}
           placeholder="City"
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div>
@@ -68,7 +68,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           value={value.state}
           onChange={e => onChange({ ...value, state: e.target.value })}
           placeholder="State"
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div>
@@ -79,7 +79,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           onChange={e => onChange({ ...value, postalCode: e.target.value })}
           placeholder="6-digit PIN"
           maxLength={6}
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div>
@@ -90,7 +90,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
           onChange={e => onChange({ ...value, phonenumber: e.target.value })}
           placeholder="10-digit mobile"
           maxLength={10}
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         />
       </div>
       <div>
@@ -98,7 +98,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
         <select
           value={value.addressType}
           onChange={e => onChange({ ...value, addressType: e.target.value })}
-          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-[#b22222] focus:border-[#b22222]"
+          className="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
         >
           {['Home', 'Work', 'Other'].map(t => <option key={t}>{t}</option>)}
         </select>
@@ -110,7 +110,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
         type="checkbox"
         checked={value.isDefault}
         onChange={e => onChange({ ...value, isDefault: e.target.checked })}
-        className="accent-[#b22222]"
+        className="accent-brand"
       />
       Set as default delivery address
     </label>
@@ -119,7 +119,7 @@ const AddressForm = ({ value, onChange, onSubmit, onCancel, loading, submitLabel
       <button
         onClick={onSubmit}
         disabled={loading}
-        className="flex-1 bg-[#b22222] text-white py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
+        className="flex-1 bg-brand text-white py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
       >
         {loading ? 'Saving…' : submitLabel}
       </button>
@@ -213,12 +213,12 @@ const AddressManager = () => {
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-800">
-          <MapPin className="w-5 h-5 text-[#b22222]" /> My Addresses
+          <MapPin className="w-5 h-5 text-brand" /> My Addresses
         </h2>
         {!showForm && (
           <button
             onClick={() => { setShowForm(true); setEditingId(null); }}
-            className="flex items-center gap-1 text-sm text-[#b22222] border border-[#b22222] px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+            className="flex items-center gap-1 text-sm text-brand border border-brand px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
           >
             <Plus className="w-4 h-4" /> Add New
           </button>
@@ -231,7 +231,7 @@ const AddressManager = () => {
           {user.addresses.map(addr => (
             <div
               key={addr._id}
-              className={`border rounded-xl p-4 transition-colors ${addr.isDefault ? 'border-[#b22222] bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}
+              className={`border rounded-xl p-4 transition-colors ${addr.isDefault ? 'border-brand bg-red-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}
             >
               {editingId === addr._id ? (
                 <AddressForm
@@ -253,7 +253,7 @@ const AddressManager = () => {
                         {addr.addressType || 'Home'}
                       </span>
                       {addr.isDefault && (
-                        <span className="text-xs bg-[#b22222] text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-xs bg-brand text-white px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Star className="w-3 h-3" fill="currentColor" /> Default
                         </span>
                       )}
@@ -269,7 +269,7 @@ const AddressManager = () => {
                       <Pencil className="w-3 h-3" /> Edit
                     </button>
                     {!addr.isDefault && (
-                      <button onClick={() => handleSetDefault(addr._id)} disabled={loading} className="flex items-center gap-1 text-xs text-[#b22222] border border-[#b22222] px-2.5 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                      <button onClick={() => handleSetDefault(addr._id)} disabled={loading} className="flex items-center gap-1 text-xs text-brand border border-brand px-2.5 py-1 rounded-lg hover:bg-red-50 transition-colors">
                         <Star className="w-3 h-3" /> Default
                       </button>
                     )}

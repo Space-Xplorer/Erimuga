@@ -3,8 +3,10 @@ import Counter from '../models/counterModel.js';
 
 const getInitial = (str) => str?.trim().charAt(0).toUpperCase() || 'X';
 
-export const generateBaseProductCode = async (mainCategory, subcategory, apparelType) => {
-  const prefix = `${getInitial(mainCategory)}${getInitial(subcategory)}-${getInitial(apparelType)}`;
+// Prefix is derived from the category pair only. Tags are optional and
+// cross-cutting, so they can't contribute to a stable product code.
+export const generateBaseProductCode = async (mainCategory, subcategory) => {
+  const prefix = `${getInitial(mainCategory)}${getInitial(subcategory)}`;
 
   const counter = await Counter.findOneAndUpdate(
     { _id: `product-${prefix}` },
@@ -13,5 +15,5 @@ export const generateBaseProductCode = async (mainCategory, subcategory, apparel
   );
 
   const serial = String(counter.seq).padStart(4, '0');
-  return `${prefix}-${serial}`; // e.g., TS-MEN-0001
+  return `${prefix}-${serial}`; // e.g., SE-0001 (Sarees / Eri Silk)
 };

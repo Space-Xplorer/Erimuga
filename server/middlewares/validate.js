@@ -1,4 +1,7 @@
 import validator from 'validator';
+import MainCategory from '../models/mainCategoryModel.js';
+import Subcategory from '../models/subCategoryModel.js';
+import slugify from '../utils/slugify.js';
 
 export const validateRegister = (req, res, next) => {
   const { name, email, password } = req.body;
@@ -29,8 +32,11 @@ export const validateLogin = (req, res, next) => {
   next();
 };
 
-export const validateProduct = (req, res, next) => {
-  const { name, price, mainCategory, apparelType, subcategory } = req.body;
+// Resolves the category slugs on the request into real documents and proves the
+// subcategory actually belongs to the given main category — a check the old flat
+// model could not express. On success attaches `req.resolvedCategory`.
+export const validateProduct = async (req, res, next) => {
+  const { name, price, mainCategory, subcategory } = req.body;
 
   if (!name || name.trim().length < 2) {
     return res.status(400).json({ error: 'Product name must be at least 2 characters' });
@@ -38,17 +44,34 @@ export const validateProduct = (req, res, next) => {
   if (!price || isNaN(price) || Number(price) <= 0) {
     return res.status(400).json({ error: 'Price must be a positive number' });
   }
-  if (!mainCategory || !mainCategory.trim()) {
+  if (!mainCategory || !String(mainCategory).trim()) {
     return res.status(400).json({ error: 'Category is required' });
   }
-  if (!apparelType || !apparelType.trim()) {
-    return res.status(400).json({ error: 'Apparel type is required' });
-  }
-  if (!subcategory || !subcategory.trim()) {
+  if (!subcategory || !String(subcategory).trim()) {
     return res.status(400).json({ error: 'Subcategory is required' });
   }
 
-  next();
+  try {
+    const main = await MainCategory.findOne({ slug: slugify(mainCategory) });
+    if (!main) {
+      return res.status(400).json({ error: `Unknown category "${mainCategory}"` });
+    }
+
+    const sub = await Subcategory.findOne({
+      mainCategory: main._id,
+      slug: slugify(subcategory),
+    });
+    if (!sub) {
+      return res.status(400).json({
+        error: `"${subcategory}" is not a subcategory of ${main.name}`,
+      });
+    }
+
+    req.resolvedCategory = { main, sub };
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to validate category', details: err.message });
+  }
 };
 
 export const validateAddress = (address, res) => {
